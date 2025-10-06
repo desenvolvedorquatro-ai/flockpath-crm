@@ -54,9 +54,9 @@ export default function Dashboard() {
   const [regions, setRegions] = useState<Region[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
   const [churches, setChurches] = useState<Church[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<string>("");
-  const [selectedArea, setSelectedArea] = useState<string>("");
-  const [selectedChurch, setSelectedChurch] = useState<string>("");
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [selectedArea, setSelectedArea] = useState<string>("all");
+  const [selectedChurch, setSelectedChurch] = useState<string>("all");
   const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
   const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -115,23 +115,23 @@ export default function Dashboard() {
 
   // Filtrar áreas quando região mudar
   useEffect(() => {
-    if (selectedRegion) {
+    if (selectedRegion && selectedRegion !== "all") {
       setFilteredAreas(areas.filter(a => a.region_id === selectedRegion));
     } else {
       setFilteredAreas(areas);
     }
     // Limpar área e igreja se região mudou
     if (!roles.includes("pastor_coordenador") && !roles.includes("pastor")) {
-      setSelectedArea("");
-      setSelectedChurch("");
+      setSelectedArea("all");
+      setSelectedChurch("all");
     }
   }, [selectedRegion, areas, roles]);
 
   // Filtrar igrejas quando área mudar
   useEffect(() => {
-    if (selectedArea) {
+    if (selectedArea && selectedArea !== "all") {
       setFilteredChurches(churches.filter(c => c.area_id === selectedArea));
-    } else if (selectedRegion) {
+    } else if (selectedRegion && selectedRegion !== "all") {
       // Se tem região mas não tem área, mostrar igrejas da região
       const regionAreas = areas.filter(a => a.region_id === selectedRegion).map(a => a.id);
       setFilteredChurches(churches.filter(c => c.area_id && regionAreas.includes(c.area_id)));
@@ -140,7 +140,7 @@ export default function Dashboard() {
     }
     // Limpar igreja se área mudou
     if (!roles.includes("pastor")) {
-      setSelectedChurch("");
+      setSelectedChurch("all");
     }
   }, [selectedArea, selectedRegion, churches, areas, roles]);
 
@@ -163,11 +163,11 @@ export default function Dashboard() {
       `);
 
       // Aplicar filtros hierárquicos
-      if (selectedChurch) {
+      if (selectedChurch && selectedChurch !== "all") {
         query = query.eq("church_id", selectedChurch);
-      } else if (selectedArea) {
+      } else if (selectedArea && selectedArea !== "all") {
         query = query.eq("churches.area_id", selectedArea);
-      } else if (selectedRegion) {
+      } else if (selectedRegion && selectedRegion !== "all") {
         query = query.eq("churches.areas.region_id", selectedRegion);
       } else if (!isAdmin) {
         // Se não é admin e não tem filtros, aplicar lógica antiga
@@ -240,14 +240,14 @@ export default function Dashboard() {
     setEndDate(undefined);
     // Limpar apenas filtros que o usuário pode alterar
     if (isAdmin) {
-      setSelectedRegion("");
-      setSelectedArea("");
-      setSelectedChurch("");
+      setSelectedRegion("all");
+      setSelectedArea("all");
+      setSelectedChurch("all");
     } else if (roles.includes("pastor_regiao")) {
-      setSelectedArea("");
-      setSelectedChurch("");
+      setSelectedArea("all");
+      setSelectedChurch("all");
     } else if (roles.includes("pastor_coordenador")) {
-      setSelectedChurch("");
+      setSelectedChurch("all");
     }
     setIsFiltering(false);
   };
@@ -288,7 +288,7 @@ export default function Dashboard() {
                     <SelectValue placeholder="Todas as Regiões" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as Regiões</SelectItem>
+                    <SelectItem value="all">Todas as Regiões</SelectItem>
                     {regions.map(region => (
                       <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>
                     ))}
@@ -300,14 +300,14 @@ export default function Dashboard() {
                 <Select 
                   value={selectedArea} 
                   onValueChange={setSelectedArea}
-                  disabled={isAreaLocked || !selectedRegion}
+                  disabled={isAreaLocked || !selectedRegion || selectedRegion === "all"}
                 >
-                  <SelectTrigger className={cn((isAreaLocked || !selectedRegion) && "opacity-70")}>
+                  <SelectTrigger className={cn((isAreaLocked || !selectedRegion || selectedRegion === "all") && "opacity-70")}>
                     <Building2 className="mr-2 h-4 w-4" />
                     <SelectValue placeholder="Todas as Áreas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as Áreas</SelectItem>
+                    <SelectItem value="all">Todas as Áreas</SelectItem>
                     {filteredAreas.map(area => (
                       <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>
                     ))}
@@ -319,14 +319,14 @@ export default function Dashboard() {
                 <Select 
                   value={selectedChurch} 
                   onValueChange={setSelectedChurch}
-                  disabled={isChurchLocked || !selectedArea}
+                  disabled={isChurchLocked || !selectedArea || selectedArea === "all"}
                 >
-                  <SelectTrigger className={cn((isChurchLocked || !selectedArea) && "opacity-70")}>
+                  <SelectTrigger className={cn((isChurchLocked || !selectedArea || selectedArea === "all") && "opacity-70")}>
                     <Church className="mr-2 h-4 w-4" />
                     <SelectValue placeholder="Todas as Igrejas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as Igrejas</SelectItem>
+                    <SelectItem value="all">Todas as Igrejas</SelectItem>
                     {filteredChurches.map(church => (
                       <SelectItem key={church.id} value={church.id}>{church.name}</SelectItem>
                     ))}
@@ -386,14 +386,14 @@ export default function Dashboard() {
                   </PopoverContent>
                 </Popover>
 
-                {(startDate || endDate || (selectedRegion && !isRegionLocked) || (selectedArea && !isAreaLocked) || (selectedChurch && !isChurchLocked)) && (
+                {(startDate || endDate || (selectedRegion && selectedRegion !== "all" && !isRegionLocked) || (selectedArea && selectedArea !== "all" && !isAreaLocked) || (selectedChurch && selectedChurch !== "all" && !isChurchLocked)) && (
                   <Button onClick={clearFilters} variant="ghost">
                     Limpar Filtros
                   </Button>
                 )}
               </div>
 
-              {(startDate || endDate || selectedRegion || selectedArea || selectedChurch) && (
+              {(startDate || endDate || (selectedRegion && selectedRegion !== "all") || (selectedArea && selectedArea !== "all") || (selectedChurch && selectedChurch !== "all")) && (
                 <Badge variant="secondary" className="animate-fade-in">
                   Filtros Ativos
                 </Badge>
