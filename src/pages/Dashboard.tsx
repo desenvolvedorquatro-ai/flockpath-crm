@@ -5,6 +5,7 @@ import { PipelineStage } from "@/components/dashboard/PipelineStage";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface DashboardStats {
   totalVisitors: number;
@@ -15,6 +16,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const [stats, setStats] = useState<DashboardStats>({
     totalVisitors: 0,
     newMembers: 0,
@@ -33,18 +35,30 @@ export default function Dashboard() {
     if (!user) return;
 
     const fetchStats = async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("church_id")
-        .eq("id", user.id)
-        .single();
+      let visitors;
 
-      if (!profile?.church_id) return;
+      if (isAdmin) {
+        // Admin vê todos os visitantes
+        const { data } = await supabase
+          .from("visitors")
+          .select("status");
+        visitors = data;
+      } else {
+        // Outros usuários veem apenas da sua igreja
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("church_id")
+          .eq("id", user.id)
+          .single();
 
-      const { data: visitors } = await supabase
-        .from("visitors")
-        .select("status")
-        .eq("church_id", profile.church_id);
+        if (!profile?.church_id) return;
+
+        const { data } = await supabase
+          .from("visitors")
+          .select("status")
+          .eq("church_id", profile.church_id);
+        visitors = data;
+      }
 
       if (visitors) {
         const total = visitors.length;
@@ -76,7 +90,7 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, [user]);
+  }, [user, isAdmin]);
 
   const statsCards = [
     { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, color: "primary" },

@@ -29,6 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "@/hooks/use-toast";
 
 interface Visitor {
@@ -65,6 +66,7 @@ const statusLabels: Record<string, string> = {
 
 export default function Visitantes() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
   const [assistanceGroups, setAssistanceGroups] = useState<AssistanceGroup[]>([]);
@@ -87,51 +89,78 @@ export default function Visitantes() {
     if (!user) return;
 
     const fetchChurchAndVisitors = async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("church_id")
-        .eq("id", user.id)
-        .single();
+      if (isAdmin) {
+        // Admin vê todos os visitantes e grupos
+        const { data, error } = await supabase
+          .from("visitors")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      if (!profile?.church_id) {
-        toast({
-          title: "Igreja não encontrada",
-          description: "Você precisa estar vinculado a uma igreja.",
-          variant: "destructive",
-        });
-        return;
-      }
+        if (error) {
+          toast({
+            title: "Erro ao carregar visitantes",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          setVisitors(data || []);
+          setFilteredVisitors(data || []);
+        }
 
-      setChurchId(profile.church_id);
+        const { data: groupsData } = await supabase
+          .from("assistance_groups")
+          .select("id, name")
+          .order("name");
 
-      const { data, error } = await supabase
-        .from("visitors")
-        .select("*")
-        .eq("church_id", profile.church_id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        toast({
-          title: "Erro ao carregar visitantes",
-          description: error.message,
-          variant: "destructive",
-        });
+        setAssistanceGroups(groupsData || []);
       } else {
-        setVisitors(data || []);
-        setFilteredVisitors(data || []);
+        // Outros usuários veem apenas da sua igreja
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("church_id")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.church_id) {
+          toast({
+            title: "Igreja não encontrada",
+            description: "Você precisa estar vinculado a uma igreja.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setChurchId(profile.church_id);
+
+        const { data, error } = await supabase
+          .from("visitors")
+          .select("*")
+          .eq("church_id", profile.church_id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          toast({
+            title: "Erro ao carregar visitantes",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          setVisitors(data || []);
+          setFilteredVisitors(data || []);
+        }
+
+        const { data: groupsData } = await supabase
+          .from("assistance_groups")
+          .select("id, name")
+          .eq("church_id", profile.church_id)
+          .order("name");
+
+        setAssistanceGroups(groupsData || []);
       }
-
-      const { data: groupsData } = await supabase
-        .from("assistance_groups")
-        .select("id, name")
-        .eq("church_id", profile.church_id)
-        .order("name");
-
-      setAssistanceGroups(groupsData || []);
     };
 
     fetchChurchAndVisitors();
-  }, [user]);
+  }, [user, isAdmin]);
 
   useEffect(() => {
     let filtered = visitors;
@@ -155,10 +184,20 @@ export default function Visitantes() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!churchId) {
+    if (!churchId && !isAdmin) {
       toast({
         title: "Erro",
         description: "Igreja não encontrada.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Se admin e não tiver church_id, deve selecionar uma igreja
+    if (isAdmin && !churchId) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma igreja para o visitante.",
         variant: "destructive",
       });
       return;
