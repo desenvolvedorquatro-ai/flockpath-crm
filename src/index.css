@@ -8,8 +8,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Apple-inspired color palette */
-    --background: 0 0% 98%;
+    /* APRISCO color palette */
+    --background: 40 33% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -18,10 +18,10 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary: Blue-purple gradient inspiration */
-    --primary: 237 89% 60%;
+    /* Primary: APRISCO red #B73E37 */
+    --primary: 5 53% 48%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 245 92% 70%;
+    --primary-glow: 5 63% 58%;
 
     /* Secondary: Soft gray */
     --secondary: 215 20% 96%;
@@ -30,7 +30,7 @@ All colors MUST be HSL.
     --muted: 215 20% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 237 89% 60%;
+    --accent: 5 53% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -38,25 +38,25 @@ All colors MUST be HSL.
 
     --border: 215 20% 90%;
     --input: 215 20% 90%;
-    --ring: 237 89% 60%;
+    --ring: 5 53% 48%;
 
     --radius: 1rem;
 
-    /* Sidebar Apple-style */
+    /* Sidebar APRISCO-style */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 237 89% 60%;
+    --sidebar-primary: 5 53% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 215 20% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 215 20% 90%;
-    --sidebar-ring: 237 89% 60%;
+    --sidebar-ring: 5 53% 48%;
 
     /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(237 89% 60%), hsl(245 92% 70%));
+    --gradient-primary: linear-gradient(135deg, hsl(5 53% 48%), hsl(5 63% 58%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(215 20% 98%));
     
-    /* Shadows Apple-style */
+    /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
@@ -78,9 +78,9 @@ All colors MUST be HSL.
     --popover: 224 71% 4%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 237 89% 65%;
+    --primary: 5 63% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 245 92% 75%;
+    --primary-glow: 5 73% 68%;
 
     --secondary: 215 25% 15%;
     --secondary-foreground: 210 40% 98%;
@@ -88,7 +88,7 @@ All colors MUST be HSL.
     --muted: 215 25% 15%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 237 89% 65%;
+    --accent: 5 63% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 50%;
@@ -96,18 +96,18 @@ All colors MUST be HSL.
 
     --border: 215 25% 20%;
     --input: 215 25% 20%;
-    --ring: 237 89% 65%;
+    --ring: 5 63% 58%;
     
     --sidebar-background: 224 71% 4%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 237 89% 65%;
+    --sidebar-primary: 5 63% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 215 25% 15%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 215 25% 20%;
-    --sidebar-ring: 237 89% 65%;
+    --sidebar-ring: 5 63% 58%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(237 89% 65%), hsl(245 92% 75%));
+    --gradient-primary: linear-gradient(135deg, hsl(5 63% 58%), hsl(5 73% 68%));
     --gradient-subtle: linear-gradient(180deg, hsl(224 71% 4%), hsl(222 47% 11%));
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
