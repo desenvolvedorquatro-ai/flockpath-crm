@@ -176,13 +176,13 @@ export default function Grupos() {
   );
 
   if (roleLoading || loading) {
-    return <div className="min-h-screen bg-background p-8 flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-muted-foreground">Carregando...</div>
     </div>;
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background">
       <ModernHeader
         title="Grupos de Assistência"
         description="Gerencie células e grupos de acompanhamento"

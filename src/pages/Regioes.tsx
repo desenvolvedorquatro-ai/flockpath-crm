@@ -179,7 +179,7 @@ export default function Regioes() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background">
       <ModernHeader
         title="Regiões"
         description="Gerencie as regiões do sistema"

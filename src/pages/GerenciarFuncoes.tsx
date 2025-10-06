@@ -376,8 +376,8 @@ export default function GerenciarFuncoes() {
 
             <div className="space-y-4">
               <Label>Permissões por Módulo</Label>
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full">
+              <div className="border rounded-lg overflow-hidden overflow-x-auto">
+                <table className="w-full min-w-[600px]">
                   <thead className="bg-muted">
                     <tr>
                       <th className="text-left p-2 font-medium">Módulo</th>

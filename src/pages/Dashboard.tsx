@@ -116,8 +116,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="p-4 md:p-8 animate-fade-in">
+    <div className="min-h-screen bg-background animate-fade-in">
         <ModernHeader
           title="Dashboard"
           description="Acompanhe as métricas e estatísticas do sistema"
@@ -156,7 +155,6 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-      </div>
     </div>
   );
 }

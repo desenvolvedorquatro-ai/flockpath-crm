@@ -435,14 +435,14 @@ export default function Usuarios() {
   );
 
   if (roleLoading || loading) {
-    return <div className="min-h-screen bg-background p-8 flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-muted-foreground">Carregando...</div>
     </div>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-background p-8">
+      <div className="min-h-screen bg-background">
         <div className="glass-card rounded-2xl p-8 text-center">
           <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground">Você não tem permissão para acessar esta página</p>
@@ -452,7 +452,7 @@ export default function Usuarios() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background">
       <ModernHeader
         title="Usuários"
         description="Gerencie usuários e permissões do sistema"
@@ -476,7 +476,7 @@ export default function Usuarios() {
 
       <div className="glass-card rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[800px]">
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nome</th>

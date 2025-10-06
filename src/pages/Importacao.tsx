@@ -273,7 +273,7 @@ export default function Importacao() {
 
   if (!isAdmin && !isPastor) {
     return (
-      <div className="min-h-screen bg-background p-8">
+      <div className="min-h-screen bg-background">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -285,7 +285,7 @@ export default function Importacao() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background">
       <ModernHeader
         title="Importação de Dados"
         description="Importe dados em lote através de arquivos Excel"

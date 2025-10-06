@@ -204,7 +204,7 @@ export default function Areas() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background">
       <ModernHeader
         title="Áreas"
         description="Gerencie as áreas do sistema"

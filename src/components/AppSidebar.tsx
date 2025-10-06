@@ -32,10 +32,10 @@ const menuItems = [{
   icon: UserCog
 }];
 export function AppSidebar() {
-  return <Sidebar className="border-r border-border bg-background">
+  return <Sidebar className="border-r border-border bg-background" collapsible="icon">
       <SidebarContent>
-        <div className="p-6 flex items-center justify-center">
-          <img src={logoAprisco} alt="APRISCO" className="h-30" />
+        <div className="p-4 md:p-6 flex items-center justify-center">
+          <img src={logoAprisco} alt="APRISCO" className="h-20 md:h-30 w-auto" />
         </div>
 
         <SidebarGroup>

@@ -63,7 +63,7 @@ const AppLayout = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-border bg-background sticky top-0 z-10 flex items-center justify-end px-6">
+          <header className="h-16 border-b border-border bg-white shadow-sm sticky top-0 z-10 flex items-center justify-end px-4 md:px-6">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -83,7 +83,7 @@ const AppLayout = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
-          <main className="flex-1 overflow-x-hidden">
+          <main className="flex-1 overflow-x-hidden p-4 md:p-6 lg:p-8">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/visitantes" element={<Visitantes />} />

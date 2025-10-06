@@ -130,7 +130,7 @@ export default function Configuracoes() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background">
       <ModernHeader
         title="Configurações"
         description="Personalize o sistema de acordo com suas necessidades"

@@ -300,7 +300,7 @@ export default function Visitantes() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background">
       <ModernHeader
         title="Visitantes"
         description="Gestão completa de visitantes e membros"
@@ -528,7 +528,7 @@ export default function Visitantes() {
       ) : (
         <div className="glass-card rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[150px]">Nome</TableHead>
