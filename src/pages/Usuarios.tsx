@@ -53,13 +53,22 @@ export default function Usuarios() {
   const [newUserData, setNewUserData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     full_name: "",
     phone: "",
+    cpf: "",
+    church_id: "",
   });
+  const [multiChurchAccess, setMultiChurchAccess] = useState(false);
+  const [selectedChurches, setSelectedChurches] = useState<string[]>([]);
   const [editUserData, setEditUserData] = useState({
     full_name: "",
     phone: "",
+    cpf: "",
+    church_id: "",
   });
+  const [editMultiChurchAccess, setEditMultiChurchAccess] = useState(false);
+  const [editSelectedChurches, setEditSelectedChurches] = useState<string[]>([]);
   const [newPassword, setNewPassword] = useState("");
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
@@ -178,6 +187,34 @@ export default function Usuarios() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validações
+    if (newUserData.password !== newUserData.confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newUserData.password.length < 8) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter no mínimo 8 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newUserData.church_id) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma igreja principal",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -194,15 +231,33 @@ export default function Usuarios() {
           .update({
             full_name: newUserData.full_name,
             phone: newUserData.phone,
+            cpf: newUserData.cpf,
+            church_id: newUserData.church_id,
           })
           .eq("id", authData.user.id);
 
         if (profileError) throw profileError;
+
+        // Se multi-igreja habilitado, adicionar igrejas adicionais
+        if (multiChurchAccess && selectedChurches.length > 0) {
+          const churchesToInsert = selectedChurches.map(churchId => ({
+            user_id: authData.user.id,
+            church_id: churchId,
+          }));
+
+          const { error: churchesError } = await supabase
+            .from("user_churches")
+            .insert(churchesToInsert);
+
+          if (churchesError) throw churchesError;
+        }
       }
 
       toast({ title: "Usuário criado com sucesso!" });
       setIsCreateDialogOpen(false);
-      setNewUserData({ email: "", password: "", full_name: "", phone: "" });
+      setNewUserData({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cpf: "", church_id: "" });
+      setMultiChurchAccess(false);
+      setSelectedChurches([]);
       fetchProfiles();
     } catch (error: any) {
       toast({
@@ -213,14 +268,31 @@ export default function Usuarios() {
     }
   };
 
-  const openEditDialog = (userId: string) => {
+  const openEditDialog = async (userId: string) => {
     const user = profiles.find(p => p.id === userId);
     if (user) {
       setSelectedUserId(userId);
       setEditUserData({
         full_name: user.full_name || "",
         phone: user.phone || "",
+        cpf: user.cpf || "",
+        church_id: user.church_id || "",
       });
+
+      // Buscar igrejas adicionais do usuário
+      const { data: userChurches } = await supabase
+        .from("user_churches")
+        .select("church_id")
+        .eq("user_id", userId);
+
+      if (userChurches && userChurches.length > 0) {
+        setEditMultiChurchAccess(true);
+        setEditSelectedChurches(userChurches.map(uc => uc.church_id));
+      } else {
+        setEditMultiChurchAccess(false);
+        setEditSelectedChurches([]);
+      }
+
       setIsEditDialogOpen(true);
     }
   };
@@ -235,10 +307,32 @@ export default function Usuarios() {
         .update({
           full_name: editUserData.full_name,
           phone: editUserData.phone,
+          cpf: editUserData.cpf,
+          church_id: editUserData.church_id,
         })
         .eq("id", selectedUserId);
 
       if (error) throw error;
+
+      // Deletar igrejas adicionais antigas
+      await supabase
+        .from("user_churches")
+        .delete()
+        .eq("user_id", selectedUserId);
+
+      // Inserir novas igrejas adicionais se habilitado
+      if (editMultiChurchAccess && editSelectedChurches.length > 0) {
+        const churchesToInsert = editSelectedChurches.map(churchId => ({
+          user_id: selectedUserId,
+          church_id: churchId,
+        }));
+
+        const { error: churchesError } = await supabase
+          .from("user_churches")
+          .insert(churchesToInsert);
+
+        if (churchesError) throw churchesError;
+      }
 
       toast({ title: "Dados atualizados com sucesso!" });
       setIsEditDialogOpen(false);
@@ -446,49 +540,160 @@ export default function Usuarios() {
 
       {/* Dialog Criar Usuário */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Criar Novo Usuário</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateUser} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newUserData.email}
+                  onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="full_name">Nome Completo *</Label>
+                <Input
+                  id="full_name"
+                  value={newUserData.full_name}
+                  onChange={(e) => setNewUserData({ ...newUserData, full_name: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  value={newUserData.cpf}
+                  onChange={(e) => setNewUserData({ ...newUserData, cpf: e.target.value })}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  value={newUserData.phone}
+                  onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="password">Senha *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newUserData.password}
+                  onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                  required
+                  minLength={8}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Mínimo 8 caracteres</p>
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={newUserData.confirmPassword}
+                  onChange={(e) => setNewUserData({ ...newUserData, confirmPassword: e.target.value })}
+                  required
+                  minLength={8}
+                />
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUserData.email}
-                onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+              <Label htmlFor="church_id">Igreja Principal *</Label>
+              <Select
+                value={newUserData.church_id}
+                onValueChange={(value) => setNewUserData({ ...newUserData, church_id: value })}
                 required
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma igreja" />
+                </SelectTrigger>
+                <SelectContent>
+                  {churches.map((church) => (
+                    <SelectItem key={church.id} value={church.id}>
+                      {church.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <Label htmlFor="password">Senha *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={newUserData.password}
-                onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
-                required
-                minLength={6}
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="multiChurch"
+                checked={multiChurchAccess}
+                onChange={(e) => setMultiChurchAccess(e.target.checked)}
+                className="h-4 w-4"
               />
+              <Label htmlFor="multiChurch" className="cursor-pointer">
+                Acesso a múltiplas igrejas
+              </Label>
             </div>
-            <div>
-              <Label htmlFor="full_name">Nome Completo *</Label>
-              <Input
-                id="full_name"
-                value={newUserData.full_name}
-                onChange={(e) => setNewUserData({ ...newUserData, full_name: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                value={newUserData.phone}
-                onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
-              />
-            </div>
+
+            {multiChurchAccess && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Select
+                    onValueChange={(value) => {
+                      if (value && !selectedChurches.includes(value) && value !== newUserData.church_id) {
+                        setSelectedChurches([...selectedChurches, value]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Adicionar mais igrejas..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {churches
+                        .filter((c) => c.id !== newUserData.church_id && !selectedChurches.includes(c.id))
+                        .map((church) => (
+                          <SelectItem key={church.id} value={church.id}>
+                            {church.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedChurches.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedChurches.map((churchId) => {
+                      const church = churches.find((c) => c.id === churchId);
+                      return (
+                        <Badge key={churchId} variant="secondary" className="gap-1">
+                          {church?.name}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedChurches(selectedChurches.filter((id) => id !== churchId))}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancelar
@@ -501,28 +706,125 @@ export default function Usuarios() {
 
       {/* Dialog Editar Usuário */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Dados do Usuário</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditUser} className="space-y-4">
-            <div>
-              <Label htmlFor="edit_full_name">Nome Completo *</Label>
-              <Input
-                id="edit_full_name"
-                value={editUserData.full_name}
-                onChange={(e) => setEditUserData({ ...editUserData, full_name: e.target.value })}
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_full_name">Nome Completo *</Label>
+                <Input
+                  id="edit_full_name"
+                  value={editUserData.full_name}
+                  onChange={(e) => setEditUserData({ ...editUserData, full_name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_cpf">CPF</Label>
+                <Input
+                  id="edit_cpf"
+                  value={editUserData.cpf}
+                  onChange={(e) => setEditUserData({ ...editUserData, cpf: e.target.value })}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="edit_phone">Telefone</Label>
-              <Input
-                id="edit_phone"
-                value={editUserData.phone}
-                onChange={(e) => setEditUserData({ ...editUserData, phone: e.target.value })}
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_phone">Telefone</Label>
+                <Input
+                  id="edit_phone"
+                  value={editUserData.phone}
+                  onChange={(e) => setEditUserData({ ...editUserData, phone: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_church_id">Igreja Principal *</Label>
+                <Select
+                  value={editUserData.church_id}
+                  onValueChange={(value) => setEditUserData({ ...editUserData, church_id: value })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma igreja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {churches.map((church) => (
+                      <SelectItem key={church.id} value={church.id}>
+                        {church.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="editMultiChurch"
+                checked={editMultiChurchAccess}
+                onChange={(e) => setEditMultiChurchAccess(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="editMultiChurch" className="cursor-pointer">
+                Acesso a múltiplas igrejas
+              </Label>
+            </div>
+
+            {editMultiChurchAccess && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Select
+                    onValueChange={(value) => {
+                      if (value && !editSelectedChurches.includes(value) && value !== editUserData.church_id) {
+                        setEditSelectedChurches([...editSelectedChurches, value]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Adicionar mais igrejas..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {churches
+                        .filter((c) => c.id !== editUserData.church_id && !editSelectedChurches.includes(c.id))
+                        .map((church) => (
+                          <SelectItem key={church.id} value={church.id}>
+                            {church.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {editSelectedChurches.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {editSelectedChurches.map((churchId) => {
+                      const church = churches.find((c) => c.id === churchId);
+                      return (
+                        <Badge key={churchId} variant="secondary" className="gap-1">
+                          {church?.name}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditSelectedChurches(editSelectedChurches.filter((id) => id !== churchId))
+                            }
+                            className="ml-1 hover:text-destructive"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancelar
