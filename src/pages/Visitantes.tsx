@@ -66,7 +66,7 @@ const statusLabels: Record<string, string> = {
 
 export default function Visitantes() {
   const { user } = useAuth();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isPastor } = useUserRole();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
   const [assistanceGroups, setAssistanceGroups] = useState<AssistanceGroup[]>([]);
@@ -113,6 +113,41 @@ export default function Visitantes() {
           .order("name");
 
         setAssistanceGroups(groupsData || []);
+      } else if (isPastor) {
+        // Pastor vê visitantes e grupos de todas as suas igrejas
+        const { data: pastorChurches } = await supabase
+          .from("churches")
+          .select("id")
+          .eq("pastor_id", user.id);
+
+        if (pastorChurches && pastorChurches.length > 0) {
+          const churchIds = pastorChurches.map(c => c.id);
+          
+          const { data, error } = await supabase
+            .from("visitors")
+            .select("*")
+            .in("church_id", churchIds)
+            .order("created_at", { ascending: false });
+
+          if (error) {
+            toast({
+              title: "Erro ao carregar visitantes",
+              description: error.message,
+              variant: "destructive",
+            });
+          } else {
+            setVisitors(data || []);
+            setFilteredVisitors(data || []);
+          }
+
+          const { data: groupsData } = await supabase
+            .from("assistance_groups")
+            .select("id, name")
+            .in("church_id", churchIds)
+            .order("name");
+
+          setAssistanceGroups(groupsData || []);
+        }
       } else {
         // Outros usuários veem apenas da sua igreja
         const { data: profile } = await supabase
@@ -160,7 +195,7 @@ export default function Visitantes() {
     };
 
     fetchChurchAndVisitors();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isPastor]);
 
   useEffect(() => {
     let filtered = visitors;
@@ -184,7 +219,7 @@ export default function Visitantes() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!churchId && !isAdmin) {
+    if (!churchId && !isAdmin && !isPastor) {
       toast({
         title: "Erro",
         description: "Igreja não encontrada.",
@@ -193,8 +228,8 @@ export default function Visitantes() {
       return;
     }
 
-    // Se admin e não tiver church_id, deve selecionar uma igreja
-    if (isAdmin && !churchId) {
+    // Se admin/pastor e não tiver church_id, deve selecionar uma igreja
+    if ((isAdmin || isPastor) && !churchId) {
       toast({
         title: "Erro",
         description: "Selecione uma igreja para o visitante.",

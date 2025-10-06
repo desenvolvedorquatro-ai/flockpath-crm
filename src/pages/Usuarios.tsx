@@ -114,10 +114,16 @@ export default function Usuarios() {
     if (!selectedUserId || !selectedRole) return;
 
     try {
+      // Deletar função antiga do usuário
+      await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", selectedUserId);
+
+      // Inserir nova função
       const { error } = await supabase.from("user_roles").insert({
         user_id: selectedUserId,
         role: selectedRole as any,
-        church_id: selectedChurchId || null,
       });
 
       if (error) throw error;
@@ -142,7 +148,16 @@ export default function Usuarios() {
   };
 
   const openAssignDialog = (userId: string) => {
+    const user = profiles.find(p => p.id === userId);
     setSelectedUserId(userId);
+    
+    // Pré-selecionar a função atual do usuário
+    if (user?.user_roles && user.user_roles.length > 0) {
+      setSelectedRole(user.user_roles[0].role);
+    } else {
+      setSelectedRole("");
+    }
+    
     setIsDialogOpen(true);
   };
 
@@ -271,21 +286,6 @@ export default function Usuarios() {
                   <SelectItem value="pastor_coordenador">Pastor Coordenador</SelectItem>
                   <SelectItem value="group_leader">Líder de Grupo</SelectItem>
                   <SelectItem value="user">Usuário</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="church">Igreja (opcional)</Label>
-              <Select value={selectedChurchId} onValueChange={setSelectedChurchId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma igreja" />
-                </SelectTrigger>
-                <SelectContent>
-                  {churches.map((church) => (
-                    <SelectItem key={church.id} value={church.id}>
-                      {church.name}
-                    </SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
             </div>

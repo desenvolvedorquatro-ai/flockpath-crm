@@ -16,7 +16,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isPastor } = useUserRole();
   const [stats, setStats] = useState<DashboardStats>({
     totalVisitors: 0,
     newMembers: 0,
@@ -43,6 +43,21 @@ export default function Dashboard() {
           .from("visitors")
           .select("status");
         visitors = data;
+      } else if (isPastor) {
+        // Pastor vê visitantes de todas as igrejas que ele gerencia
+        const { data: pastorChurches } = await supabase
+          .from("churches")
+          .select("id")
+          .eq("pastor_id", user.id);
+
+        if (pastorChurches && pastorChurches.length > 0) {
+          const churchIds = pastorChurches.map(c => c.id);
+          const { data } = await supabase
+            .from("visitors")
+            .select("status")
+            .in("church_id", churchIds);
+          visitors = data;
+        }
       } else {
         // Outros usuários veem apenas da sua igreja
         const { data: profile } = await supabase
@@ -90,7 +105,7 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isPastor]);
 
   const statsCards = [
     { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, color: "primary" },
