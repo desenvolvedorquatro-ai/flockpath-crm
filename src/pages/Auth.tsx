@@ -63,9 +63,8 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-2xl border-2 border-primary/10">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto mb-2">
-            <img src={logoAprisco} alt="APRISCO" className="w-32 h-auto mx-auto" />
+            <img src={logoAprisco} alt="APRISCO" className="w-40 h-auto mx-auto" />
           </div>
-          <CardTitle className="text-3xl font-bold text-primary">APRISCO</CardTitle>
           <CardDescription>Sistema de gestão de visitantes e membros</CardDescription>
         </CardHeader>
         <CardContent>
