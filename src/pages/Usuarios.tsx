@@ -169,11 +169,11 @@ export default function Usuarios() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Usuários</h1>
-          <p className="text-muted-foreground">Gerencie usuários e permissões do sistema</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Usuários</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Gerencie usuários e permissões do sistema</p>
         </div>
       </div>
 

@@ -191,20 +191,21 @@ export default function Visitantes() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Visitantes</h1>
-          <p className="text-muted-foreground">Gestão completa de visitantes e membros</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Visitantes</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Gestão completa de visitantes e membros</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 btn-hover-lift bg-gradient-to-r from-primary to-primary-glow">
+            <Button className="gap-2 btn-hover-lift bg-gradient-to-r from-primary to-primary-glow w-full sm:w-auto">
               <Plus className="w-4 h-4" />
-              Novo Visitante
+              <span className="hidden sm:inline">Novo Visitante</span>
+              <span className="sm:hidden">Novo</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Visitante</DialogTitle>
               <DialogDescription>
@@ -212,7 +213,7 @@ export default function Visitantes() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="full_name">Nome completo *</Label>
                   <Input
@@ -301,18 +302,18 @@ export default function Visitantes() {
         </Dialog>
       </div>
 
-      <div className="glass-card rounded-2xl p-6 mb-6">
-        <div className="flex gap-4">
+      <div className="glass-card rounded-2xl p-4 md:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
           <div className="flex-1">
             <Input
-              placeholder="Buscar por nome, e-mail ou telefone..."
+              placeholder="Buscar visitante..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
@@ -340,57 +341,59 @@ export default function Visitantes() {
         </div>
       ) : (
         <div className="glass-card rounded-2xl overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Primeira Visita</TableHead>
-                <TableHead>Convidado por</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredVisitors.map((visitor) => (
-                <TableRow key={visitor.id}>
-                  <TableCell className="font-medium">{visitor.full_name}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1 text-sm">
-                      {visitor.email && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Mail className="w-3 h-3" />
-                          {visitor.email}
-                        </div>
-                      )}
-                      {visitor.phone && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Phone className="w-3 h-3" />
-                          {visitor.phone}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={statusColors[visitor.status]}
-                    >
-                      {statusLabels[visitor.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(visitor.first_visit_date).toLocaleDateString("pt-BR")}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {visitor.invited_by || "-"}
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[150px]">Nome</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[200px]">Contato</TableHead>
+                  <TableHead className="min-w-[120px]">Status</TableHead>
+                  <TableHead className="hidden lg:table-cell min-w-[140px]">Primeira Visita</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[120px]">Convidado por</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredVisitors.map((visitor) => (
+                  <TableRow key={visitor.id}>
+                    <TableCell className="font-medium">{visitor.full_name}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="flex flex-col gap-1 text-sm">
+                        {visitor.email && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="w-3 h-3" />
+                            <span className="truncate max-w-[150px]">{visitor.email}</span>
+                          </div>
+                        )}
+                        {visitor.phone && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone className="w-3 h-3" />
+                            {visitor.phone}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={`${statusColors[visitor.status]} text-xs`}
+                      >
+                        {statusLabels[visitor.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(visitor.first_visit_date).toLocaleDateString("pt-BR")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                      {visitor.invited_by || "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>

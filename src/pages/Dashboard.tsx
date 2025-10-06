@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BarChart3, Users, UserPlus, TrendingUp } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PipelineStage } from "@/components/dashboard/PipelineStage";
+import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -86,13 +87,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="p-8 animate-fade-in">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral da jornada de visitantes</p>
+      <div className="p-4 md:p-8 animate-fade-in">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Visão geral da jornada de visitantes</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {statsCards.map((stat, index) => (
             <div key={stat.title} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
               <StatCard {...stat} />
@@ -100,18 +101,22 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center gap-3 mb-4 md:mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Funil de Conversão</h2>
-              <p className="text-sm text-muted-foreground">Acompanhe a jornada dos visitantes</p>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">Funil de Conversão</h2>
+              <p className="text-xs md:text-sm text-muted-foreground">Visualização da jornada dos visitantes</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="mb-6 md:mb-8">
+            <FunnelChart stages={pipelineData} />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             {pipelineData.map((stage, index) => (
               <div key={stage.title} className="animate-scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
                 <PipelineStage {...stage} />

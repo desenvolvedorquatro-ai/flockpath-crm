@@ -32,17 +32,17 @@ const App = () => (
                 <SidebarProvider defaultOpen>
                   <div className="min-h-screen flex w-full bg-background">
                     <AppSidebar />
-                    <div className="flex-1 flex flex-col">
-                      <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 flex items-center px-6">
-                        <SidebarTrigger className="mr-4" />
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <header className="h-14 md:h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 flex items-center px-4 md:px-6">
+                        <SidebarTrigger className="mr-2 md:mr-4" />
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-                            <span className="text-white text-sm font-bold">IC</span>
+                          <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs md:text-sm font-bold">IC</span>
                           </div>
-                          <span className="font-semibold text-foreground">Igreja CRM</span>
+                          <span className="font-semibold text-sm md:text-base text-foreground truncate">Igreja CRM</span>
                         </div>
                       </header>
-                      <main className="flex-1">
+                      <main className="flex-1 overflow-x-hidden">
                         <Routes>
                           <Route path="/" element={<Dashboard />} />
                           <Route path="/visitantes" element={<Visitantes />} />

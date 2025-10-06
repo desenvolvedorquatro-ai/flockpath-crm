@@ -11,13 +11,13 @@ interface PipelineStageProps {
 export function PipelineStage({ title, count, color, percentage }: PipelineStageProps) {
   return (
     <Card className="pipeline-stage">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-sm text-foreground">{title}</h4>
-        <Badge variant="secondary" className="text-xs">{count}</Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+        <h4 className="font-semibold text-xs sm:text-sm text-foreground truncate">{title}</h4>
+        <Badge variant="secondary" className="text-xs w-fit">{count}</Badge>
       </div>
       <div className="w-full bg-secondary rounded-full h-2 mb-2">
         <div
-          className={`h-2 rounded-full bg-gradient-to-r from-${color} to-${color}/80 transition-all`}
+          className="h-2 rounded-full bg-gradient-to-r from-primary to-primary-glow transition-all"
           style={{ width: `${percentage || 0}%` }}
         />
       </div>
