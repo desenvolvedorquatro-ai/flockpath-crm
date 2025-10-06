@@ -39,6 +39,12 @@ interface Visitor {
   status: string;
   first_visit_date: string;
   invited_by: string | null;
+  assistance_group_id: string | null;
+}
+
+interface AssistanceGroup {
+  id: string;
+  name: string;
 }
 
 const statusColors: Record<string, string> = {
@@ -61,6 +67,7 @@ export default function Visitantes() {
   const { user } = useAuth();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
+  const [assistanceGroups, setAssistanceGroups] = useState<AssistanceGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -73,6 +80,7 @@ export default function Visitantes() {
     address: "",
     invited_by: "",
     status: "visitante",
+    assistance_group_id: "",
   });
 
   useEffect(() => {
@@ -112,6 +120,14 @@ export default function Visitantes() {
         setVisitors(data || []);
         setFilteredVisitors(data || []);
       }
+
+      const { data: groupsData } = await supabase
+        .from("assistance_groups")
+        .select("id, name")
+        .eq("church_id", profile.church_id)
+        .order("name");
+
+      setAssistanceGroups(groupsData || []);
     };
 
     fetchChurchAndVisitors();
@@ -156,6 +172,7 @@ export default function Visitantes() {
       invited_by: formData.invited_by || null,
       status: formData.status as "visitante" | "interessado" | "em_acompanhamento" | "novo_membro" | "engajado",
       church_id: churchId,
+      assistance_group_id: formData.assistance_group_id || null,
     }]);
 
     if (error) {
@@ -178,6 +195,7 @@ export default function Visitantes() {
         address: "",
         invited_by: "",
         status: "visitante",
+        assistance_group_id: "",
       });
 
       const { data } = await supabase
@@ -279,7 +297,7 @@ export default function Visitantes() {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-card">
                       <SelectItem value="visitante">Visitante</SelectItem>
                       <SelectItem value="interessado">Interessado</SelectItem>
                       <SelectItem value="em_acompanhamento">
@@ -290,6 +308,27 @@ export default function Visitantes() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assistance_group_id">Grupo de Assistência</Label>
+                <Select
+                  value={formData.assistance_group_id}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, assistance_group_id: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um grupo" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="">Nenhum</SelectItem>
+                    {assistanceGroups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <Button
                 type="submit"

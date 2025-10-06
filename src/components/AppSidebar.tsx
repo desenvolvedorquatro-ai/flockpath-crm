@@ -1,4 +1,4 @@
-import { Home, Users, Building2, UserCog, UsersRound, Settings, LogOut } from "lucide-react";
+import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -9,38 +9,25 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import logoAprisco from "@/assets/logo-aprisco.png";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Visitantes", url: "/visitantes", icon: Users },
+  { title: "Regiões", url: "/regioes", icon: MapPin },
+  { title: "Áreas", url: "/areas", icon: Map },
   { title: "Igrejas", url: "/igrejas", icon: Building2 },
   { title: "Grupos", url: "/grupos", icon: UsersRound },
   { title: "Usuários", url: "/usuarios", icon: UserCog },
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
-
   return (
     <Sidebar className="border-r border-border bg-sidebar">
       <SidebarContent>
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            {!isCollapsed && (
-              <div>
-                <h1 className="font-bold text-lg text-sidebar-foreground">Igreja CRM</h1>
-                <p className="text-xs text-muted-foreground">Gestão Pastoral</p>
-              </div>
-            )}
-          </div>
+        <div className="p-6 flex items-center justify-center">
+          <img src={logoAprisco} alt="APRISCO" className="h-12" />
         </div>
 
         <SidebarGroup>
@@ -52,12 +39,13 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
+                      end
                       className={({ isActive }) =>
-                        isActive ? "sidebar-item-active" : ""
+                        isActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""
                       }
                     >
                       <item.icon className="w-5 h-5" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -72,9 +60,14 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/configuracoes">
+                  <NavLink 
+                    to="/configuracoes"
+                    className={({ isActive }) =>
+                      isActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""
+                    }
+                  >
                     <Settings className="w-5 h-5" />
-                    {!isCollapsed && <span>Configurações</span>}
+                    <span>Configurações</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -82,20 +75,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="p-4">
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2"
-          onClick={() => {
-            // Logout logic will be implemented
-            console.log("Logout");
-          }}
-        >
-          <LogOut className="w-4 h-4" />
-          {!isCollapsed && <span>Sair</span>}
-        </Button>
-      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -1,6 +1,7 @@
 import { Building2, Plus, Search, Edit, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,9 +11,15 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 type Church = Tables<"churches">;
+type Region = Tables<"regions">;
+type Area = Tables<"areas">;
+type User = { id: string; email: string };
 
 export default function Igrejas() {
   const [churches, setChurches] = useState<Church[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [pastors, setPastors] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -28,11 +35,37 @@ export default function Igrejas() {
     address: "",
     city: "",
     state: "",
+    region_id: "",
+    area_id: "",
+    pastor_id: "",
   });
 
   useEffect(() => {
     fetchChurches();
+    fetchRegions();
+    fetchAreas();
+    fetchPastors();
   }, []);
+
+  const fetchRegions = async () => {
+    const { data } = await supabase.from("regions").select("*").order("name");
+    setRegions(data || []);
+  };
+
+  const fetchAreas = async () => {
+    const { data } = await supabase.from("areas").select("*").order("name");
+    setAreas(data || []);
+  };
+
+  const fetchPastors = async () => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "pastor");
+
+    const pastorsList = data?.map(r => ({ id: r.user_id, email: r.user_id })) || [];
+    setPastors(pastorsList);
+  };
 
   const fetchChurches = async () => {
     try {
@@ -114,6 +147,9 @@ export default function Igrejas() {
       address: "",
       city: "",
       state: "",
+      region_id: "",
+      area_id: "",
+      pastor_id: "",
     });
     setEditingChurch(null);
   };
@@ -128,9 +164,16 @@ export default function Igrejas() {
       address: church.address || "",
       city: church.city || "",
       state: church.state || "",
+      region_id: church.region_id || "",
+      area_id: church.area_id || "",
+      pastor_id: church.pastor_id || "",
     });
     setIsDialogOpen(true);
   };
+
+  const filteredAreas = areas.filter(a => 
+    !formData.region_id || a.region_id === formData.region_id
+  );
 
   const filteredChurches = churches.filter((church) =>
     church.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -172,6 +215,57 @@ export default function Igrejas() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="region_id">Região</Label>
+                    <Select
+                      value={formData.region_id}
+                      onValueChange={(value) => setFormData({ ...formData, region_id: value, area_id: "" })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma região" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        <SelectItem value="">Nenhuma</SelectItem>
+                        {regions.map(r => (
+                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="area_id">Área</Label>
+                    <Select
+                      value={formData.area_id}
+                      onValueChange={(value) => setFormData({ ...formData, area_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma área" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        <SelectItem value="">Nenhuma</SelectItem>
+                        {filteredAreas.map(a => (
+                          <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="pastor_id">Pastor Responsável</Label>
+                    <Select
+                      value={formData.pastor_id}
+                      onValueChange={(value) => setFormData({ ...formData, pastor_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um pastor" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        <SelectItem value="">Nenhum</SelectItem>
+                        {pastors.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.email}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="pastor_name">Nome do Pastor</Label>

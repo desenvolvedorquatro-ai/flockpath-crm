@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      areas: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          pastor_id: string | null
+          region_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          pastor_id?: string | null
+          region_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          pastor_id?: string | null
+          region_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "areas_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistance_groups: {
         Row: {
           church_id: string
@@ -22,6 +57,7 @@ export type Database = {
           id: string
           leader_id: string | null
           name: string
+          responsible_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -31,6 +67,7 @@ export type Database = {
           id?: string
           leader_id?: string | null
           name: string
+          responsible_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -40,6 +77,7 @@ export type Database = {
           id?: string
           leader_id?: string | null
           name?: string
+          responsible_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -84,41 +122,65 @@ export type Database = {
       churches: {
         Row: {
           address: string | null
+          area_id: string | null
           city: string | null
           created_at: string | null
           email: string | null
           id: string
           name: string
+          pastor_id: string | null
           pastor_name: string | null
           phone: string | null
+          region_id: string | null
           state: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
+          area_id?: string | null
           city?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           name: string
+          pastor_id?: string | null
           pastor_name?: string | null
           phone?: string | null
+          region_id?: string | null
           state?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
+          area_id?: string | null
           city?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           name?: string
+          pastor_id?: string | null
           pastor_name?: string | null
           phone?: string | null
+          region_id?: string | null
           state?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "churches_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "churches_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -192,6 +254,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      regions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          pastor_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          pastor_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          pastor_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -302,6 +388,7 @@ export type Database = {
       visitors: {
         Row: {
           address: string | null
+          assistance_group_id: string | null
           church_id: string
           created_at: string | null
           email: string | null
@@ -317,6 +404,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          assistance_group_id?: string | null
           church_id: string
           created_at?: string | null
           email?: string | null
@@ -332,6 +420,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          assistance_group_id?: string | null
           church_id?: string
           created_at?: string | null
           email?: string | null
@@ -346,6 +435,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "visitors_assistance_group_id_fkey"
+            columns: ["assistance_group_id"]
+            isOneToOne: false
+            referencedRelation: "assistance_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "visitors_church_id_fkey"
             columns: ["church_id"]

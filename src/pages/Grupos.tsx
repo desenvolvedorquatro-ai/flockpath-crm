@@ -16,10 +16,12 @@ type AssistanceGroup = Tables<"assistance_groups"> & {
 };
 
 type Church = Tables<"churches">;
+type User = { id: string; email: string };
 
 export default function Grupos() {
   const [groups, setGroups] = useState<AssistanceGroup[]>([]);
   const [churches, setChurches] = useState<Church[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -31,11 +33,13 @@ export default function Grupos() {
     name: "",
     description: "",
     church_id: "",
+    responsible_id: "",
   });
 
   useEffect(() => {
     fetchGroups();
     fetchChurches();
+    fetchUsers();
   }, []);
 
   const fetchChurches = async () => {
@@ -55,6 +59,15 @@ export default function Grupos() {
       });
     }
   };
+
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("profiles").select("id, email:id");
+    setUsers(data?.map(u => ({ id: u.id, email: u.id })) || []);
+  };
+
+  const filteredUsers = users.filter(u =>
+    !formData.church_id || churches.find(c => c.id === formData.church_id)
+  );
 
   const fetchGroups = async () => {
     try {
@@ -132,6 +145,7 @@ export default function Grupos() {
       name: "",
       description: "",
       church_id: "",
+      responsible_id: "",
     });
     setEditingGroup(null);
   };
@@ -142,6 +156,7 @@ export default function Grupos() {
       name: group.name,
       description: group.description || "",
       church_id: group.church_id,
+      responsible_id: group.responsible_id || "",
     });
     setIsDialogOpen(true);
   };
@@ -194,10 +209,29 @@ export default function Grupos() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma igreja" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-card">
                       {churches.map((church) => (
                         <SelectItem key={church.id} value={church.id}>
                           {church.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="responsible_id">Responsável</Label>
+                  <Select
+                    value={formData.responsible_id}
+                    onValueChange={(value) => setFormData({ ...formData, responsible_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um responsável" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card">
+                      <SelectItem value="">Nenhum</SelectItem>
+                      {filteredUsers.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.email}
                         </SelectItem>
                       ))}
                     </SelectContent>
