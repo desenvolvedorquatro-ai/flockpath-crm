@@ -1,4 +1,4 @@
-import { UserCog, Plus, Search, Shield } from "lucide-react";
+import { UserCog, Plus, Search, Shield, Edit, Trash2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -44,9 +44,23 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedChurchId, setSelectedChurchId] = useState("");
+  const [newUserData, setNewUserData] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    phone: "",
+  });
+  const [editUserData, setEditUserData] = useState({
+    full_name: "",
+    phone: "",
+  });
+  const [newPassword, setNewPassword] = useState("");
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
 
@@ -161,6 +175,141 @@ export default function Usuarios() {
     setIsDialogOpen(true);
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      // Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newUserData.email,
+        password: newUserData.password,
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Atualizar perfil
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            full_name: newUserData.full_name,
+            phone: newUserData.phone,
+          })
+          .eq("id", authData.user.id);
+
+        if (profileError) throw profileError;
+      }
+
+      toast({ title: "Usuário criado com sucesso!" });
+      setIsCreateDialogOpen(false);
+      setNewUserData({ email: "", password: "", full_name: "", phone: "" });
+      fetchProfiles();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditDialog = (userId: string) => {
+    const user = profiles.find(p => p.id === userId);
+    if (user) {
+      setSelectedUserId(userId);
+      setEditUserData({
+        full_name: user.full_name || "",
+        phone: user.phone || "",
+      });
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserId) return;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editUserData.full_name,
+          phone: editUserData.phone,
+        })
+        .eq("id", selectedUserId);
+
+      if (error) throw error;
+
+      toast({ title: "Dados atualizados com sucesso!" });
+      setIsEditDialogOpen(false);
+      fetchProfiles();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar dados",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openPasswordDialog = (userId: string) => {
+    setSelectedUserId(userId);
+    setNewPassword("");
+    setIsPasswordDialogOpen(true);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserId || !newPassword) return;
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter no mínimo 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(
+        selectedUserId,
+        { password: newPassword }
+      );
+
+      if (error) throw error;
+
+      toast({ title: "Senha alterada com sucesso!" });
+      setIsPasswordDialogOpen(false);
+      setNewPassword("");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao alterar senha",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) throw error;
+
+      toast({ title: "Usuário excluído com sucesso!" });
+      fetchProfiles();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredProfiles = profiles.filter((profile) =>
     profile.full_name.toLowerCase().includes(search.toLowerCase()) ||
     profile.email?.toLowerCase().includes(search.toLowerCase())
@@ -190,6 +339,10 @@ export default function Usuarios() {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Usuários</h1>
           <p className="text-sm md:text-base text-muted-foreground">Gerencie usuários e permissões do sistema</p>
         </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Novo Usuário
+        </Button>
       </div>
 
       <div className="glass-card rounded-2xl p-6 mb-6">
@@ -241,14 +394,39 @@ export default function Usuarios() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openAssignDialog(profile.id)}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Atribuir Função
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(profile.id)}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openPasswordDialog(profile.id)}
+                      >
+                        <Lock className="w-4 h-4 mr-2" />
+                        Senha
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openAssignDialog(profile.id)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Função
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteUser(profile.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -266,6 +444,127 @@ export default function Usuarios() {
         </div>
       )}
 
+      {/* Dialog Criar Usuário */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar Novo Usuário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateUser} className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={newUserData.email}
+                onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Senha *</Label>
+              <Input
+                id="password"
+                type="password"
+                value={newUserData.password}
+                onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                required
+                minLength={6}
+              />
+            </div>
+            <div>
+              <Label htmlFor="full_name">Nome Completo *</Label>
+              <Input
+                id="full_name"
+                value={newUserData.full_name}
+                onChange={(e) => setNewUserData({ ...newUserData, full_name: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Telefone</Label>
+              <Input
+                id="phone"
+                value={newUserData.phone}
+                onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Criar Usuário</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Editar Usuário */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Dados do Usuário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditUser} className="space-y-4">
+            <div>
+              <Label htmlFor="edit_full_name">Nome Completo *</Label>
+              <Input
+                id="edit_full_name"
+                value={editUserData.full_name}
+                onChange={(e) => setEditUserData({ ...editUserData, full_name: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_phone">Telefone</Label>
+              <Input
+                id="edit_phone"
+                value={editUserData.phone}
+                onChange={(e) => setEditUserData({ ...editUserData, phone: e.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Salvar</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Alterar Senha */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar Senha do Usuário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <Label htmlFor="new_password">Nova Senha *</Label>
+              <Input
+                id="new_password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Mínimo de 6 caracteres
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Alterar Senha</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Atribuir Função */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
         <DialogContent>
           <DialogHeader>
