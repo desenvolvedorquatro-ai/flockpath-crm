@@ -136,7 +136,7 @@ export default function Visitantes() {
           .from("visitors")
           .select(`
             *,
-            assistance_groups(name),
+            assistance_groups!visitors_assistance_group_id_fkey(name),
             visitor_interactions(interaction_type, interaction_date)
           `)
           .order("created_at", { ascending: false });
@@ -201,7 +201,7 @@ export default function Visitantes() {
             .from("visitors")
             .select(`
               *,
-              assistance_groups(name),
+              assistance_groups!visitors_assistance_group_id_fkey(name),
               visitor_interactions(interaction_type, interaction_date)
             `)
             .in("church_id", churchIds)
@@ -260,7 +260,7 @@ export default function Visitantes() {
             .from("visitors")
             .select(`
               *,
-              assistance_groups(name),
+              assistance_groups!visitors_assistance_group_id_fkey(name),
               visitor_interactions(interaction_type, interaction_date)
             `)
             .eq("church_id", profile.church_id)
@@ -425,7 +425,7 @@ export default function Visitantes() {
       email: formData.email || null,
       address: formData.address || null,
       invited_by: formData.invited_by || null,
-      status: formData.status as "visitante" | "interessado" | "em_acompanhamento" | "novo_membro" | "engajado",
+      status: formData.status as "visitante" | "interessado" | "em_assistencia" | "batizado",
       church_id: churchId,
       assistance_group_id: formData.assistance_group_id && formData.assistance_group_id !== "none" ? formData.assistance_group_id : null,
       data_nascimento: dataNascimento ? format(dataNascimento, "yyyy-MM-dd") : null,
