@@ -51,6 +51,7 @@ export default function Usuarios() {
   const [regions, setRegions] = useState<Region[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
   const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
+  const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -343,6 +344,13 @@ export default function Usuarios() {
         setFilteredAreas([]);
       }
 
+      // Filter churches based on selected area
+      if (user.area_id) {
+        setFilteredChurches(churches.filter(church => church.area_id === user.area_id));
+      } else {
+        setFilteredChurches([]);
+      }
+
       // Buscar igrejas adicionais do usuário
       const { data: userChurches } = await supabase
         .from("user_churches")
@@ -432,12 +440,28 @@ export default function Usuarios() {
     }
 
     try {
-      const { error } = await supabase.auth.admin.updateUserById(
-        selectedUserId,
-        { password: newPassword }
-      );
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Sessão não encontrada");
+      }
 
-      if (error) throw error;
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          userId: selectedUserId,
+          newPassword: newPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Erro ao atualizar senha');
+      }
 
       toast({ title: "Senha alterada com sucesso!" });
       setIsPasswordDialogOpen(false);
@@ -777,37 +801,19 @@ export default function Usuarios() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="church_id">Igreja Principal *</Label>
-              <Select
-                value={newUserData.church_id}
-                onValueChange={(value) => setNewUserData({ ...newUserData, church_id: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma igreja" />
-                </SelectTrigger>
-                <SelectContent>
-                  {churches.map((church) => (
-                    <SelectItem key={church.id} value={church.id}>
-                      {church.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="region_id">Região</Label>
                 <Select
                   value={newUserData.region_id || undefined}
                   onValueChange={(value) => {
-                    setNewUserData({ ...newUserData, region_id: value, area_id: "" });
+                    setNewUserData({ ...newUserData, region_id: value, area_id: "", church_id: "" });
                     if (value) {
                       setFilteredAreas(areas.filter(area => area.region_id === value));
+                      setFilteredChurches([]);
                     } else {
                       setFilteredAreas([]);
+                      setFilteredChurches([]);
                     }
                   }}
                 >
@@ -828,7 +834,14 @@ export default function Usuarios() {
                 <Label htmlFor="area_id">Área</Label>
                 <Select
                   value={newUserData.area_id || undefined}
-                  onValueChange={(value) => setNewUserData({ ...newUserData, area_id: value })}
+                  onValueChange={(value) => {
+                    setNewUserData({ ...newUserData, area_id: value, church_id: "" });
+                    if (value) {
+                      setFilteredChurches(churches.filter(church => church.area_id === value));
+                    } else {
+                      setFilteredChurches([]);
+                    }
+                  }}
                   disabled={!newUserData.region_id}
                 >
                   <SelectTrigger>
@@ -843,6 +856,27 @@ export default function Usuarios() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="church_id">Igreja Principal *</Label>
+              <Select
+                value={newUserData.church_id}
+                onValueChange={(value) => setNewUserData({ ...newUserData, church_id: value })}
+                required
+                disabled={!newUserData.area_id}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma igreja" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredChurches.map((church) => (
+                    <SelectItem key={church.id} value={church.id}>
+                      {church.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -944,34 +978,13 @@ export default function Usuarios() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit_phone">Telefone</Label>
-                <Input
-                  id="edit_phone"
-                  value={editUserData.phone}
-                  onChange={(e) => setEditUserData({ ...editUserData, phone: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_church_id">Igreja Principal *</Label>
-                <Select
-                  value={editUserData.church_id}
-                  onValueChange={(value) => setEditUserData({ ...editUserData, church_id: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma igreja" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {churches.map((church) => (
-                      <SelectItem key={church.id} value={church.id}>
-                        {church.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="edit_phone">Telefone</Label>
+              <Input
+                id="edit_phone"
+                value={editUserData.phone}
+                onChange={(e) => setEditUserData({ ...editUserData, phone: e.target.value })}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -980,11 +993,13 @@ export default function Usuarios() {
                 <Select
                   value={editUserData.region_id || undefined}
                   onValueChange={(value) => {
-                    setEditUserData({ ...editUserData, region_id: value, area_id: "" });
+                    setEditUserData({ ...editUserData, region_id: value, area_id: "", church_id: "" });
                     if (value) {
                       setFilteredAreas(areas.filter(area => area.region_id === value));
+                      setFilteredChurches([]);
                     } else {
                       setFilteredAreas([]);
+                      setFilteredChurches([]);
                     }
                   }}
                 >
@@ -1005,7 +1020,14 @@ export default function Usuarios() {
                 <Label htmlFor="edit_area_id">Área</Label>
                 <Select
                   value={editUserData.area_id || undefined}
-                  onValueChange={(value) => setEditUserData({ ...editUserData, area_id: value })}
+                  onValueChange={(value) => {
+                    setEditUserData({ ...editUserData, area_id: value, church_id: "" });
+                    if (value) {
+                      setFilteredChurches(churches.filter(church => church.area_id === value));
+                    } else {
+                      setFilteredChurches([]);
+                    }
+                  }}
                   disabled={!editUserData.region_id}
                 >
                   <SelectTrigger>
@@ -1020,6 +1042,27 @@ export default function Usuarios() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit_church_id">Igreja Principal *</Label>
+              <Select
+                value={editUserData.church_id}
+                onValueChange={(value) => setEditUserData({ ...editUserData, church_id: value })}
+                required
+                disabled={!editUserData.area_id}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma igreja" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredChurches.map((church) => (
+                    <SelectItem key={church.id} value={church.id}>
+                      {church.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center space-x-2">
