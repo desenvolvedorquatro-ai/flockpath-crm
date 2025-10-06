@@ -34,6 +34,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "@/hooks/use-toast";
 import { VisitorInteractions } from "@/components/VisitorInteractions";
+import { ModernHeader } from "@/components/ModernHeader";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -486,7 +487,6 @@ export default function Visitantes() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <div className="glass-card rounded-2xl p-4 md:p-6 mb-6">
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
