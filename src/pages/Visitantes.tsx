@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2 } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -106,6 +107,7 @@ export default function Visitantes() {
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [churchId, setChurchId] = useState<string | null>(null);
   const [view, setView] = useState<"card" | "list">("list");
+  const [userHasNoChurch, setUserHasNoChurch] = useState(false);
 
   // Estados para admin selecionar região, área e igreja
   const [regions, setRegions] = useState<Region[]>([]);
@@ -292,6 +294,7 @@ export default function Visitantes() {
   // Carregar grupos quando igreja é selecionada (para admin)
   useEffect(() => {
     if (churchId && isAdmin) {
+      console.log("[VISITANTES] Carregando grupos para igreja (admin):", churchId);
       const loadChurchGroups = async () => {
         const { data: groupsData } = await supabase
           .from("assistance_groups")
@@ -299,12 +302,55 @@ export default function Visitantes() {
           .eq("church_id", churchId)
           .order("name");
 
+        console.log("[VISITANTES] Grupos carregados para admin:", groupsData);
         setAssistanceGroups(groupsData || []);
       };
 
       loadChurchGroups();
     }
   }, [churchId, isAdmin]);
+
+  // Recarregar church_id do usuário quando o dialog de cadastro abre
+  useEffect(() => {
+    if (!user || isAdmin || isPastor || !isDialogOpen) return;
+
+    console.log("[VISITANTES] Dialog aberto, recarregando church_id do usuário...");
+    
+    const reloadUserChurch = async () => {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("church_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("[VISITANTES] Erro ao recarregar church_id:", error);
+        return;
+      }
+
+      console.log("[VISITANTES] Church ID recarregado:", profile?.church_id);
+
+      if (profile?.church_id) {
+        setChurchId(profile.church_id);
+        setUserHasNoChurch(false);
+
+        // Recarregar grupos de assistência para a igreja do usuário
+        const { data: groupsData } = await supabase
+          .from("assistance_groups")
+          .select("id, name")
+          .eq("church_id", profile.church_id)
+          .order("name");
+
+        console.log("[VISITANTES] Grupos carregados para usuário:", groupsData);
+        setAssistanceGroups(groupsData || []);
+      } else {
+        setUserHasNoChurch(true);
+        console.warn("[VISITANTES] Usuário sem church_id configurado");
+      }
+    };
+
+    reloadUserChurch();
+  }, [user, isAdmin, isPastor, isDialogOpen]);
 
   useEffect(() => {
     let filtered = visitors;
@@ -406,6 +452,18 @@ export default function Visitantes() {
         actionText="Novo Visitante"
         colorScheme="red-coral"
       />
+
+      {/* Alerta quando usuário não tem igreja configurada */}
+      {userHasNoChurch && !isAdmin && !isPastor && (
+        <div className="mb-6">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Sua igreja não está configurada. Por favor, solicite a um administrador que configure sua igreja principal nas configurações de usuário.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
