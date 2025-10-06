@@ -92,6 +92,8 @@ export default function Usuarios() {
     if (!roleLoading && isAdmin) {
       fetchProfiles();
       fetchChurches();
+      fetchRegions();
+      fetchAreas();
     }
   }, [roleLoading, isAdmin]);
 
@@ -107,6 +109,42 @@ export default function Usuarios() {
     } catch (error: any) {
       toast({
         title: "Erro ao carregar igrejas",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchRegions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("regions")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setRegions(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar regiões",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchAreas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("areas")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setAreas(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar áreas",
         description: error.message,
         variant: "destructive",
       });
@@ -763,16 +801,20 @@ export default function Usuarios() {
               <div>
                 <Label htmlFor="region_id">Região</Label>
                 <Select
-                  value={newUserData.region_id}
+                  value={newUserData.region_id || undefined}
                   onValueChange={(value) => {
                     setNewUserData({ ...newUserData, region_id: value, area_id: "" });
+                    if (value) {
+                      setFilteredAreas(areas.filter(area => area.region_id === value));
+                    } else {
+                      setFilteredAreas([]);
+                    }
                   }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma região" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma</SelectItem>
                     {regions.map((region) => (
                       <SelectItem key={region.id} value={region.id}>
                         {region.name}
@@ -785,7 +827,7 @@ export default function Usuarios() {
               <div>
                 <Label htmlFor="area_id">Área</Label>
                 <Select
-                  value={newUserData.area_id}
+                  value={newUserData.area_id || undefined}
                   onValueChange={(value) => setNewUserData({ ...newUserData, area_id: value })}
                   disabled={!newUserData.region_id}
                 >
@@ -793,7 +835,6 @@ export default function Usuarios() {
                     <SelectValue placeholder="Selecione uma área" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma</SelectItem>
                     {filteredAreas.map((area) => (
                       <SelectItem key={area.id} value={area.id}>
                         {area.name}
@@ -937,7 +978,7 @@ export default function Usuarios() {
               <div>
                 <Label htmlFor="edit_region_id">Região</Label>
                 <Select
-                  value={editUserData.region_id}
+                  value={editUserData.region_id || undefined}
                   onValueChange={(value) => {
                     setEditUserData({ ...editUserData, region_id: value, area_id: "" });
                     if (value) {
@@ -951,7 +992,6 @@ export default function Usuarios() {
                     <SelectValue placeholder="Selecione uma região" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma</SelectItem>
                     {regions.map((region) => (
                       <SelectItem key={region.id} value={region.id}>
                         {region.name}
@@ -964,7 +1004,7 @@ export default function Usuarios() {
               <div>
                 <Label htmlFor="edit_area_id">Área</Label>
                 <Select
-                  value={editUserData.area_id}
+                  value={editUserData.area_id || undefined}
                   onValueChange={(value) => setEditUserData({ ...editUserData, area_id: value })}
                   disabled={!editUserData.region_id}
                 >
@@ -972,7 +1012,6 @@ export default function Usuarios() {
                     <SelectValue placeholder="Selecione uma área" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma</SelectItem>
                     {filteredAreas.map((area) => (
                       <SelectItem key={area.id} value={area.id}>
                         {area.name}
