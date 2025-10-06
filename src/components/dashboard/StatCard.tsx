@@ -10,9 +10,10 @@ interface StatCardProps {
     isPositive: boolean;
   };
   color?: string;
+  iconColor?: string;
 }
 
-export function StatCard({ title, value, icon: Icon, trend, color = "primary" }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, trend, color = "primary", iconColor }: StatCardProps) {
   return (
     <Card className="stat-card group">
       <div className="flex items-start justify-between gap-2">
@@ -25,7 +26,14 @@ export function StatCard({ title, value, icon: Icon, trend, color = "primary" }:
             </p>
           )}
         </div>
-        <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div 
+          className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
+          style={
+            iconColor
+              ? { background: `linear-gradient(135deg, ${iconColor}, ${iconColor}dd)` }
+              : { background: 'linear-gradient(to-br, hsl(var(--primary)), hsl(var(--primary-glow)))' }
+          }
+        >
           <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
         </div>
       </div>

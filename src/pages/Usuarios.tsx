@@ -419,12 +419,15 @@ export default function Usuarios() {
       }
 
       toast({ title: "Dados atualizados com sucesso!" });
+      
+      // AGUARDAR fetchProfiles completar antes de fechar
+      await fetchProfiles();
+      
       setIsEditDialogOpen(false);
       setSelectedUserId(null);
       setEditUserData({ full_name: "", phone: "", cpf: "", church_id: "", region_id: "", area_id: "" });
       setEditMultiChurchAccess(false);
       setEditSelectedChurches([]);
-      fetchProfiles();
     } catch (error: any) {
       toast({
         title: "Erro ao atualizar dados",

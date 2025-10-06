@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,9 +38,10 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "@/hooks/use-toast";
 import { VisitorInteractions } from "@/components/VisitorInteractions";
 import { ModernHeader } from "@/components/ModernHeader";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { statusColors, statusLabels, statusOptions } from "@/lib/visitorStatus";
 
 interface Visitor {
   id: string;
@@ -53,6 +54,9 @@ interface Visitor {
   assistance_group_id: string | null;
   data_nascimento: string | null;
   primeira_visita: string | null;
+  assistance_group_name?: string | null;
+  last_interaction_type?: string | null;
+  last_interaction_date?: string | null;
 }
 
 interface AssistanceGroup {
@@ -78,20 +82,12 @@ interface Church {
   region_id: string | null;
 }
 
-const statusColors: Record<string, string> = {
-  visitante: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  interessado: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  em_acompanhamento: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  novo_membro: "bg-green-500/10 text-green-500 border-green-500/20",
-  engajado: "bg-pink-500/10 text-pink-500 border-pink-500/20",
-};
-
-const statusLabels: Record<string, string> = {
-  visitante: "Visitante",
-  interessado: "Interessado",
-  em_acompanhamento: "Em Acompanhamento",
-  novo_membro: "Novo Membro",
-  engajado: "Engajado",
+const interactionTypeLabels: Record<string, string> = {
+  visita: "Visita",
+  ligacao: "Ligação",
+  mensagem: "Mensagem",
+  reuniao: "Reunião",
+  outro: "Outro",
 };
 
 export default function Visitantes() {
@@ -135,10 +131,14 @@ export default function Visitantes() {
 
     const fetchChurchAndVisitors = async () => {
       if (isAdmin) {
-        // Admin vê todos os visitantes e grupos
+        // Admin vê todos os visitantes e grupos com última interação e grupo
         const { data, error } = await supabase
           .from("visitors")
-          .select("*")
+          .select(`
+            *,
+            assistance_groups(name),
+            visitor_interactions(interaction_type, interaction_date)
+          `)
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -148,8 +148,18 @@ export default function Visitantes() {
             variant: "destructive",
           });
         } else {
-          setVisitors(data || []);
-          setFilteredVisitors(data || []);
+          // Processar os dados para incluir último tipo de interação e nome do grupo
+          const processedData = (data || []).map((v: any) => {
+            const lastInteraction = v.visitor_interactions?.[0] || null;
+            return {
+              ...v,
+              assistance_group_name: v.assistance_groups?.name || null,
+              last_interaction_type: lastInteraction?.interaction_type || null,
+              last_interaction_date: lastInteraction?.interaction_date || null,
+            };
+          });
+          setVisitors(processedData);
+          setFilteredVisitors(processedData);
         }
 
         const { data: groupsData } = await supabase
@@ -189,7 +199,11 @@ export default function Visitantes() {
           
           const { data, error } = await supabase
             .from("visitors")
-            .select("*")
+            .select(`
+              *,
+              assistance_groups(name),
+              visitor_interactions(interaction_type, interaction_date)
+            `)
             .in("church_id", churchIds)
             .order("created_at", { ascending: false });
 
@@ -200,8 +214,17 @@ export default function Visitantes() {
               variant: "destructive",
             });
           } else {
-            setVisitors(data || []);
-            setFilteredVisitors(data || []);
+            const processedData = (data || []).map((v: any) => {
+              const lastInteraction = v.visitor_interactions?.[0] || null;
+              return {
+                ...v,
+                assistance_group_name: v.assistance_groups?.name || null,
+                last_interaction_type: lastInteraction?.interaction_type || null,
+                last_interaction_date: lastInteraction?.interaction_date || null,
+              };
+            });
+            setVisitors(processedData);
+            setFilteredVisitors(processedData);
           }
 
           const { data: groupsData } = await supabase
@@ -235,7 +258,11 @@ export default function Visitantes() {
 
           const { data, error } = await supabase
             .from("visitors")
-            .select("*")
+            .select(`
+              *,
+              assistance_groups(name),
+              visitor_interactions(interaction_type, interaction_date)
+            `)
             .eq("church_id", profile.church_id)
             .order("created_at", { ascending: false });
 
@@ -246,8 +273,17 @@ export default function Visitantes() {
               variant: "destructive",
             });
           } else {
-            setVisitors(data || []);
-            setFilteredVisitors(data || []);
+            const processedData = (data || []).map((v: any) => {
+              const lastInteraction = v.visitor_interactions?.[0] || null;
+              return {
+                ...v,
+                assistance_group_name: v.assistance_groups?.name || null,
+                last_interaction_type: lastInteraction?.interaction_type || null,
+                last_interaction_date: lastInteraction?.interaction_date || null,
+              };
+            });
+            setVisitors(processedData);
+            setFilteredVisitors(processedData);
           }
 
           const { data: groupsData } = await supabase
@@ -666,14 +702,12 @@ export default function Visitantes() {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-card">
-                      <SelectItem value="visitante">Visitante</SelectItem>
-                      <SelectItem value="interessado">Interessado</SelectItem>
-                      <SelectItem value="em_acompanhamento">
-                        Em Acompanhamento
-                      </SelectItem>
-                      <SelectItem value="novo_membro">Novo Membro</SelectItem>
-                      <SelectItem value="engajado">Engajado</SelectItem>
+                     <SelectContent className="bg-card">
+                      {statusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -727,11 +761,11 @@ export default function Visitantes() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="visitante">Visitante</SelectItem>
-                <SelectItem value="interessado">Interessado</SelectItem>
-                <SelectItem value="em_acompanhamento">Em Acompanhamento</SelectItem>
-                <SelectItem value="novo_membro">Novo Membro</SelectItem>
-                <SelectItem value="engajado">Engajado</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -756,65 +790,84 @@ export default function Visitantes() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[150px]">Nome</TableHead>
-                  <TableHead className="hidden md:table-cell min-w-[200px]">Contato</TableHead>
+                  <TableHead className="hidden sm:table-cell min-w-[130px]">Grupo</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[160px]">Última Interação</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[100px]">Aniversário</TableHead>
                   <TableHead className="min-w-[120px]">Status</TableHead>
-                  <TableHead className="hidden lg:table-cell min-w-[140px]">Primeira Visita</TableHead>
-                  <TableHead className="hidden xl:table-cell min-w-[120px]">Convidado por</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVisitors.map((visitor) => (
-                  <TableRow key={visitor.id}>
-                    <TableCell className="font-medium">{visitor.full_name}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <div className="flex flex-col gap-1 text-sm">
-                        {visitor.email && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="w-3 h-3" />
-                            <span className="truncate max-w-[150px]">{visitor.email}</span>
+                {filteredVisitors.map((visitor) => {
+                  const birthday = visitor.data_nascimento ? new Date(visitor.data_nascimento) : null;
+                  const today = new Date();
+                  const daysUntilBirthday = birthday 
+                    ? differenceInDays(
+                        new Date(today.getFullYear(), birthday.getMonth(), birthday.getDate()),
+                        today
+                      )
+                    : null;
+                  const isUpcomingBirthday = daysUntilBirthday !== null && daysUntilBirthday >= 0 && daysUntilBirthday <= 7;
+
+                  return (
+                    <TableRow key={visitor.id}>
+                      <TableCell className="font-medium">{visitor.full_name}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                        {visitor.assistance_group_name || "-"}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                        {visitor.last_interaction_type ? (
+                          <div className="flex flex-col gap-1">
+                            <span>{interactionTypeLabels[visitor.last_interaction_type] || visitor.last_interaction_type}</span>
+                            {visitor.last_interaction_date && (
+                              <span className="text-xs opacity-70">
+                                {format(new Date(visitor.last_interaction_date), "dd/MM/yyyy", { locale: ptBR })}
+                              </span>
+                            )}
                           </div>
+                        ) : (
+                          "-"
                         )}
-                        {visitor.phone && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="w-3 h-3" />
-                            {visitor.phone}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {birthday ? (
+                          <div className="flex items-center gap-2">
+                            {isUpcomingBirthday && <Cake className="w-4 h-4 text-green-500" />}
+                            <span className={cn(
+                              "text-sm",
+                              isUpcomingBirthday ? "text-green-600 font-semibold" : "text-muted-foreground"
+                            )}>
+                              {format(birthday, "dd/MM")}
+                            </span>
                           </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`${statusColors[visitor.status]} text-xs`}
-                      >
-                        {statusLabels[visitor.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(visitor.first_visit_date).toLocaleDateString("pt-BR")}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                      {visitor.invited_by || "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedVisitor(visitor);
-                          setIsInteractionsDialogOpen(true);
-                        }}
-                      >
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Interações
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={`${statusColors[visitor.status]} text-xs`}
+                        >
+                          {statusLabels[visitor.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedVisitor(visitor);
+                            setIsInteractionsDialogOpen(true);
+                          }}
+                        >
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Interações
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

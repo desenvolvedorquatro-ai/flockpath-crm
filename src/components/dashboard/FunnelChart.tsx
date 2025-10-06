@@ -29,7 +29,7 @@ export function FunnelChart({ stages }: FunnelChartProps) {
                 style={{
                   width: `${actualWidth}%`,
                   minHeight: "60px",
-                  background: `linear-gradient(135deg, hsl(var(--primary)) ${index * 10}%, hsl(var(--primary-glow)) ${100 - index * 5}%)`,
+                  background: `linear-gradient(135deg, ${stage.color} 0%, ${stage.color}dd 100%)`,
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
