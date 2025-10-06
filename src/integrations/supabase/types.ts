@@ -220,6 +220,7 @@ export type Database = {
       profiles: {
         Row: {
           church_id: string | null
+          cpf: string | null
           created_at: string | null
           email: string | null
           full_name: string
@@ -229,6 +230,7 @@ export type Database = {
         }
         Insert: {
           church_id?: string | null
+          cpf?: string | null
           created_at?: string | null
           email?: string | null
           full_name: string
@@ -238,6 +240,7 @@ export type Database = {
         }
         Update: {
           church_id?: string | null
+          cpf?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string
@@ -278,6 +281,106 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      role_definitions: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          role_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          role_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          role_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      role_permissions: {
+        Row: {
+          can_create: boolean | null
+          can_delete: boolean | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          id: string
+          module: string
+          role_name: string | null
+        }
+        Insert: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          module: string
+          role_name?: string | null
+        }
+        Update: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          module?: string
+          role_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_name_fkey"
+            columns: ["role_name"]
+            isOneToOne: false
+            referencedRelation: "role_definitions"
+            referencedColumns: ["role_name"]
+          },
+        ]
+      }
+      user_churches: {
+        Row: {
+          church_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_churches_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
