@@ -31,7 +31,7 @@ interface RolePermission {
   can_delete: boolean;
 }
 
-const MODULES: ModuleName[] = ["visitantes", "igrejas", "regioes", "areas", "grupos", "usuarios", "importacao"];
+const MODULES: ModuleName[] = ["visitantes", "igrejas", "regioes", "areas", "grupos", "usuarios", "importacao", "interacoes"];
 const MODULE_LABELS: Record<ModuleName, string> = {
   visitantes: "Visitantes",
   igrejas: "Igrejas",
@@ -40,6 +40,7 @@ const MODULE_LABELS: Record<ModuleName, string> = {
   grupos: "Grupos",
   usuarios: "Usuários",
   importacao: "Importação",
+  interacoes: "Interações",
 };
 
 export default function GerenciarFuncoes() {

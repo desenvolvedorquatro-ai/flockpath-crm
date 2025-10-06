@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "./useUserRole";
 
-export type ModuleName = "visitantes" | "igrejas" | "regioes" | "areas" | "grupos" | "usuarios" | "importacao";
+export type ModuleName = "visitantes" | "igrejas" | "regioes" | "areas" | "grupos" | "usuarios" | "importacao" | "interacoes";
 export type PermissionAction = "view" | "create" | "edit" | "delete";
 
 interface Permission {

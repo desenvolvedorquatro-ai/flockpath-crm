@@ -488,12 +488,54 @@ export type Database = {
           },
         ]
       }
+      visitor_interactions: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string
+          id: string
+          interaction_date: string
+          interaction_type: string
+          updated_at: string | null
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description: string
+          id?: string
+          interaction_date?: string
+          interaction_type: string
+          updated_at?: string | null
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          id?: string
+          interaction_date?: string
+          interaction_type?: string
+          updated_at?: string | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitor_interactions_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visitors: {
         Row: {
           address: string | null
           assistance_group_id: string | null
           church_id: string
           created_at: string | null
+          data_nascimento: string | null
           email: string | null
           first_visit_date: string | null
           full_name: string
@@ -502,6 +544,7 @@ export type Database = {
           invited_by: string | null
           notes: string | null
           phone: string | null
+          primeira_visita: string | null
           status: Database["public"]["Enums"]["visitor_status"] | null
           updated_at: string | null
         }
@@ -510,6 +553,7 @@ export type Database = {
           assistance_group_id?: string | null
           church_id: string
           created_at?: string | null
+          data_nascimento?: string | null
           email?: string | null
           first_visit_date?: string | null
           full_name: string
@@ -518,6 +562,7 @@ export type Database = {
           invited_by?: string | null
           notes?: string | null
           phone?: string | null
+          primeira_visita?: string | null
           status?: Database["public"]["Enums"]["visitor_status"] | null
           updated_at?: string | null
         }
@@ -526,6 +571,7 @@ export type Database = {
           assistance_group_id?: string | null
           church_id?: string
           created_at?: string | null
+          data_nascimento?: string | null
           email?: string | null
           first_visit_date?: string | null
           full_name?: string
@@ -534,6 +580,7 @@ export type Database = {
           invited_by?: string | null
           notes?: string | null
           phone?: string | null
+          primeira_visita?: string | null
           status?: Database["public"]["Enums"]["visitor_status"] | null
           updated_at?: string | null
         }

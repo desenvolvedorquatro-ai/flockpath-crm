@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -27,10 +27,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "@/hooks/use-toast";
+import { VisitorInteractions } from "@/components/VisitorInteractions";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface Visitor {
   id: string;
@@ -41,6 +47,8 @@ interface Visitor {
   first_visit_date: string;
   invited_by: string | null;
   assistance_group_id: string | null;
+  data_nascimento: string | null;
+  primeira_visita: string | null;
 }
 
 interface AssistanceGroup {
@@ -73,6 +81,8 @@ export default function Visitantes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
+  const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [churchId, setChurchId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -84,6 +94,8 @@ export default function Visitantes() {
     status: "visitante",
     assistance_group_id: "none",
   });
+  const [dataNascimento, setDataNascimento] = useState<Date | undefined>();
+  const [primeiraVisita, setPrimeiraVisita] = useState<Date | undefined>();
 
   useEffect(() => {
     if (!user) return;
@@ -247,6 +259,8 @@ export default function Visitantes() {
       status: formData.status as "visitante" | "interessado" | "em_acompanhamento" | "novo_membro" | "engajado",
       church_id: churchId,
       assistance_group_id: formData.assistance_group_id && formData.assistance_group_id !== "none" ? formData.assistance_group_id : null,
+      data_nascimento: dataNascimento ? format(dataNascimento, "yyyy-MM-dd") : null,
+      primeira_visita: primeiraVisita ? format(primeiraVisita, "yyyy-MM-dd") : null,
     }]);
 
     if (error) {
@@ -271,6 +285,8 @@ export default function Visitantes() {
         status: "visitante",
         assistance_group_id: "none",
       });
+      setDataNascimento(undefined);
+      setPrimeiraVisita(undefined);
 
       const { data } = await supabase
         .from("visitors")
@@ -348,6 +364,69 @@ export default function Visitantes() {
                     setFormData({ ...formData, address: e.target.value })
                   }
                 />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data de Nascimento</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dataNascimento && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataNascimento ? (
+                          format(dataNascimento, "dd/MM/yyyy", { locale: ptBR })
+                        ) : (
+                          <span>Selecione uma data</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={dataNascimento}
+                        onSelect={setDataNascimento}
+                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label>Primeira Visita</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !primeiraVisita && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {primeiraVisita ? (
+                          format(primeiraVisita, "dd/MM/yyyy", { locale: ptBR })
+                        ) : (
+                          <span>Selecione uma data</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={primeiraVisita}
+                        onSelect={setPrimeiraVisita}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -463,6 +542,7 @@ export default function Visitantes() {
                   <TableHead className="min-w-[120px]">Status</TableHead>
                   <TableHead className="hidden lg:table-cell min-w-[140px]">Primeira Visita</TableHead>
                   <TableHead className="hidden xl:table-cell min-w-[120px]">Convidado por</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -502,6 +582,19 @@ export default function Visitantes() {
                     <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                       {visitor.invited_by || "-"}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedVisitor(visitor);
+                          setIsInteractionsDialogOpen(true);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Interações
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -509,6 +602,21 @@ export default function Visitantes() {
           </div>
         </div>
       )}
+
+      {/* Dialog de Interações */}
+      <Dialog open={isInteractionsDialogOpen} onOpenChange={setIsInteractionsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Interações - {selectedVisitor?.full_name}</DialogTitle>
+          </DialogHeader>
+          {selectedVisitor && (
+            <VisitorInteractions
+              visitorId={selectedVisitor.id}
+              visitorName={selectedVisitor.full_name}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
