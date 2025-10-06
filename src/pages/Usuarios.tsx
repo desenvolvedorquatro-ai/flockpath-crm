@@ -270,44 +270,23 @@ export default function Usuarios() {
     }
 
     try {
-      // Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newUserData.email,
-        password: newUserData.password,
+      // Criar usuário usando edge function (não faz logout do admin)
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: newUserData.email,
+          password: newUserData.password,
+          full_name: newUserData.full_name,
+          phone: newUserData.phone,
+          cpf: newUserData.cpf,
+          church_id: newUserData.church_id,
+          region_id: newUserData.region_id || null,
+          area_id: newUserData.area_id || null,
+          additional_churches: multiChurchAccess ? selectedChurches : [],
+        }
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Atualizar perfil
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            full_name: newUserData.full_name,
-            phone: newUserData.phone,
-            cpf: newUserData.cpf,
-            church_id: newUserData.church_id,
-            region_id: newUserData.region_id || null,
-            area_id: newUserData.area_id || null,
-          })
-          .eq("id", authData.user.id);
-
-        if (profileError) throw profileError;
-
-        // Se multi-igreja habilitado, adicionar igrejas adicionais
-        if (multiChurchAccess && selectedChurches.length > 0) {
-          const churchesToInsert = selectedChurches.map(churchId => ({
-            user_id: authData.user.id,
-            church_id: churchId,
-          }));
-
-          const { error: churchesError } = await supabase
-            .from("user_churches")
-            .insert(churchesToInsert);
-
-          if (churchesError) throw churchesError;
-        }
-      }
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Erro desconhecido ao criar usuário');
 
       toast({ title: "Usuário criado com sucesso!" });
       setIsCreateDialogOpen(false);
