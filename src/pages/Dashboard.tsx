@@ -79,10 +79,10 @@ export default function Dashboard() {
 
       // Aplicar filtros de data
       if (startDate) {
-        query = query.gte("first_visit_date", format(startDate, "yyyy-MM-dd"));
+        query = query.gte("primeira_visita", format(startDate, "yyyy-MM-dd"));
       }
       if (endDate) {
-        query = query.lte("first_visit_date", format(endDate, "yyyy-MM-dd"));
+        query = query.lte("primeira_visita", format(endDate, "yyyy-MM-dd"));
       }
 
       const { data: visitors } = await query;

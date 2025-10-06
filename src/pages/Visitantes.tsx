@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,12 +48,14 @@ interface Visitor {
   full_name: string;
   phone: string | null;
   email: string | null;
+  address: string | null;
   status: string;
   first_visit_date: string;
   invited_by: string | null;
   assistance_group_id: string | null;
   data_nascimento: string | null;
   primeira_visita: string | null;
+  church_id: string;
   assistance_group_name?: string | null;
   last_interaction_type?: string | null;
   last_interaction_date?: string | null;
@@ -99,6 +101,7 @@ export default function Visitantes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [churchId, setChurchId] = useState<string | null>(null);
@@ -123,8 +126,19 @@ export default function Visitantes() {
     status: "visitante",
     assistance_group_id: "none",
   });
+  const [editFormData, setEditFormData] = useState({
+    full_name: "",
+    phone: "",
+    email: "",
+    address: "",
+    invited_by: "",
+    status: "visitante",
+    assistance_group_id: "none",
+  });
   const [dataNascimento, setDataNascimento] = useState<Date | undefined>();
   const [primeiraVisita, setPrimeiraVisita] = useState<Date | undefined>();
+  const [editDataNascimento, setEditDataNascimento] = useState<Date | undefined>();
+  const [editPrimeiraVisita, setEditPrimeiraVisita] = useState<Date | undefined>();
 
   useEffect(() => {
     if (!user) return;
@@ -405,7 +419,114 @@ export default function Visitantes() {
     }
 
     setFilteredVisitors(filtered);
-  }, [searchTerm, statusFilter, visitors]);
+   }, [searchTerm, statusFilter, visitors]);
+
+  const openEditDialog = (visitor: Visitor) => {
+    setSelectedVisitor(visitor);
+    setEditFormData({
+      full_name: visitor.full_name,
+      phone: visitor.phone || "",
+      email: visitor.email || "",
+      address: visitor.address || "",
+      invited_by: visitor.invited_by || "",
+      status: visitor.status,
+      assistance_group_id: visitor.assistance_group_id || "none",
+    });
+    setEditDataNascimento(visitor.data_nascimento ? new Date(visitor.data_nascimento) : undefined);
+    setEditPrimeiraVisita(visitor.primeira_visita ? new Date(visitor.primeira_visita) : undefined);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedVisitor) return;
+
+    const { error } = await supabase
+      .from("visitors")
+      .update({
+        full_name: editFormData.full_name,
+        phone: editFormData.phone || null,
+        email: editFormData.email || null,
+        address: editFormData.address || null,
+        invited_by: editFormData.invited_by || null,
+        status: editFormData.status as "visitante" | "interessado" | "em_assistencia" | "batizado",
+        assistance_group_id: editFormData.assistance_group_id && editFormData.assistance_group_id !== "none" ? editFormData.assistance_group_id : null,
+        data_nascimento: editDataNascimento ? format(editDataNascimento, "yyyy-MM-dd") : null,
+        primeira_visita: editPrimeiraVisita ? format(editPrimeiraVisita, "yyyy-MM-dd") : null,
+      })
+      .eq("id", selectedVisitor.id);
+
+    if (error) {
+      toast({
+        title: "Erro ao atualizar visitante",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Visitante atualizado!",
+      description: "Os dados foram atualizados com sucesso.",
+    });
+
+    setIsEditDialogOpen(false);
+    
+    // Recarregar visitantes
+    const reloadVisitors = async () => {
+      const query = supabase
+        .from("visitors")
+        .select(`
+          *,
+          assistance_groups!visitors_assistance_group_id_fkey(name),
+          visitor_interactions(interaction_type, interaction_date)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (isAdmin) {
+        // Admin vê todos
+      } else if (isPastor) {
+        const { data: pastorChurches } = await supabase
+          .from("churches")
+          .select("id")
+          .eq("pastor_id", user.id);
+
+        if (pastorChurches && pastorChurches.length > 0) {
+          const churchIds = pastorChurches.map(c => c.id);
+          query.in("church_id", churchIds);
+        }
+      } else {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("church_id")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.church_id) {
+          query.eq("church_id", profile.church_id);
+        }
+      }
+
+      const { data } = await query;
+
+      if (data) {
+        const processedData = data.map((v: any) => {
+          const lastInteraction = v.visitor_interactions?.[0] || null;
+          return {
+            ...v,
+            assistance_group_name: v.assistance_groups?.name || null,
+            last_interaction_type: lastInteraction?.interaction_type || null,
+            last_interaction_date: lastInteraction?.interaction_date || null,
+          };
+        });
+        setVisitors(processedData);
+        setFilteredVisitors(processedData);
+      }
+    };
+
+    reloadVisitors();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -505,6 +626,11 @@ export default function Visitantes() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Cadastrar Novo Visitante</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do visitante. {!isAdmin && churchId && churches.length > 0 && (
+                <>Igreja: <span className="font-semibold">{churches.find((c) => c.id === churchId)?.name}</span></>
+              )}
+            </DialogDescription>
           </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               {isAdmin && (
@@ -853,17 +979,27 @@ export default function Visitantes() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedVisitor(visitor);
-                            setIsInteractionsDialogOpen(true);
-                          }}
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Interações
-                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(visitor)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedVisitor(visitor);
+                              setIsInteractionsDialogOpen(true);
+                            }}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Interações
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -917,23 +1053,245 @@ export default function Visitantes() {
                     <span className="text-muted-foreground">{visitor.invited_by}</span>
                   </div>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2"
-                  onClick={() => {
-                    setSelectedVisitor(visitor);
-                    setIsInteractionsDialogOpen(true);
-                  }}
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Ver Interações
-                </Button>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => openEditDialog(visitor)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedVisitor(visitor);
+                      setIsInteractionsDialogOpen(true);
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Interações
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Dialog de Edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Editar Visitante</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do visitante abaixo
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleEditSubmit} className="space-y-6">
+            {/* Igreja (read-only) */}
+            <div className="space-y-2">
+              <Label>Igreja</Label>
+              <div className="p-3 bg-muted rounded-md text-sm">
+                {churches.find((c) => c.id === selectedVisitor?.church_id)?.name || "Igreja não encontrada"}
+              </div>
+            </div>
+
+            {/* Nome e Telefone */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit_full_name">Nome completo *</Label>
+                <Input
+                  id="edit_full_name"
+                  value={editFormData.full_name}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, full_name: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_phone">Telefone</Label>
+                <Input
+                  id="edit_phone"
+                  value={editFormData.phone}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, phone: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_email">E-mail</Label>
+              <Input
+                id="edit_email"
+                type="email"
+                value={editFormData.email}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, email: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Endereço */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_address">Endereço</Label>
+              <Input
+                id="edit_address"
+                value={editFormData.address}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, address: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Data de Nascimento e Primeira Visita */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Data de Nascimento</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !editDataNascimento && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editDataNascimento ? (
+                        format(editDataNascimento, "dd/MM/yyyy", { locale: ptBR })
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={editDataNascimento}
+                      onSelect={setEditDataNascimento}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
+                <Label>Primeira Visita</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !editPrimeiraVisita && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editPrimeiraVisita ? (
+                        format(editPrimeiraVisita, "dd/MM/yyyy", { locale: ptBR })
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={editPrimeiraVisita}
+                      onSelect={setEditPrimeiraVisita}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Convidado por e Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit_invited_by">Convidado por</Label>
+                <Input
+                  id="edit_invited_by"
+                  value={editFormData.invited_by}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, invited_by: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_status">Status</Label>
+                <Select
+                  value={editFormData.status}
+                  onValueChange={(value) =>
+                    setEditFormData({ ...editFormData, status: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Grupo de Assistência */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_assistance_group_id">
+                Grupo de Assistência
+              </Label>
+              <Select
+                value={editFormData.assistance_group_id}
+                onValueChange={(value) =>
+                  setEditFormData({ ...editFormData, assistance_group_id: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um grupo" />
+                </SelectTrigger>
+                <SelectContent className="bg-card">
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {assistanceGroups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3 justify-end pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-gradient-to-r from-primary to-primary-glow"
+              >
+                Salvar Alterações
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de Interações */}
       <Dialog open={isInteractionsDialogOpen} onOpenChange={setIsInteractionsDialogOpen}>
