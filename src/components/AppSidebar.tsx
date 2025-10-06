@@ -35,19 +35,19 @@ export function AppSidebar() {
   return <Sidebar className="border-r border-border bg-sidebar">
       <SidebarContent>
         <div className="p-6 flex items-center justify-center">
-          <img src={logoAprisco} alt="APRISCO" className="h-24" />
+          <img src={logoAprisco} alt="APRISCO" className="h-30" />
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-base">Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={({
                   isActive
-                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}>
-                      <item.icon className="w-5 h-5" />
+                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
+                      <item.icon className="w-6 h-6" />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
@@ -57,15 +57,15 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-base">Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/configuracoes" className={({
                   isActive
-                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary" : ""}>
-                    <Settings className="w-5 h-5" />
+                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
+                    <Settings className="w-6 h-6" />
                     <span>Configurações</span>
                   </NavLink>
                 </SidebarMenuButton>

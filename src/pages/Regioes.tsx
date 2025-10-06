@@ -174,10 +174,10 @@ export default function Regioes() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Regiões</h1>
-          <p className="text-muted-foreground">Gerencie as regiões do sistema</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Regiões</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Gerencie as regiões do sistema</p>
         </div>
         {(isAdmin || isPastor) && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -21,31 +21,56 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
 import logoAprisco from "@/assets/logo-aprisco.png";
+import React from "react";
+import { supabase } from "@/integrations/supabase/client";
 const queryClient = new QueryClient();
 const AppLayout = () => {
   const {
     user,
     signOut
   } = useAuth();
+  const [userFullName, setUserFullName] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (!user) return;
+    
+    const fetchUserProfile = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+      
+      if (profile?.full_name) {
+        setUserFullName(profile.full_name);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
   const getUserInitials = () => {
-    if (!user?.email) return "U";
-    return user.email.substring(0, 2).toUpperCase();
+    if (!userFullName) return "U";
+    const names = userFullName.split(" ");
+    return names.length > 1 
+      ? (names[0][0] + names[names.length - 1][0]).toUpperCase()
+      : names[0].substring(0, 2).toUpperCase();
   };
+
   return <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 flex items-center justify-between px-6">
-            
+          <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 flex items-center justify-end px-6">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <span className="text-sm font-medium text-foreground">{userFullName || user?.email}</span>
                   <Avatar className="h-9 w-9">
                     <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium text-foreground">{user?.email}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-card">
