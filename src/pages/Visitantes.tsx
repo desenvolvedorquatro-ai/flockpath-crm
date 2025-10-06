@@ -395,6 +395,17 @@ export default function Visitantes() {
         setChurchId(profile.church_id);
         setUserHasNoChurch(false);
 
+        // Carregar dados da igreja
+        const { data: churchData } = await supabase
+          .from("churches")
+          .select("*")
+          .eq("id", profile.church_id)
+          .maybeSingle();
+
+        if (churchData) {
+          setChurches([churchData]);
+        }
+
         // Recarregar grupos de assistência para a igreja do usuário
         const { data: groupsData } = await supabase
           .from("assistance_groups")
