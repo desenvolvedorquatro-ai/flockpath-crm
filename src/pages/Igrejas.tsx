@@ -1,7 +1,148 @@
-import { Building2, Plus } from "lucide-react";
+import { Building2, Plus, Search, Edit, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Tables, TablesInsert } from "@/integrations/supabase/types";
+
+type Church = Tables<"churches">;
 
 export default function Igrejas() {
+  const [churches, setChurches] = useState<Church[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingChurch, setEditingChurch] = useState<Church | null>(null);
+  const { toast } = useToast();
+  const { isAdmin, loading: roleLoading } = useUserRole();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    pastor_name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+  });
+
+  useEffect(() => {
+    fetchChurches();
+  }, []);
+
+  const fetchChurches = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("churches")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setChurches(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar igrejas",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      if (editingChurch) {
+        const { error } = await supabase
+          .from("churches")
+          .update(formData)
+          .eq("id", editingChurch.id);
+
+        if (error) throw error;
+        toast({ title: "Igreja atualizada com sucesso!" });
+      } else {
+        const { error } = await supabase
+          .from("churches")
+          .insert([formData as TablesInsert<"churches">]);
+
+        if (error) throw error;
+        toast({ title: "Igreja criada com sucesso!" });
+      }
+
+      setIsDialogOpen(false);
+      resetForm();
+      fetchChurches();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao salvar igreja",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta igreja?")) return;
+
+    try {
+      const { error } = await supabase.from("churches").delete().eq("id", id);
+      if (error) throw error;
+      
+      toast({ title: "Igreja excluída com sucesso!" });
+      fetchChurches();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir igreja",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      pastor_name: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+    });
+    setEditingChurch(null);
+  };
+
+  const openEditDialog = (church: Church) => {
+    setEditingChurch(church);
+    setFormData({
+      name: church.name,
+      pastor_name: church.pastor_name || "",
+      email: church.email || "",
+      phone: church.phone || "",
+      address: church.address || "",
+      city: church.city || "",
+      state: church.state || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const filteredChurches = churches.filter((church) =>
+    church.name.toLowerCase().includes(search.toLowerCase()) ||
+    church.city?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (roleLoading || loading) {
+    return <div className="min-h-screen bg-background p-8 flex items-center justify-center">
+      <div className="text-muted-foreground">Carregando...</div>
+    </div>;
+  }
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="flex items-center justify-between mb-8">
@@ -9,16 +150,157 @@ export default function Igrejas() {
           <h1 className="text-4xl font-bold text-foreground mb-2">Igrejas</h1>
           <p className="text-muted-foreground">Gerencie todas as igrejas do sistema</p>
         </div>
-        <Button className="gap-2 btn-hover-lift bg-gradient-to-r from-primary to-primary-glow">
-          <Plus className="w-4 h-4" />
-          Nova Igreja
-        </Button>
+        {(isAdmin) && (
+          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 btn-hover-lift bg-gradient-to-r from-primary to-primary-glow">
+                <Plus className="w-4 h-4" />
+                Nova Igreja
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>{editingChurch ? "Editar Igreja" : "Nova Igreja"}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Nome da Igreja *</Label>
+                    <Input
+                      id="name"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pastor_name">Nome do Pastor</Label>
+                    <Input
+                      id="pastor_name"
+                      value={formData.pastor_name}
+                      onChange={(e) => setFormData({ ...formData, pastor_name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="address">Endereço</Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">Cidade</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">Estado</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Salvar</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
-      <div className="glass-card rounded-2xl p-8 text-center">
-        <Building2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-muted-foreground">Em breve: Cadastro e gestão de igrejas</p>
+      <div className="glass-card rounded-2xl p-6 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Buscar por nome ou cidade..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredChurches.map((church) => (
+          <div key={church.id} className="glass-card rounded-2xl p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-foreground">{church.name}</h3>
+                  {church.city && (
+                    <p className="text-sm text-muted-foreground">{church.city}, {church.state}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {church.pastor_name && (
+              <p className="text-sm text-muted-foreground mb-2">
+                <span className="font-medium">Pastor:</span> {church.pastor_name}
+              </p>
+            )}
+            
+            {church.email && (
+              <p className="text-sm text-muted-foreground mb-2">{church.email}</p>
+            )}
+            
+            {church.phone && (
+              <p className="text-sm text-muted-foreground mb-4">{church.phone}</p>
+            )}
+
+            {isAdmin && (
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" size="sm" onClick={() => openEditDialog(church)} className="flex-1">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => handleDelete(church.id)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {filteredChurches.length === 0 && (
+        <div className="glass-card rounded-2xl p-8 text-center">
+          <Building2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">
+            {search ? "Nenhuma igreja encontrada" : "Nenhuma igreja cadastrada"}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -52,6 +52,35 @@ export type Database = {
           },
         ]
       }
+      church_permissions: {
+        Row: {
+          church_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_permissions_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       churches: {
         Row: {
           address: string | null
@@ -338,6 +367,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_church: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_church: {
         Args: { _user_id: string }
         Returns: string
