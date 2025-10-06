@@ -21,24 +21,22 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
 import logoAprisco from "@/assets/logo-aprisco.png";
-
 const queryClient = new QueryClient();
-
 const AppLayout = () => {
-  const { user, signOut } = useAuth();
-
+  const {
+    user,
+    signOut
+  } = useAuth();
   const getUserInitials = () => {
     if (!user?.email) return "U";
     return user.email.substring(0, 2).toUpperCase();
   };
-
-  return (
-    <SidebarProvider defaultOpen>
+  return <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 flex items-center justify-between px-6">
-            <img src={logoAprisco} alt="APRISCO" className="h-10" />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -73,30 +71,20 @@ const AppLayout = () => {
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 };
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
+          <Route path="/*" element={<ProtectedRoute>
                 <AppLayout />
-              </ProtectedRoute>
-            }
-          />
+              </ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
-);
-
+  </QueryClientProvider>;
 export default App;
