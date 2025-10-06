@@ -22,19 +22,19 @@ export default function Importacao() {
     
     switch (type) {
       case "regioes":
-        headers = ["codigo", "nome", "pastor_email"];
+        headers = ["nome", "pastor_email"];
         filename = "template_regioes.xlsx";
         break;
       case "areas":
-        headers = ["codigo", "nome", "codigo_regiao", "pastor_email"];
+        headers = ["nome", "nome_regiao", "pastor_email"];
         filename = "template_areas.xlsx";
         break;
       case "igrejas":
-        headers = ["codigo", "nome", "codigo_regiao", "codigo_area", "pastor_email", "endereco", "cidade", "estado"];
+        headers = ["nome", "nome_regiao", "nome_area", "pastor_email", "nome_pastor", "email", "telefone", "endereco", "cidade", "estado"];
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "codigo_igreja", "data_visita", "observacoes"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "data_visita", "observacoes"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -64,6 +64,7 @@ export default function Importacao() {
 
       let success = 0;
       let errors = 0;
+      const errorMessages: string[] = [];
 
       for (const row of jsonData as any[]) {
         try {
@@ -82,16 +83,22 @@ export default function Importacao() {
               break;
           }
           success++;
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Erro na linha:`, row, error);
+          errorMessages.push(`${row.nome || 'Linha'}: ${error.message}`);
           errors++;
         }
       }
 
       toast({
         title: "Importação concluída!",
-        description: `${success} registros importados com sucesso. ${errors} erros.`,
+        description: `${success} registros importados. ${errors} erros.`,
+        variant: errors > 0 ? "destructive" : "default",
       });
+
+      if (errorMessages.length > 0) {
+        console.error("Erros detalhados:", errorMessages);
+      }
     } catch (error: any) {
       toast({
         title: "Erro na importação",
@@ -105,6 +112,10 @@ export default function Importacao() {
   };
 
   const importRegiao = async (row: any) => {
+    if (!row.nome) {
+      throw new Error("Nome da região é obrigatório");
+    }
+
     let pastor_id = null;
     
     if (row.pastor_email) {
@@ -112,19 +123,37 @@ export default function Importacao() {
         .from("profiles")
         .select("id")
         .eq("email", row.pastor_email)
-        .single();
+        .maybeSingle();
       
-      pastor_id = profile?.id || null;
+      if (profile) {
+        pastor_id = profile.id;
+      }
     }
 
-    await supabase.from("regions").upsert({
-      id: row.codigo,
+    const { error } = await supabase.from("regions").insert({
       name: row.nome,
       pastor_id,
-    }, { onConflict: "id" });
+    });
+
+    if (error) throw error;
   };
 
   const importArea = async (row: any) => {
+    if (!row.nome || !row.nome_regiao) {
+      throw new Error("Nome da área e região são obrigatórios");
+    }
+
+    // Buscar região pelo nome
+    const { data: region } = await supabase
+      .from("regions")
+      .select("id")
+      .eq("name", row.nome_regiao)
+      .maybeSingle();
+
+    if (!region) {
+      throw new Error(`Região '${row.nome_regiao}' não encontrada`);
+    }
+
     let pastor_id = null;
     
     if (row.pastor_email) {
@@ -132,54 +161,113 @@ export default function Importacao() {
         .from("profiles")
         .select("id")
         .eq("email", row.pastor_email)
-        .single();
+        .maybeSingle();
       
-      pastor_id = profile?.id || null;
+      if (profile) {
+        pastor_id = profile.id;
+      }
     }
 
-    await supabase.from("areas").upsert({
-      id: row.codigo,
+    const { error } = await supabase.from("areas").insert({
       name: row.nome,
-      region_id: row.codigo_regiao,
+      region_id: region.id,
       pastor_id,
-    }, { onConflict: "id" });
+    });
+
+    if (error) throw error;
   };
 
   const importIgreja = async (row: any) => {
+    if (!row.nome) {
+      throw new Error("Nome da igreja é obrigatório");
+    }
+
+    let region_id = null;
+    let area_id = null;
     let pastor_id = null;
-    
+
+    // Buscar região pelo nome
+    if (row.nome_regiao) {
+      const { data: region } = await supabase
+        .from("regions")
+        .select("id")
+        .eq("name", row.nome_regiao)
+        .maybeSingle();
+
+      if (region) {
+        region_id = region.id;
+      }
+    }
+
+    // Buscar área pelo nome
+    if (row.nome_area) {
+      const { data: area } = await supabase
+        .from("areas")
+        .select("id")
+        .eq("name", row.nome_area)
+        .maybeSingle();
+
+      if (area) {
+        area_id = area.id;
+      }
+    }
+
+    // Buscar pastor pelo email
     if (row.pastor_email) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
         .eq("email", row.pastor_email)
-        .single();
+        .maybeSingle();
       
-      pastor_id = profile?.id || null;
+      if (profile) {
+        pastor_id = profile.id;
+      }
     }
 
-    await supabase.from("churches").upsert({
-      id: row.codigo,
+    const { error } = await supabase.from("churches").insert({
       name: row.nome,
-      region_id: row.codigo_regiao || null,
-      area_id: row.codigo_area || null,
+      region_id,
+      area_id,
       pastor_id,
+      pastor_name: row.nome_pastor || null,
+      email: row.email || null,
+      phone: row.telefone || null,
       address: row.endereco || null,
       city: row.cidade || null,
       state: row.estado || null,
-    }, { onConflict: "id" });
+    });
+
+    if (error) throw error;
   };
 
   const importVisitante = async (row: any) => {
-    await supabase.from("visitors").insert({
+    if (!row.nome || !row.nome_igreja) {
+      throw new Error("Nome do visitante e igreja são obrigatórios");
+    }
+
+    // Buscar igreja pelo nome
+    const { data: church } = await supabase
+      .from("churches")
+      .select("id")
+      .eq("name", row.nome_igreja)
+      .maybeSingle();
+
+    if (!church) {
+      throw new Error(`Igreja '${row.nome_igreja}' não encontrada`);
+    }
+
+    const { error } = await supabase.from("visitors").insert({
       full_name: row.nome,
       email: row.email || null,
       phone: row.telefone || null,
-      church_id: row.codigo_igreja,
+      church_id: church.id,
       first_visit_date: row.data_visita || new Date().toISOString().split('T')[0],
       notes: row.observacoes || null,
       status: "visitante",
     });
+
+    if (error) throw error;
   };
 
   if (!isAdmin && !isPastor) {
@@ -207,8 +295,8 @@ export default function Importacao() {
       <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Para importar dados, primeiro baixe o template Excel correspondente, preencha com os dados e depois faça o upload do arquivo.
-          Os códigos devem ser únicos e são usados para conectar os registros entre os módulos.
+          <strong>Como importar:</strong> Baixe o template, preencha com seus dados e faça o upload.
+          Use nomes exatos para conectar os registros (exemplo: nome da região, nome da igreja).
         </AlertDescription>
       </Alert>
 
@@ -228,7 +316,7 @@ export default function Importacao() {
                 Importar Regiões
               </CardTitle>
               <CardDescription>
-                Campos: codigo (único), nome, pastor_email (opcional)
+                Campos: <strong>nome</strong> (obrigatório), pastor_email (opcional - deve existir no sistema)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -259,7 +347,9 @@ export default function Importacao() {
                 Importar Áreas
               </CardTitle>
               <CardDescription>
-                Campos: codigo (único), nome, codigo_regiao, pastor_email (opcional)
+                Campos: <strong>nome, nome_regiao</strong> (obrigatórios), pastor_email (opcional)
+                <br/>
+                <em>A região deve estar cadastrada antes</em>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -290,7 +380,9 @@ export default function Importacao() {
                 Importar Igrejas
               </CardTitle>
               <CardDescription>
-                Campos: codigo (único), nome, codigo_regiao, codigo_area, pastor_email, endereco, cidade, estado
+                Campos: <strong>nome</strong> (obrigatório), nome_regiao, nome_area, pastor_email, nome_pastor, email, telefone, endereco, cidade, estado (opcionais)
+                <br/>
+                <em>Regiões e áreas devem estar cadastradas antes</em>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -321,7 +413,9 @@ export default function Importacao() {
                 Importar Visitantes
               </CardTitle>
               <CardDescription>
-                Campos: nome, email, telefone, codigo_igreja, data_visita, observacoes
+                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, data_visita, observacoes (opcionais)
+                <br/>
+                <em>A igreja deve estar cadastrada antes</em>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

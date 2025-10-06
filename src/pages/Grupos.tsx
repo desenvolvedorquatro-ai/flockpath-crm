@@ -16,7 +16,7 @@ type AssistanceGroup = Tables<"assistance_groups"> & {
 };
 
 type Church = Tables<"churches">;
-type User = { id: string; email: string };
+type User = { id: string; full_name: string; email: string };
 
 export default function Grupos() {
   const [groups, setGroups] = useState<AssistanceGroup[]>([]);
@@ -61,8 +61,12 @@ export default function Grupos() {
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("id, email:id");
-    setUsers(data?.map(u => ({ id: u.id, email: u.id })) || []);
+    const { data } = await supabase.from("profiles").select("id, full_name, email");
+    setUsers(data?.map(u => ({ 
+      id: u.id, 
+      full_name: u.full_name || "Sem nome",
+      email: u.email || "Sem email"
+    })) || []);
   };
 
   const filteredUsers = users.filter(u =>
@@ -236,7 +240,7 @@ export default function Grupos() {
                       <SelectItem value="none">Nenhum</SelectItem>
                       {filteredUsers.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
-                          {user.email}
+                          {user.full_name}
                         </SelectItem>
                       ))}
                     </SelectContent>

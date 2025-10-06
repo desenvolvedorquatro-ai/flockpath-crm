@@ -25,6 +25,7 @@ interface Region {
 
 interface User {
   id: string;
+  full_name: string;
   email: string;
 }
 
@@ -84,7 +85,10 @@ export default function Areas() {
   const fetchPastors = async () => {
     const { data, error } = await supabase
       .from("user_roles")
-      .select("user_id, profiles(id, email:id)")
+      .select(`
+        user_id,
+        profiles!user_roles_user_id_fkey(full_name, email)
+      `)
       .eq("role", "pastor");
 
     if (error) {
@@ -94,7 +98,8 @@ export default function Areas() {
 
     const pastorsList = data?.map(r => ({
       id: r.user_id,
-      email: r.user_id
+      full_name: (r.profiles as any)?.full_name || "Sem nome",
+      email: (r.profiles as any)?.email || "Sem email"
     })) || [];
     
     setPastors(pastorsList);
@@ -261,7 +266,7 @@ export default function Areas() {
                       <SelectItem value="none">Nenhum</SelectItem>
                       {pastors.map((pastor) => (
                         <SelectItem key={pastor.id} value={pastor.id}>
-                          {pastor.email}
+                          {pastor.full_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -306,7 +311,7 @@ export default function Areas() {
                     <CardDescription>
                       Região: {regions.find(r => r.id === area.region_id)?.name || "N/A"}
                       <br />
-                      Pastor: {pastors.find(p => p.id === area.pastor_id)?.email || "Não definido"}
+                      Pastor: {pastors.find(p => p.id === area.pastor_id)?.full_name || "Não definido"}
                     </CardDescription>
                   </div>
                   {(isAdmin || isPastor) && (

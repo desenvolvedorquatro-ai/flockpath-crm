@@ -13,7 +13,7 @@ import { Tables, TablesInsert } from "@/integrations/supabase/types";
 type Church = Tables<"churches">;
 type Region = Tables<"regions">;
 type Area = Tables<"areas">;
-type User = { id: string; email: string };
+type User = { id: string; full_name: string; email: string };
 
 export default function Igrejas() {
   const [churches, setChurches] = useState<Church[]>([]);
@@ -60,10 +60,17 @@ export default function Igrejas() {
   const fetchPastors = async () => {
     const { data } = await supabase
       .from("user_roles")
-      .select("user_id")
+      .select(`
+        user_id,
+        profiles!user_roles_user_id_fkey(full_name, email)
+      `)
       .eq("role", "pastor");
 
-    const pastorsList = data?.map(r => ({ id: r.user_id, email: r.user_id })) || [];
+    const pastorsList = data?.map(r => ({
+      id: r.user_id,
+      full_name: (r.profiles as any)?.full_name || "Sem nome",
+      email: (r.profiles as any)?.email || "Sem email"
+    })) || [];
     setPastors(pastorsList);
   };
 
@@ -269,7 +276,7 @@ export default function Igrejas() {
                       <SelectContent className="bg-card">
                         <SelectItem value="none">Nenhum</SelectItem>
                         {pastors.map(p => (
-                          <SelectItem key={p.id} value={p.id}>{p.email}</SelectItem>
+                          <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
