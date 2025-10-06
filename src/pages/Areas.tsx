@@ -41,7 +41,7 @@ export default function Areas() {
   const [formData, setFormData] = useState({
     name: "",
     region_id: "",
-    pastor_id: "",
+    pastor_id: "none",
   });
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function Areas() {
     const payload = {
       name: formData.name,
       region_id: formData.region_id,
-      pastor_id: formData.pastor_id || null,
+      pastor_id: formData.pastor_id && formData.pastor_id !== "none" ? formData.pastor_id : null,
     };
 
     if (editingArea) {
@@ -173,7 +173,7 @@ export default function Areas() {
     setFormData({
       name: "",
       region_id: "",
-      pastor_id: "",
+      pastor_id: "none",
     });
     setEditingArea(null);
     setIsDialogOpen(false);
@@ -184,7 +184,7 @@ export default function Areas() {
     setFormData({
       name: area.name,
       region_id: area.region_id,
-      pastor_id: area.pastor_id || "",
+      pastor_id: area.pastor_id || "none",
     });
     setIsDialogOpen(true);
   };
@@ -258,7 +258,7 @@ export default function Areas() {
                       <SelectValue placeholder="Selecione um pastor" />
                     </SelectTrigger>
                     <SelectContent className="bg-card">
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {pastors.map((pastor) => (
                         <SelectItem key={pastor.id} value={pastor.id}>
                           {pastor.email}

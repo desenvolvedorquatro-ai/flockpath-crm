@@ -35,9 +35,9 @@ export default function Igrejas() {
     address: "",
     city: "",
     state: "",
-    region_id: "",
-    area_id: "",
-    pastor_id: "",
+    region_id: "none",
+    area_id: "none",
+    pastor_id: "none",
   });
 
   useEffect(() => {
@@ -90,11 +90,18 @@ export default function Igrejas() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const payload = {
+      ...formData,
+      region_id: formData.region_id && formData.region_id !== "none" ? formData.region_id : null,
+      area_id: formData.area_id && formData.area_id !== "none" ? formData.area_id : null,
+      pastor_id: formData.pastor_id && formData.pastor_id !== "none" ? formData.pastor_id : null,
+    };
+    
     try {
       if (editingChurch) {
         const { error } = await supabase
           .from("churches")
-          .update(formData)
+          .update(payload)
           .eq("id", editingChurch.id);
 
         if (error) throw error;
@@ -102,7 +109,7 @@ export default function Igrejas() {
       } else {
         const { error } = await supabase
           .from("churches")
-          .insert([formData as TablesInsert<"churches">]);
+          .insert([payload as TablesInsert<"churches">]);
 
         if (error) throw error;
         toast({ title: "Igreja criada com sucesso!" });
@@ -147,9 +154,9 @@ export default function Igrejas() {
       address: "",
       city: "",
       state: "",
-      region_id: "",
-      area_id: "",
-      pastor_id: "",
+      region_id: "none",
+      area_id: "none",
+      pastor_id: "none",
     });
     setEditingChurch(null);
   };
@@ -164,9 +171,9 @@ export default function Igrejas() {
       address: church.address || "",
       city: church.city || "",
       state: church.state || "",
-      region_id: church.region_id || "",
-      area_id: church.area_id || "",
-      pastor_id: church.pastor_id || "",
+      region_id: church.region_id || "none",
+      area_id: church.area_id || "none",
+      pastor_id: church.pastor_id || "none",
     });
     setIsDialogOpen(true);
   };
@@ -220,13 +227,13 @@ export default function Igrejas() {
                     <Label htmlFor="region_id">Região</Label>
                     <Select
                       value={formData.region_id}
-                      onValueChange={(value) => setFormData({ ...formData, region_id: value, area_id: "" })}
+                      onValueChange={(value) => setFormData({ ...formData, region_id: value, area_id: "none" })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma região" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
-                        <SelectItem value="">Nenhuma</SelectItem>
+                        <SelectItem value="none">Nenhuma</SelectItem>
                         {regions.map(r => (
                           <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                         ))}
@@ -243,7 +250,7 @@ export default function Igrejas() {
                         <SelectValue placeholder="Selecione uma área" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
-                        <SelectItem value="">Nenhuma</SelectItem>
+                        <SelectItem value="none">Nenhuma</SelectItem>
                         {filteredAreas.map(a => (
                           <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                         ))}
@@ -260,7 +267,7 @@ export default function Igrejas() {
                         <SelectValue placeholder="Selecione um pastor" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
-                        <SelectItem value="">Nenhum</SelectItem>
+                        <SelectItem value="none">Nenhum</SelectItem>
                         {pastors.map(p => (
                           <SelectItem key={p.id} value={p.id}>{p.email}</SelectItem>
                         ))}

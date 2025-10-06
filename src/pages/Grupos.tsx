@@ -33,7 +33,7 @@ export default function Grupos() {
     name: "",
     description: "",
     church_id: "",
-    responsible_id: "",
+    responsible_id: "none",
   });
 
   useEffect(() => {
@@ -92,11 +92,16 @@ export default function Grupos() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const payload = {
+      ...formData,
+      responsible_id: formData.responsible_id && formData.responsible_id !== "none" ? formData.responsible_id : null,
+    };
+    
     try {
       if (editingGroup) {
         const { error } = await supabase
           .from("assistance_groups")
-          .update(formData)
+          .update(payload)
           .eq("id", editingGroup.id);
 
         if (error) throw error;
@@ -104,7 +109,7 @@ export default function Grupos() {
       } else {
         const { error } = await supabase
           .from("assistance_groups")
-          .insert([formData as TablesInsert<"assistance_groups">]);
+          .insert([payload as TablesInsert<"assistance_groups">]);
 
         if (error) throw error;
         toast({ title: "Grupo criado com sucesso!" });
@@ -145,7 +150,7 @@ export default function Grupos() {
       name: "",
       description: "",
       church_id: "",
-      responsible_id: "",
+      responsible_id: "none",
     });
     setEditingGroup(null);
   };
@@ -156,7 +161,7 @@ export default function Grupos() {
       name: group.name,
       description: group.description || "",
       church_id: group.church_id,
-      responsible_id: group.responsible_id || "",
+      responsible_id: group.responsible_id || "none",
     });
     setIsDialogOpen(true);
   };
@@ -228,7 +233,7 @@ export default function Grupos() {
                       <SelectValue placeholder="Selecione um responsável" />
                     </SelectTrigger>
                     <SelectContent className="bg-card">
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {filteredUsers.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.email}

@@ -80,7 +80,7 @@ export default function Visitantes() {
     address: "",
     invited_by: "",
     status: "visitante",
-    assistance_group_id: "",
+    assistance_group_id: "none",
   });
 
   useEffect(() => {
@@ -172,7 +172,7 @@ export default function Visitantes() {
       invited_by: formData.invited_by || null,
       status: formData.status as "visitante" | "interessado" | "em_acompanhamento" | "novo_membro" | "engajado",
       church_id: churchId,
-      assistance_group_id: formData.assistance_group_id || null,
+      assistance_group_id: formData.assistance_group_id && formData.assistance_group_id !== "none" ? formData.assistance_group_id : null,
     }]);
 
     if (error) {
@@ -195,7 +195,7 @@ export default function Visitantes() {
         address: "",
         invited_by: "",
         status: "visitante",
-        assistance_group_id: "",
+        assistance_group_id: "none",
       });
 
       const { data } = await supabase
@@ -321,7 +321,7 @@ export default function Visitantes() {
                     <SelectValue placeholder="Selecione um grupo" />
                   </SelectTrigger>
                   <SelectContent className="bg-card">
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {assistanceGroups.map((group) => (
                       <SelectItem key={group.id} value={group.id}>
                         {group.name}

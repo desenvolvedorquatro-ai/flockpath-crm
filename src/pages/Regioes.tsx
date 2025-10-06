@@ -33,7 +33,7 @@ export default function Regioes() {
 
   const [formData, setFormData] = useState({
     name: "",
-    pastor_id: "",
+    pastor_id: "none",
   });
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function Regioes() {
 
     const payload = {
       name: formData.name,
-      pastor_id: formData.pastor_id || null,
+      pastor_id: formData.pastor_id && formData.pastor_id !== "none" ? formData.pastor_id : null,
     };
 
     if (editingRegion) {
@@ -149,7 +149,7 @@ export default function Regioes() {
   const resetForm = () => {
     setFormData({
       name: "",
-      pastor_id: "",
+      pastor_id: "none",
     });
     setEditingRegion(null);
     setIsDialogOpen(false);
@@ -159,7 +159,7 @@ export default function Regioes() {
     setEditingRegion(region);
     setFormData({
       name: region.name,
-      pastor_id: region.pastor_id || "",
+      pastor_id: region.pastor_id || "none",
     });
     setIsDialogOpen(true);
   };
@@ -214,7 +214,7 @@ export default function Regioes() {
                       <SelectValue placeholder="Selecione um pastor" />
                     </SelectTrigger>
                     <SelectContent className="bg-card">
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {pastors.map((pastor) => (
                         <SelectItem key={pastor.id} value={pastor.id}>
                           {pastor.email}
