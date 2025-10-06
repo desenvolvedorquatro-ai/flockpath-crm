@@ -59,28 +59,28 @@ export function ModernHeader({
   
   return (
     <FadeIn>
-      <header className="relative overflow-hidden rounded-2xl bg-white/60 backdrop-blur-xl border-0 shadow-lg mb-8">
+      <header className="relative overflow-hidden rounded-2xl bg-white/60 backdrop-blur-xl border-0 shadow-lg mb-4">
         {/* Overlay de gradiente */}
         <div className={`absolute inset-0 bg-gradient-to-r ${scheme.overlayGradient}`} />
         
         {/* Conteúdo */}
-        <div className="relative p-6 lg:p-8">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="relative p-4 lg:p-5">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
             
             {/* Seção Esquerda */}
-            <div className="space-y-3 flex-1">
-              <div className="flex items-center gap-4">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-3">
                 {/* Ícone */}
-                <div className={`p-3 bg-gradient-to-br ${scheme.iconBg} rounded-2xl border border-white/20`}>
-                  <Icon className={`w-8 h-8 lg:w-10 lg:h-10 ${scheme.iconColor}`} />
+                <div className={`p-2 bg-gradient-to-br ${scheme.iconBg} rounded-2xl border border-white/20`}>
+                  <Icon className={`w-6 h-6 lg:w-7 lg:h-7 ${scheme.iconColor}`} />
                 </div>
                 
                 {/* Texto */}
                 <div>
-                  <h1 className={`text-3xl lg:text-4xl font-bold bg-gradient-to-r ${scheme.titleGradient} bg-clip-text text-transparent`}>
+                  <h1 className={`text-2xl lg:text-3xl font-bold bg-gradient-to-r ${scheme.titleGradient} bg-clip-text text-transparent`}>
                     {title}
                   </h1>
-                  <p className="text-slate-600 text-sm lg:text-base mt-1">
+                  <p className="text-slate-600 text-sm mt-0.5">
                     {description}
                   </p>
                 </div>
@@ -89,7 +89,7 @@ export function ModernHeader({
             
             {/* Seção Direita */}
             {onAction && (
-              <div className="flex items-center gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-2 w-full lg:w-auto">
                 <Button 
                   onClick={onAction}
                   className={`bg-gradient-to-r ${scheme.buttonGradient} ${scheme.buttonHover} text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] flex-1 lg:flex-none`}

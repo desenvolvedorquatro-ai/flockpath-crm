@@ -109,12 +109,12 @@ const AppLayout = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-border bg-white shadow-sm sticky top-0 z-10 flex items-center justify-between px-4 md:px-6">
-            <div className="flex items-center gap-3">
+          <header className="h-12 border-b border-border bg-white shadow-sm sticky top-0 z-10 flex items-center justify-between px-3 md:px-4">
+            <div className="flex items-center gap-2">
               <SidebarTrigger />
               {userChurchInfo && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Building2 className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Building2 className="w-3.5 h-3.5" />
                   <span className="font-medium">{userChurchInfo}</span>
                 </div>
               )}
@@ -122,10 +122,10 @@ const AppLayout = () => {
             <div className="flex-1" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                  <span className="text-sm font-medium text-foreground">{userFullName || user?.email}</span>
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <span className="text-xs font-medium text-foreground hidden md:inline">{userFullName || user?.email}</span>
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -139,7 +139,7 @@ const AppLayout = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
-          <main className="flex-1 overflow-x-hidden p-4 md:p-6 lg:p-8">
+          <main className="flex-1 overflow-x-hidden p-3 md:p-4 lg:p-6">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/visitantes" element={<Visitantes />} />
