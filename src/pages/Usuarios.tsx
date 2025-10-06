@@ -1,5 +1,7 @@
 import { UserCog, Plus, Search, Shield, Edit, Trash2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ViewToggle } from "@/components/ViewToggle";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,6 +86,7 @@ export default function Usuarios() {
   const [newPassword, setNewPassword] = useState("");
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  const [view, setView] = useState<"card" | "list">("list");
 
   useEffect(() => {
     if (!roleLoading && isAdmin) {
@@ -462,8 +465,8 @@ export default function Usuarios() {
         colorScheme="red-coral"
       />
 
-      <div className="glass-card rounded-2xl p-6 mb-6">
-        <div className="relative">
+      <div className="glass-card rounded-2xl p-6 mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="relative flex-1 w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Buscar por nome ou email..."
@@ -472,93 +475,184 @@ export default function Usuarios() {
             className="pl-10"
           />
         </div>
+        <ViewToggle view={view} onViewChange={setView} />
       </div>
 
-      <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nome</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Email</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Igreja</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Região</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Área</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Funções</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredProfiles.map((profile) => (
-                <tr key={profile.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-6 py-4 text-sm text-foreground">{profile.full_name}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{profile.email}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {profile.churches?.name || "-"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {profile.regions?.name || "-"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {profile.areas?.name || "-"}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      {profile.user_roles && profile.user_roles.length > 0 ? (
-                        profile.user_roles.map((ur, idx) => (
-                          <Badge
-                            key={idx}
-                            className={`${roleColors[ur.role]} text-white`}
-                          >
-                            {roleLabels[ur.role]}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Sem funções</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(profile.id)}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Editar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openPasswordDialog(profile.id)}
-                      >
-                        <Lock className="w-4 h-4 mr-2" />
-                        Senha
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openAssignDialog(profile.id)}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Função
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteUser(profile.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
+      {view === "list" ? (
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nome</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Email</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Igreja</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Região</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Área</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Funções</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredProfiles.map((profile) => (
+                  <tr key={profile.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-6 py-4 text-sm text-foreground">{profile.full_name}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">{profile.email}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                      {profile.churches?.name || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                      {profile.regions?.name || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                      {profile.areas?.name || "-"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {profile.user_roles && profile.user_roles.length > 0 ? (
+                          profile.user_roles.map((ur, idx) => (
+                            <Badge
+                              key={idx}
+                              className={`${roleColors[ur.role]} text-white`}
+                            >
+                              {roleLabels[ur.role]}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Sem funções</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(profile.id)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openPasswordDialog(profile.id)}
+                        >
+                          <Lock className="w-4 h-4 mr-2" />
+                          Senha
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openAssignDialog(profile.id)}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Função
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteUser(profile.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProfiles.map((profile) => (
+            <Card key={profile.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                      <UserCog className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{profile.full_name}</CardTitle>
+                      <CardDescription className="text-sm">{profile.email}</CardDescription>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-medium text-foreground">Igreja:</span>{" "}
+                    <span className="text-muted-foreground">{profile.churches?.name || "-"}</span>
+                  </div>
+                  {profile.regions && (
+                    <div>
+                      <span className="font-medium text-foreground">Região:</span>{" "}
+                      <span className="text-muted-foreground">{profile.regions.name}</span>
+                    </div>
+                  )}
+                  {profile.areas && (
+                    <div>
+                      <span className="font-medium text-foreground">Área:</span>{" "}
+                      <span className="text-muted-foreground">{profile.areas.name}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <span className="font-medium text-sm text-foreground mb-2 block">Funções:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.user_roles && profile.user_roles.length > 0 ? (
+                      profile.user_roles.map((ur, idx) => (
+                        <Badge key={idx} className={`${roleColors[ur.role]} text-white`}>
+                          {roleLabels[ur.role]}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Sem funções</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditDialog(profile.id)}
+                    className="flex-1"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openPasswordDialog(profile.id)}
+                  >
+                    <Lock className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openAssignDialog(profile.id)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteUser(profile.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {filteredProfiles.length === 0 && (
         <div className="glass-card rounded-2xl p-8 text-center mt-6">

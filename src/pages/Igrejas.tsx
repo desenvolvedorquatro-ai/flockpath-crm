@@ -1,5 +1,7 @@
 import { Building2, Search, Edit, Trash2 } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
+import { ViewToggle } from "@/components/ViewToggle";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +27,7 @@ export default function Igrejas() {
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChurch, setEditingChurch] = useState<Church | null>(null);
+  const [view, setView] = useState<"card" | "list">("list");
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
 
@@ -341,8 +344,8 @@ export default function Igrejas() {
           </Dialog>
         )}
 
-      <div className="glass-card rounded-2xl p-6 mb-6">
-        <div className="relative">
+      <div className="glass-card rounded-2xl p-6 mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="relative flex-1 w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Buscar por nome ou cidade..."
@@ -351,53 +354,96 @@ export default function Igrejas() {
             className="pl-10"
           />
         </div>
+        <ViewToggle view={view} onViewChange={setView} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredChurches.map((church) => (
-          <div key={church.id} className="glass-card rounded-2xl p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg text-foreground">{church.name}</h3>
-                  {church.city && (
-                    <p className="text-sm text-muted-foreground">{church.city}, {church.state}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {church.pastor_name && (
-              <p className="text-sm text-muted-foreground mb-2">
-                <span className="font-medium">Pastor:</span> {church.pastor_name}
-              </p>
-            )}
-            
-            {church.email && (
-              <p className="text-sm text-muted-foreground mb-2">{church.email}</p>
-            )}
-            
-            {church.phone && (
-              <p className="text-sm text-muted-foreground mb-4">{church.phone}</p>
-            )}
-
-            {isAdmin && (
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" onClick={() => openEditDialog(church)} className="flex-1">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Editar
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(church.id)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
+      {view === "list" ? (
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Cidade/Estado</TableHead>
+                  <TableHead>Pastor</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  {isAdmin && <TableHead className="text-right">Ações</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredChurches.map((church) => (
+                  <TableRow key={church.id}>
+                    <TableCell className="font-medium">{church.name}</TableCell>
+                    <TableCell>{church.city ? `${church.city}, ${church.state}` : "-"}</TableCell>
+                    <TableCell>{church.pastor_name || "-"}</TableCell>
+                    <TableCell>{church.email || "-"}</TableCell>
+                    <TableCell>{church.phone || "-"}</TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(church)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(church.id)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredChurches.map((church) => (
+            <div key={church.id} className="glass-card rounded-2xl p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-foreground">{church.name}</h3>
+                    {church.city && (
+                      <p className="text-sm text-muted-foreground">{church.city}, {church.state}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {church.pastor_name && (
+                <p className="text-sm text-muted-foreground mb-2">
+                  <span className="font-medium">Pastor:</span> {church.pastor_name}
+                </p>
+              )}
+              
+              {church.email && (
+                <p className="text-sm text-muted-foreground mb-2">{church.email}</p>
+              )}
+              
+              {church.phone && (
+                <p className="text-sm text-muted-foreground mb-4">{church.phone}</p>
+              )}
+
+              {isAdmin && (
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" size="sm" onClick={() => openEditDialog(church)} className="flex-1">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(church.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {filteredChurches.length === 0 && (
         <div className="glass-card rounded-2xl p-8 text-center">

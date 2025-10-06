@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon } from "lucide-react";
+import { ViewToggle } from "@/components/ViewToggle";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +87,7 @@ export default function Visitantes() {
   const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [churchId, setChurchId] = useState<string | null>(null);
+  const [view, setView] = useState<"card" | "list">("list");
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -489,29 +492,32 @@ export default function Visitantes() {
         </Dialog>
 
       <div className="glass-card rounded-2xl p-4 md:p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Buscar visitante..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 flex-1">
+            <div className="flex-1">
+              <Input
+                placeholder="Buscar visitante..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="visitante">Visitante</SelectItem>
+                <SelectItem value="interessado">Interessado</SelectItem>
+                <SelectItem value="em_acompanhamento">Em Acompanhamento</SelectItem>
+                <SelectItem value="novo_membro">Novo Membro</SelectItem>
+                <SelectItem value="engajado">Engajado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Filtrar por status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="visitante">Visitante</SelectItem>
-              <SelectItem value="interessado">Interessado</SelectItem>
-              <SelectItem value="em_acompanhamento">Em Acompanhamento</SelectItem>
-              <SelectItem value="novo_membro">Novo Membro</SelectItem>
-              <SelectItem value="engajado">Engajado</SelectItem>
-            </SelectContent>
-          </Select>
+          <ViewToggle view={view} onViewChange={setView} />
         </div>
       </div>
 
@@ -525,7 +531,7 @@ export default function Visitantes() {
               : "Nenhum visitante corresponde aos filtros aplicados"}
           </p>
         </div>
-      ) : (
+      ) : view === "list" ? (
         <div className="glass-card rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <Table className="min-w-[800px]">
@@ -594,6 +600,67 @@ export default function Visitantes() {
               </TableBody>
             </Table>
           </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredVisitors.map((visitor) => (
+            <Card key={visitor.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{visitor.full_name}</CardTitle>
+                      <Badge
+                        variant="outline"
+                        className={`${statusColors[visitor.status]} text-xs mt-1`}
+                      >
+                        {statusLabels[visitor.status]}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {visitor.email && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="w-4 h-4" />
+                    <span className="truncate">{visitor.email}</span>
+                  </div>
+                )}
+                {visitor.phone && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Phone className="w-4 h-4" />
+                    {visitor.phone}
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  {new Date(visitor.first_visit_date).toLocaleDateString("pt-BR")}
+                </div>
+                {visitor.invited_by && (
+                  <div className="text-sm">
+                    <span className="font-medium text-foreground">Convidado por:</span>{" "}
+                    <span className="text-muted-foreground">{visitor.invited_by}</span>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    setSelectedVisitor(visitor);
+                    setIsInteractionsDialogOpen(true);
+                  }}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Ver Interações
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 

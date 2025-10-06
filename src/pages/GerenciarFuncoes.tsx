@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ViewToggle } from "@/components/ViewToggle";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +55,7 @@ export default function GerenciarFuncoes() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentRole, setCurrentRole] = useState<RoleDefinition | null>(null);
+  const [view, setView] = useState<"card" | "list">("list");
 
   // Form state
   const [roleName, setRoleName] = useState("");
@@ -287,43 +290,97 @@ export default function GerenciarFuncoes() {
         actionText="Nova Função"
       />
 
-      <div className="grid gap-4">
-        {roles.map((role) => (
-          <Card key={role.id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="flex items-center gap-3">
-                <Badge className={role.color}>{role.display_name}</Badge>
-                <div>
-                  <CardTitle className="text-sm font-medium">{role.role_name}</CardTitle>
-                  <CardDescription className="text-xs">{role.description}</CardDescription>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => openEditDialog(role)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDelete(role)}
-                  disabled={["admin", "pastor", "user"].includes(role.role_name)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xs text-muted-foreground">
-                Permissões:{" "}
-                {permissions
-                  .filter((p) => p.role_name === role.role_name)
-                  .map((p) => MODULE_LABELS[p.module])
-                  .join(", ")}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mb-6 flex justify-end">
+        <ViewToggle view={view} onViewChange={setView} />
       </div>
+
+      {view === "list" ? (
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Função</TableHead>
+                  <TableHead>Identificador</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Permissões</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles.map((role) => (
+                  <TableRow key={role.id}>
+                    <TableCell>
+                      <Badge className={role.color}>{role.display_name}</Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{role.role_name}</TableCell>
+                    <TableCell className="max-w-xs truncate">{role.description}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {permissions
+                        .filter((p) => p.role_name === role.role_name)
+                        .map((p) => MODULE_LABELS[p.module])
+                        .join(", ")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(role)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(role)}
+                          disabled={["admin", "pastor", "user"].includes(role.role_name)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {roles.map((role) => (
+            <Card key={role.id}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-3">
+                  <Badge className={role.color}>{role.display_name}</Badge>
+                  <div>
+                    <CardTitle className="text-sm font-medium">{role.role_name}</CardTitle>
+                    <CardDescription className="text-xs">{role.description}</CardDescription>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(role)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(role)}
+                    disabled={["admin", "pastor", "user"].includes(role.role_name)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground">
+                  Permissões:{" "}
+                  {permissions
+                    .filter((p) => p.role_name === role.role_name)
+                    .map((p) => MODULE_LABELS[p.module])
+                    .join(", ")}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">

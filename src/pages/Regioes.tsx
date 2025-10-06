@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { MapPin, Trash2, Edit } from "lucide-react";
+import { ViewToggle } from "@/components/ViewToggle";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ModernHeader } from "@/components/ModernHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +34,7 @@ export default function Regioes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRegion, setEditingRegion] = useState<Region | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [view, setView] = useState<"card" | "list">("list");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -235,13 +238,14 @@ export default function Regioes() {
           </Dialog>
         )}
 
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <Input
           placeholder="Buscar região..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-md"
         />
+        <ViewToggle view={view} onViewChange={setView} />
       </div>
 
       {filteredRegions.length === 0 ? (
@@ -254,6 +258,48 @@ export default function Regioes() {
             </p>
           </CardContent>
         </Card>
+      ) : view === "list" ? (
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Pastor Responsável</TableHead>
+                  {(isAdmin || isPastor) && <TableHead className="text-right">Ações</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRegions.map((region) => (
+                  <TableRow key={region.id}>
+                    <TableCell className="font-medium">{region.name}</TableCell>
+                    <TableCell>{pastors.find(p => p.id === region.pastor_id)?.full_name || "Não definido"}</TableCell>
+                    {(isAdmin || isPastor) && (
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditDialog(region)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(region.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRegions.map((region) => (
