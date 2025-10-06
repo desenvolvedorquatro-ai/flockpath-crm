@@ -11,11 +11,16 @@ import { toast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import * as XLSX from "xlsx";
 import { ModernHeader } from "@/components/ModernHeader";
+import { ImportPreviewDialog } from "@/components/ImportPreviewDialog";
+import { validateImportData, ValidationResult } from "@/lib/importValidation";
 
 export default function Importacao() {
   const { isAdmin, isPastor } = useUserRole();
   const [importing, setImporting] = useState(false);
   const [activeTab, setActiveTab] = useState("regioes");
+  const [validationResults, setValidationResults] = useState<ValidationResult | null>(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [pendingImportData, setPendingImportData] = useState<{ data: any[], type: string } | null>(null);
 
   const downloadTemplate = (type: string) => {
     let headers: string[] = [];
@@ -35,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "data_visita", "observacoes"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "endereco", "data_visita", "convidado_por", "observacoes"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -63,43 +68,83 @@ export default function Importacao() {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+      if (jsonData.length === 0) {
+        toast({
+          title: "Arquivo vazio",
+          description: "O arquivo não contém dados para importar.",
+          variant: "destructive",
+        });
+        setImporting(false);
+        e.target.value = "";
+        return;
+      }
+
+      // Validar dados
+      toast({
+        title: "Validando dados...",
+        description: "Aguarde enquanto validamos os registros.",
+      });
+
+      const results = await validateImportData(jsonData, type);
+      
+      setValidationResults(results);
+      setPendingImportData({ data: jsonData, type });
+      setShowPreviewDialog(true);
+      setImporting(false);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao ler arquivo",
+        description: error.message,
+        variant: "destructive",
+      });
+      setImporting(false);
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const confirmImport = async () => {
+    if (!pendingImportData || !validationResults) return;
+
+    setImporting(true);
+
+    try {
       let success = 0;
       let errors = 0;
-      const errorMessages: string[] = [];
 
-      for (const row of jsonData as any[]) {
+      // Importar apenas registros válidos
+      for (const item of validationResults.valid) {
         try {
-          switch (type) {
+          switch (pendingImportData.type) {
             case "regioes":
-              await importRegiao(row);
+              await importRegiao(item.row);
               break;
             case "areas":
-              await importArea(row);
+              await importArea(item.row);
               break;
             case "igrejas":
-              await importIgreja(row);
+              await importIgreja(item.row);
               break;
             case "visitantes":
-              await importVisitante(row);
+              await importVisitante(item.row);
               break;
           }
           success++;
         } catch (error: any) {
-          console.error(`Erro na linha:`, row, error);
-          errorMessages.push(`${row.nome || 'Linha'}: ${error.message}`);
+          console.error(`Erro ao importar:`, item.row, error);
           errors++;
         }
       }
 
       toast({
         title: "Importação concluída!",
-        description: `${success} registros importados. ${errors} erros.`,
+        description: `${success} registros importados com sucesso. ${errors} erros durante a importação.`,
         variant: errors > 0 ? "destructive" : "default",
       });
 
-      if (errorMessages.length > 0) {
-        console.error("Erros detalhados:", errorMessages);
-      }
+      setShowPreviewDialog(false);
+      setValidationResults(null);
+      setPendingImportData(null);
     } catch (error: any) {
       toast({
         title: "Erro na importação",
@@ -108,7 +153,6 @@ export default function Importacao() {
       });
     } finally {
       setImporting(false);
-      e.target.value = "";
     }
   };
 
@@ -263,7 +307,9 @@ export default function Importacao() {
       email: row.email || null,
       phone: row.telefone || null,
       church_id: church.id,
+      address: row.endereco || null,
       first_visit_date: row.data_visita || new Date().toISOString().split('T')[0],
+      invited_by: row.convidado_por || null,
       notes: row.observacoes || null,
       status: "visitante",
     });
@@ -414,7 +460,7 @@ export default function Importacao() {
                 Importar Visitantes
               </CardTitle>
               <CardDescription>
-                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, data_visita, observacoes (opcionais)
+                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, endereco, data_visita, convidado_por, observacoes (opcionais)
                 <br/>
                 <em>A igreja deve estar cadastrada antes</em>
               </CardDescription>
@@ -439,6 +485,15 @@ export default function Importacao() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ImportPreviewDialog
+        open={showPreviewDialog}
+        onOpenChange={setShowPreviewDialog}
+        validationResults={validationResults}
+        onConfirm={confirmImport}
+        importing={importing}
+        type={pendingImportData?.type || ""}
+      />
     </div>
   );
 }
