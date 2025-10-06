@@ -1,6 +1,7 @@
 import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map, Upload, Shield } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import logoAprisco from "@/assets/logo-aprisco.png";
 const menuItems = [{
   title: "Dashboard",
@@ -32,6 +33,15 @@ const menuItems = [{
   icon: UserCog
 }];
 export function AppSidebar() {
+  const { setOpenMobile } = useSidebar();
+  const isMobile = useIsMobile();
+
+  const handleMenuClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return <Sidebar className="border-r border-border bg-background" collapsible="icon">
       <SidebarContent>
         <div className="p-4 md:p-6 flex items-center justify-center">
@@ -44,7 +54,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={({
+                    <NavLink to={item.url} end onClick={handleMenuClick} className={({
                   isActive
                 }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
                       <item.icon className="w-6 h-6" />
@@ -62,7 +72,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/importacao" className={({
+                  <NavLink to="/importacao" onClick={handleMenuClick} className={({
                   isActive
                 }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
                     <Upload className="w-6 h-6" />
@@ -72,7 +82,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/gerenciar-funcoes" className={({
+                  <NavLink to="/gerenciar-funcoes" onClick={handleMenuClick} className={({
                   isActive
                 }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
                     <Shield className="w-6 h-6" />
@@ -82,7 +92,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/configuracoes" className={({
+                  <NavLink to="/configuracoes" onClick={handleMenuClick} className={({
                   isActive
                 }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
                     <Settings className="w-6 h-6" />
