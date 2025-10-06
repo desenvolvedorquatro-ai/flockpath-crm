@@ -1,4 +1,4 @@
-import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map } from "lucide-react";
+import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map, Upload } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import logoAprisco from "@/assets/logo-aprisco.png";
@@ -60,6 +60,16 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-base">Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/importacao" className={({
+                  isActive
+                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
+                    <Upload className="w-6 h-6" />
+                    <span>Importação</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/configuracoes" className={({
