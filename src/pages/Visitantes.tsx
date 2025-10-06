@@ -300,26 +300,20 @@ export default function Visitantes() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Visitantes</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Gestão completa de visitantes e membros</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 btn-hover-lift bg-gradient-to-r from-primary to-primary-glow w-full sm:w-auto">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Novo Visitante</span>
-              <span className="sm:hidden">Novo</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
-            <DialogHeader>
-              <DialogTitle>Cadastrar Novo Visitante</DialogTitle>
-              <DialogDescription>
-                Adicione as informações do visitante ao sistema
-              </DialogDescription>
-            </DialogHeader>
+      <ModernHeader
+        title="Visitantes"
+        description="Gestão completa de visitantes e membros"
+        icon={Users}
+        onAction={() => setIsDialogOpen(true)}
+        actionText="Novo Visitante"
+        colorScheme="cyan-blue"
+      />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cadastrar Novo Visitante</DialogTitle>
+          </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">

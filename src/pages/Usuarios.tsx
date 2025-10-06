@@ -10,13 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tables } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
+import { ModernHeader } from "@/components/ModernHeader";
 
 type Profile = Tables<"profiles"> & {
-  churches: { name: string } | null;
-  user_roles: { role: string }[];
+  churches?: { name: string } | null;
+  regions?: { name: string } | null;
+  areas?: { name: string } | null;
+  user_roles?: { role: string }[];
 };
 
 type Church = Tables<"churches">;
+type Region = Tables<"regions">;
+type Area = Tables<"areas">;
 
 const roleLabels: Record<string, string> = {
   admin: "Administrador",
@@ -41,6 +46,9 @@ const roleColors: Record<string, string> = {
 export default function Usuarios() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [churches, setChurches] = useState<Church[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -58,6 +66,8 @@ export default function Usuarios() {
     phone: "",
     cpf: "",
     church_id: "",
+    region_id: "",
+    area_id: "",
   });
   const [multiChurchAccess, setMultiChurchAccess] = useState(false);
   const [selectedChurches, setSelectedChurches] = useState<string[]>([]);
@@ -66,6 +76,8 @@ export default function Usuarios() {
     phone: "",
     cpf: "",
     church_id: "",
+    region_id: "",
+    area_id: "",
   });
   const [editMultiChurchAccess, setEditMultiChurchAccess] = useState(false);
   const [editSelectedChurches, setEditSelectedChurches] = useState<string[]>([]);
@@ -233,6 +245,8 @@ export default function Usuarios() {
             phone: newUserData.phone,
             cpf: newUserData.cpf,
             church_id: newUserData.church_id,
+            region_id: newUserData.region_id || null,
+            area_id: newUserData.area_id || null,
           })
           .eq("id", authData.user.id);
 
@@ -255,7 +269,7 @@ export default function Usuarios() {
 
       toast({ title: "Usuário criado com sucesso!" });
       setIsCreateDialogOpen(false);
-      setNewUserData({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cpf: "", church_id: "" });
+      setNewUserData({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cpf: "", church_id: "", region_id: "", area_id: "" });
       setMultiChurchAccess(false);
       setSelectedChurches([]);
       fetchProfiles();
@@ -277,7 +291,16 @@ export default function Usuarios() {
         phone: user.phone || "",
         cpf: user.cpf || "",
         church_id: user.church_id || "",
+        region_id: user.region_id || "",
+        area_id: user.area_id || "",
       });
+
+      // Filter areas based on selected region
+      if (user.region_id) {
+        setFilteredAreas(areas.filter(area => area.region_id === user.region_id));
+      } else {
+        setFilteredAreas([]);
+      }
 
       // Buscar igrejas adicionais do usuário
       const { data: userChurches } = await supabase
@@ -309,6 +332,8 @@ export default function Usuarios() {
           phone: editUserData.phone,
           cpf: editUserData.cpf,
           church_id: editUserData.church_id,
+          region_id: editUserData.region_id || null,
+          area_id: editUserData.area_id || null,
         })
         .eq("id", selectedUserId);
 
@@ -428,16 +453,14 @@ export default function Usuarios() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Usuários</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Gerencie usuários e permissões do sistema</p>
-        </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Usuário
-        </Button>
-      </div>
+      <ModernHeader
+        title="Usuários"
+        description="Gerencie usuários e permissões do sistema"
+        icon={UserCog}
+        onAction={() => setIsCreateDialogOpen(true)}
+        actionText="Novo Usuário"
+        colorScheme="cyan-blue"
+      />
 
       <div className="glass-card rounded-2xl p-6 mb-6">
         <div className="relative">
@@ -459,6 +482,8 @@ export default function Usuarios() {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nome</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Email</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Igreja</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Região</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Área</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Funções</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Ações</th>
               </tr>
@@ -470,6 +495,12 @@ export default function Usuarios() {
                   <td className="px-6 py-4 text-sm text-muted-foreground">{profile.email}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">
                     {profile.churches?.name || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
+                    {profile.regions?.name || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
+                    {profile.areas?.name || "-"}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-2">
@@ -634,6 +665,51 @@ export default function Usuarios() {
               </Select>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="region_id">Região</Label>
+                <Select
+                  value={newUserData.region_id}
+                  onValueChange={(value) => {
+                    setNewUserData({ ...newUserData, region_id: value, area_id: "" });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma região" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhuma</SelectItem>
+                    {regions.map((region) => (
+                      <SelectItem key={region.id} value={region.id}>
+                        {region.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="area_id">Área</Label>
+                <Select
+                  value={newUserData.area_id}
+                  onValueChange={(value) => setNewUserData({ ...newUserData, area_id: value })}
+                  disabled={!newUserData.region_id}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhuma</SelectItem>
+                    {filteredAreas.map((area) => (
+                      <SelectItem key={area.id} value={area.id}>
+                        {area.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -756,6 +832,56 @@ export default function Usuarios() {
                     {churches.map((church) => (
                       <SelectItem key={church.id} value={church.id}>
                         {church.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_region_id">Região</Label>
+                <Select
+                  value={editUserData.region_id}
+                  onValueChange={(value) => {
+                    setEditUserData({ ...editUserData, region_id: value, area_id: "" });
+                    if (value) {
+                      setFilteredAreas(areas.filter(area => area.region_id === value));
+                    } else {
+                      setFilteredAreas([]);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma região" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhuma</SelectItem>
+                    {regions.map((region) => (
+                      <SelectItem key={region.id} value={region.id}>
+                        {region.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit_area_id">Área</Label>
+                <Select
+                  value={editUserData.area_id}
+                  onValueChange={(value) => setEditUserData({ ...editUserData, area_id: value })}
+                  disabled={!editUserData.region_id}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhuma</SelectItem>
+                    {filteredAreas.map((area) => (
+                      <SelectItem key={area.id} value={area.id}>
+                        {area.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

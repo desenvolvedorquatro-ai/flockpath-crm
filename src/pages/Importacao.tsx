@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import * as XLSX from "xlsx";
+import { ModernHeader } from "@/components/ModernHeader";
 
 export default function Importacao() {
   const { isAdmin, isPastor } = useUserRole();
@@ -285,12 +286,12 @@ export default function Importacao() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Importação de Dados</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Importe dados em lote através de arquivos Excel</p>
-        </div>
-      </div>
+      <ModernHeader
+        title="Importação de Dados"
+        description="Importe dados em lote através de arquivos Excel"
+        icon={Upload}
+        colorScheme="green-teal"
+      />
 
       <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />

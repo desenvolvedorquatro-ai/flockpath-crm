@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ModernHeader } from "@/components/ModernHeader";
 
 export default function Configuracoes() {
   const { user, signOut } = useAuth();
@@ -130,10 +131,12 @@ export default function Configuracoes() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Configurações</h1>
-        <p className="text-sm md:text-base text-muted-foreground">Personalize o sistema de acordo com suas necessidades</p>
-      </div>
+      <ModernHeader
+        title="Configurações"
+        description="Personalize o sistema de acordo com suas necessidades"
+        icon={Settings}
+        colorScheme="blue-purple"
+      />
 
       <div className="grid gap-4 md:gap-6 max-w-4xl">
         <Card>

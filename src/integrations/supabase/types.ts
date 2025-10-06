@@ -219,6 +219,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          area_id: string | null
           church_id: string | null
           cpf: string | null
           created_at: string | null
@@ -226,9 +227,11 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          region_id: string | null
           updated_at: string | null
         }
         Insert: {
+          area_id?: string | null
           church_id?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -236,9 +239,11 @@ export type Database = {
           full_name: string
           id: string
           phone?: string | null
+          region_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          area_id?: string | null
           church_id?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -246,14 +251,29 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          region_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_church_id_fkey"
             columns: ["church_id"]
             isOneToOne: false
             referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]

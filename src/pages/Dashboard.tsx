@@ -6,6 +6,7 @@ import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { ModernHeader } from "@/components/ModernHeader";
 
 interface DashboardStats {
   totalVisitors: number;
@@ -117,10 +118,12 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="p-4 md:p-8 animate-fade-in">
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Visão geral da jornada de visitantes</p>
-        </div>
+        <ModernHeader
+          title="Dashboard"
+          description="Acompanhe as métricas e estatísticas do sistema"
+          icon={BarChart3}
+          colorScheme="blue-purple"
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {statsCards.map((stat, index) => (
