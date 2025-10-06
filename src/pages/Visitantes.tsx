@@ -307,7 +307,7 @@ export default function Visitantes() {
         icon={Users}
         onAction={() => setIsDialogOpen(true)}
         actionText="Novo Visitante"
-        colorScheme="cyan-blue"
+        colorScheme="red-coral"
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

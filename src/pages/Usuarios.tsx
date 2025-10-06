@@ -459,7 +459,7 @@ export default function Usuarios() {
         icon={UserCog}
         onAction={() => setIsCreateDialogOpen(true)}
         actionText="Novo Usuário"
-        colorScheme="cyan-blue"
+        colorScheme="red-coral"
       />
 
       <div className="glass-card rounded-2xl p-6 mb-6">

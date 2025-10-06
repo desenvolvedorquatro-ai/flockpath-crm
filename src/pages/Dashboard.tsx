@@ -122,7 +122,7 @@ export default function Dashboard() {
           title="Dashboard"
           description="Acompanhe as métricas e estatísticas do sistema"
           icon={BarChart3}
-          colorScheme="blue-purple"
+          colorScheme="red-coral"
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">

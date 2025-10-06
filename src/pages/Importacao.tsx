@@ -290,7 +290,7 @@ export default function Importacao() {
         title="Importação de Dados"
         description="Importe dados em lote através de arquivos Excel"
         icon={Upload}
-        colorScheme="green-teal"
+        colorScheme="red-coral"
       />
 
       <Alert className="mb-6">

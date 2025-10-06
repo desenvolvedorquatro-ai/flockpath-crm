@@ -135,7 +135,7 @@ export default function Configuracoes() {
         title="Configurações"
         description="Personalize o sistema de acordo com suas necessidades"
         icon={Settings}
-        colorScheme="blue-purple"
+        colorScheme="red-coral"
       />
 
       <div className="grid gap-4 md:gap-6 max-w-4xl mx-auto">
