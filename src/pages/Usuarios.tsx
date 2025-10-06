@@ -158,7 +158,7 @@ export default function Usuarios() {
     try {
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("*, churches(name)")
+        .select("*, churches(name), regions(name), areas(name)")
         .order("full_name");
 
       if (profilesError) throw profilesError;

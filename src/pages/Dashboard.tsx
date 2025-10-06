@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, Users, UserPlus, TrendingUp, Calendar as CalendarIcon } from "lucide-react";
+import { BarChart3, Users, UserPlus, TrendingUp, Calendar as CalendarIcon, MapPin, Building2, Church } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PipelineStage } from "@/components/dashboard/PipelineStage";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
@@ -15,6 +15,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tables } from "@/integrations/supabase/types";
 
 interface DashboardStats {
   totalVisitors: number;
@@ -23,9 +25,13 @@ interface DashboardStats {
   conversionRate: string;
 }
 
+type Region = Tables<"regions">;
+type Area = Tables<"areas">;
+type Church = Tables<"churches">;
+
 export default function Dashboard() {
   const { user } = useAuth();
-  const { isAdmin, isPastor } = useUserRole();
+  const { isAdmin, isPastor, roles } = useUserRole();
   const [stats, setStats] = useState<DashboardStats>({
     totalVisitors: 0,
     batizados: 0,
@@ -44,37 +50,149 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [isFiltering, setIsFiltering] = useState(false);
 
+  // Estados para filtros hierárquicos
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [churches, setChurches] = useState<Church[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
+  const [selectedArea, setSelectedArea] = useState<string>("");
+  const [selectedChurch, setSelectedChurch] = useState<string>("");
+  const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
+  const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Carregar dados hierárquicos e perfil do usuário
+  useEffect(() => {
+    if (!user) return;
+
+    const loadInitialData = async () => {
+      // Carregar regiões, áreas e igrejas
+      const [regionsRes, areasRes, churchesRes, profileRes] = await Promise.all([
+        supabase.from("regions").select("*").order("name"),
+        supabase.from("areas").select("*").order("name"),
+        supabase.from("churches").select("*").order("name"),
+        supabase.from("profiles").select("church_id, region_id, area_id, churches(area_id, areas(region_id))").eq("id", user.id).single()
+      ]);
+
+      if (regionsRes.data) setRegions(regionsRes.data);
+      if (areasRes.data) setAreas(areasRes.data);
+      if (churchesRes.data) setChurches(churchesRes.data);
+      if (profileRes.data) setUserProfile(profileRes.data);
+
+      // Pré-selecionar filtros baseado no nível do usuário
+      if (roles.includes("pastor")) {
+        // Pastor de igreja: pré-selecionar tudo e bloquear
+        if (profileRes.data?.church_id) {
+          setSelectedChurch(profileRes.data.church_id);
+          const church = churchesRes.data?.find(c => c.id === profileRes.data.church_id);
+          if (church?.area_id) {
+            setSelectedArea(church.area_id);
+            const area = areasRes.data?.find(a => a.id === church.area_id);
+            if (area?.region_id) {
+              setSelectedRegion(area.region_id);
+            }
+          }
+        }
+      } else if (roles.includes("pastor_coordenador")) {
+        // Pastor de área: pré-selecionar região e área
+        if (profileRes.data?.area_id) {
+          setSelectedArea(profileRes.data.area_id);
+          const area = areasRes.data?.find(a => a.id === profileRes.data.area_id);
+          if (area?.region_id) {
+            setSelectedRegion(area.region_id);
+          }
+        }
+      } else if (roles.includes("pastor_regiao")) {
+        // Pastor de região: pré-selecionar apenas região
+        if (profileRes.data?.region_id) {
+          setSelectedRegion(profileRes.data.region_id);
+        }
+      }
+    };
+
+    loadInitialData();
+  }, [user, roles]);
+
+  // Filtrar áreas quando região mudar
+  useEffect(() => {
+    if (selectedRegion) {
+      setFilteredAreas(areas.filter(a => a.region_id === selectedRegion));
+    } else {
+      setFilteredAreas(areas);
+    }
+    // Limpar área e igreja se região mudou
+    if (!roles.includes("pastor_coordenador") && !roles.includes("pastor")) {
+      setSelectedArea("");
+      setSelectedChurch("");
+    }
+  }, [selectedRegion, areas, roles]);
+
+  // Filtrar igrejas quando área mudar
+  useEffect(() => {
+    if (selectedArea) {
+      setFilteredChurches(churches.filter(c => c.area_id === selectedArea));
+    } else if (selectedRegion) {
+      // Se tem região mas não tem área, mostrar igrejas da região
+      const regionAreas = areas.filter(a => a.region_id === selectedRegion).map(a => a.id);
+      setFilteredChurches(churches.filter(c => c.area_id && regionAreas.includes(c.area_id)));
+    } else {
+      setFilteredChurches(churches);
+    }
+    // Limpar igreja se área mudou
+    if (!roles.includes("pastor")) {
+      setSelectedChurch("");
+    }
+  }, [selectedArea, selectedRegion, churches, areas, roles]);
+
   useEffect(() => {
     if (!user) return;
 
     const fetchStats = async () => {
-      let query = supabase.from("visitors").select("status, first_visit_date");
+      let query = supabase.from("visitors").select(`
+        status,
+        primeira_visita,
+        church_id,
+        churches!inner(
+          id,
+          area_id,
+          areas(
+            id,
+            region_id
+          )
+        )
+      `);
 
-      if (isAdmin) {
-        // Admin vê todos os visitantes
-      } else if (isPastor) {
-        // Pastor vê visitantes de todas as igrejas que ele gerencia
-        const { data: pastorChurches } = await supabase
-          .from("churches")
-          .select("id")
-          .eq("pastor_id", user.id);
+      // Aplicar filtros hierárquicos
+      if (selectedChurch) {
+        query = query.eq("church_id", selectedChurch);
+      } else if (selectedArea) {
+        query = query.eq("churches.area_id", selectedArea);
+      } else if (selectedRegion) {
+        query = query.eq("churches.areas.region_id", selectedRegion);
+      } else if (!isAdmin) {
+        // Se não é admin e não tem filtros, aplicar lógica antiga
+        if (isPastor) {
+          const { data: pastorChurches } = await supabase
+            .from("churches")
+            .select("id")
+            .eq("pastor_id", user.id);
 
-        if (pastorChurches && pastorChurches.length > 0) {
-          const churchIds = pastorChurches.map(c => c.id);
-          query = query.in("church_id", churchIds);
+          if (pastorChurches && pastorChurches.length > 0) {
+            const churchIds = pastorChurches.map(c => c.id);
+            query = query.in("church_id", churchIds);
+          } else {
+            return;
+          }
         } else {
-          return;
-        }
-      } else {
-        // Outros usuários veem apenas da sua igreja
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("church_id")
-          .eq("id", user.id)
-          .single();
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("church_id")
+            .eq("id", user.id)
+            .single();
 
-        if (!profile?.church_id) return;
-        query = query.eq("church_id", profile.church_id);
+          if (!profile?.church_id) return;
+          query = query.eq("church_id", profile.church_id);
+        }
       }
 
       // Aplicar filtros de data
@@ -115,13 +233,28 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, [user, isAdmin, isPastor, startDate, endDate]);
+  }, [user, isAdmin, isPastor, startDate, endDate, selectedRegion, selectedArea, selectedChurch]);
 
   const clearFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
+    // Limpar apenas filtros que o usuário pode alterar
+    if (isAdmin) {
+      setSelectedRegion("");
+      setSelectedArea("");
+      setSelectedChurch("");
+    } else if (roles.includes("pastor_regiao")) {
+      setSelectedArea("");
+      setSelectedChurch("");
+    } else if (roles.includes("pastor_coordenador")) {
+      setSelectedChurch("");
+    }
     setIsFiltering(false);
   };
+
+  const isRegionLocked = roles.includes("pastor_regiao") || roles.includes("pastor_coordenador") || roles.includes("pastor");
+  const isAreaLocked = roles.includes("pastor_coordenador") || roles.includes("pastor");
+  const isChurchLocked = roles.includes("pastor");
 
   const statsCards = [
     { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.visitante },
@@ -139,70 +272,133 @@ export default function Dashboard() {
           colorScheme="red-coral"
         />
 
-        {/* Filtros de Data */}
+        {/* Filtros */}
         <div className="mb-6 p-4 bg-card border border-border rounded-xl shadow-apple-sm">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-3 flex-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full sm:w-[200px] justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : "Data Inicial"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
+          <div className="flex flex-col gap-4">
+            {/* Filtros Hierárquicos */}
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+              <div className="flex-1 min-w-[200px]">
+                <Select 
+                  value={selectedRegion} 
+                  onValueChange={setSelectedRegion}
+                  disabled={isRegionLocked}
+                >
+                  <SelectTrigger className={cn(isRegionLocked && "opacity-70")}>
+                    <MapPin className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Todas as Regiões" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas as Regiões</SelectItem>
+                    {regions.map(region => (
+                      <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full sm:w-[200px] justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : "Data Final"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="flex-1 min-w-[200px]">
+                <Select 
+                  value={selectedArea} 
+                  onValueChange={setSelectedArea}
+                  disabled={isAreaLocked || !selectedRegion}
+                >
+                  <SelectTrigger className={cn((isAreaLocked || !selectedRegion) && "opacity-70")}>
+                    <Building2 className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Todas as Áreas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas as Áreas</SelectItem>
+                    {filteredAreas.map(area => (
+                      <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              {(startDate || endDate) && (
-                <Button onClick={clearFilters} variant="ghost">
-                  Limpar Filtros
-                </Button>
-              )}
+              <div className="flex-1 min-w-[200px]">
+                <Select 
+                  value={selectedChurch} 
+                  onValueChange={setSelectedChurch}
+                  disabled={isChurchLocked || !selectedArea}
+                >
+                  <SelectTrigger className={cn((isChurchLocked || !selectedArea) && "opacity-70")}>
+                    <Church className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Todas as Igrejas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas as Igrejas</SelectItem>
+                    {filteredChurches.map(church => (
+                      <SelectItem key={church.id} value={church.id}>{church.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {(startDate || endDate) && (
-              <Badge variant="secondary" className="animate-fade-in">
-                Filtros Ativos
-              </Badge>
-            )}
+            {/* Filtros de Data */}
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[200px] justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : "Data Inicial"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[200px] justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : "Data Final"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {(startDate || endDate || (selectedRegion && !isRegionLocked) || (selectedArea && !isAreaLocked) || (selectedChurch && !isChurchLocked)) && (
+                  <Button onClick={clearFilters} variant="ghost">
+                    Limpar Filtros
+                  </Button>
+                )}
+              </div>
+
+              {(startDate || endDate || selectedRegion || selectedArea || selectedChurch) && (
+                <Badge variant="secondary" className="animate-fade-in">
+                  Filtros Ativos
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
