@@ -8,7 +8,7 @@ interface ModernHeaderProps {
   icon: LucideIcon;
   onAction?: () => void;
   actionText?: string;
-  colorScheme?: 'blue-purple' | 'cyan-blue' | 'green-teal';
+  colorScheme?: 'blue-purple' | 'cyan-blue' | 'green-teal' | 'red-coral';
 }
 
 export function ModernHeader({
@@ -44,6 +44,14 @@ export function ModernHeader({
       overlayGradient: 'from-green-500/5 to-teal-500/5',
       buttonGradient: 'from-green-600 to-teal-600',
       buttonHover: 'hover:from-green-700 hover:to-teal-700'
+    },
+    'red-coral': {
+      iconBg: 'from-[#b63e37]/10 to-[#8b2e29]/10',
+      iconColor: 'text-[#b63e37]',
+      titleGradient: 'from-[#b63e37] via-[#8b2e29] to-[#d14e47]',
+      overlayGradient: 'from-[#b63e37]/5 to-[#d14e47]/5',
+      buttonGradient: 'from-[#b63e37] to-[#8b2e29]',
+      buttonHover: 'hover:from-[#8b2e29] hover:to-[#6f2420]'
     }
   };
   

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Map, Plus, Trash2, Edit } from "lucide-react";
+import { Map, Trash2, Edit } from "lucide-react";
+import { ModernHeader } from "@/components/ModernHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -204,19 +205,17 @@ export default function Areas() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Áreas</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Gerencie as áreas do sistema</p>
-        </div>
-        {(isAdmin || isPastor) && (
+      <ModernHeader
+        title="Áreas"
+        description="Gerencie as áreas do sistema"
+        icon={Map}
+        colorScheme="red-coral"
+        onAction={(isAdmin || isPastor) ? () => setIsDialogOpen(true) : undefined}
+        actionText="Nova Área"
+      />
+
+      {(isAdmin || isPastor) && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-gradient-to-r from-primary to-primary-glow">
-                <Plus className="w-4 h-4" />
-                Nova Área
-              </Button>
-            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingArea ? "Editar Área" : "Nova Área"}</DialogTitle>
@@ -279,7 +278,6 @@ export default function Areas() {
             </DialogContent>
           </Dialog>
         )}
-      </div>
 
       <div className="mb-6">
         <Input

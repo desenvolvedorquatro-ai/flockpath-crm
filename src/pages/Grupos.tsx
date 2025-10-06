@@ -1,4 +1,5 @@
-import { UsersRound, Plus, Search, Edit, Trash2 } from "lucide-react";
+import { UsersRound, Search, Edit, Trash2 } from "lucide-react";
+import { ModernHeader } from "@/components/ModernHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -182,19 +183,17 @@ export default function Grupos() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Grupos de Assistência</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Gerencie células e grupos de acompanhamento</p>
-        </div>
-        {(isAdmin || isPastor) && (
+      <ModernHeader
+        title="Grupos de Assistência"
+        description="Gerencie células e grupos de acompanhamento"
+        icon={UsersRound}
+        colorScheme="red-coral"
+        onAction={(isAdmin || isPastor) ? () => setIsDialogOpen(true) : undefined}
+        actionText="Novo Grupo"
+      />
+
+      {(isAdmin || isPastor) && (
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 btn-hover-lift bg-gradient-to-r from-primary to-primary-glow w-full sm:w-auto">
-                <Plus className="w-4 h-4" />
-                Novo Grupo
-              </Button>
-            </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto mx-4">
               <DialogHeader>
                 <DialogTitle>{editingGroup ? "Editar Grupo" : "Novo Grupo"}</DialogTitle>
@@ -264,7 +263,6 @@ export default function Grupos() {
             </DialogContent>
           </Dialog>
         )}
-      </div>
 
       <div className="glass-card rounded-2xl p-6 mb-6">
         <div className="relative">

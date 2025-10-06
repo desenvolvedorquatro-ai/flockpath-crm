@@ -1,4 +1,5 @@
-import { Building2, Plus, Search, Edit, Trash2, Users } from "lucide-react";
+import { Building2, Search, Edit, Trash2 } from "lucide-react";
+import { ModernHeader } from "@/components/ModernHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -202,19 +203,17 @@ export default function Igrejas() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Igrejas</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Gerencie todas as igrejas do sistema</p>
-        </div>
-        {(isAdmin) && (
+      <ModernHeader
+        title="Igrejas"
+        description="Gerencie todas as igrejas do sistema"
+        icon={Building2}
+        colorScheme="red-coral"
+        onAction={isAdmin ? () => setIsDialogOpen(true) : undefined}
+        actionText="Nova Igreja"
+      />
+
+      {(isAdmin) && (
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 btn-hover-lift bg-gradient-to-r from-primary to-primary-glow w-full sm:w-auto">
-                <Plus className="w-4 h-4" />
-                Nova Igreja
-              </Button>
-            </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
               <DialogHeader>
                 <DialogTitle>{editingChurch ? "Editar Igreja" : "Nova Igreja"}</DialogTitle>
@@ -341,7 +340,6 @@ export default function Igrejas() {
             </DialogContent>
           </Dialog>
         )}
-      </div>
 
       <div className="glass-card rounded-2xl p-6 mb-6">
         <div className="relative">

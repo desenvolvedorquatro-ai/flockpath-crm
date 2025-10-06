@@ -138,7 +138,7 @@ export default function Configuracoes() {
         colorScheme="blue-purple"
       />
 
-      <div className="grid gap-4 md:gap-6 max-w-4xl">
+      <div className="grid gap-4 md:gap-6 max-w-4xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

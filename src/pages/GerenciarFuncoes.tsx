@@ -10,8 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Edit, Trash2, Plus } from "lucide-react";
+import { Shield, Edit, Trash2 } from "lucide-react";
 import { ModuleName } from "@/hooks/usePermissions";
+import { ModernHeader } from "@/components/ModernHeader";
 
 interface RoleDefinition {
   id: string;
@@ -277,21 +278,14 @@ export default function GerenciarFuncoes() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="h-8 w-8" />
-            Gerenciamento de Funções
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Crie e gerencie funções personalizadas com permissões específicas
-          </p>
-        </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Função
-        </Button>
-      </div>
+      <ModernHeader
+        title="Gerenciamento de Funções"
+        description="Crie e gerencie funções personalizadas com permissões específicas"
+        icon={Shield}
+        colorScheme="red-coral"
+        onAction={openCreateDialog}
+        actionText="Nova Função"
+      />
 
       <div className="grid gap-4">
         {roles.map((role) => (
