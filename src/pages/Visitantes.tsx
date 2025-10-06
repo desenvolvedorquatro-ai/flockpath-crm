@@ -289,6 +289,23 @@ export default function Visitantes() {
     }
   }, [selectedAreaId, selectedRegionId, churches]);
 
+  // Carregar grupos quando igreja é selecionada (para admin)
+  useEffect(() => {
+    if (churchId && isAdmin) {
+      const loadChurchGroups = async () => {
+        const { data: groupsData } = await supabase
+          .from("assistance_groups")
+          .select("id, name")
+          .eq("church_id", churchId)
+          .order("name");
+
+        setAssistanceGroups(groupsData || []);
+      };
+
+      loadChurchGroups();
+    }
+  }, [churchId, isAdmin]);
+
   useEffect(() => {
     let filtered = visitors;
 
