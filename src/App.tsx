@@ -22,7 +22,7 @@ import NotFound from "./pages/NotFound";
 import { useAuth } from "./hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogOut } from "lucide-react";
+import { Building2, LogOut } from "lucide-react";
 import logoAprisco from "@/assets/logo-aprisco.png";
 import { supabase } from "@/integrations/supabase/client";
 const queryClient = new QueryClient();
@@ -32,6 +32,7 @@ const AppLayout = () => {
     signOut
   } = useAuth();
   const [userFullName, setUserFullName] = React.useState<string>("");
+  const [userChurchInfo, setUserChurchInfo] = React.useState<string>("");
 
   React.useEffect(() => {
     if (!user) return;
@@ -39,12 +40,41 @@ const AppLayout = () => {
     const fetchUserProfile = async () => {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select(`
+          full_name,
+          church_id,
+          churches (
+            name,
+            area_id,
+            region_id,
+            areas (
+              name
+            ),
+            regions (
+              name
+            )
+          )
+        `)
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       
       if (profile?.full_name) {
         setUserFullName(profile.full_name);
+      }
+
+      // Montar informações da igreja
+      if (profile?.churches) {
+        const church = profile.churches as any;
+        const churchName = church.name || "";
+        const areaName = church.areas?.name || "";
+        const regionName = church.regions?.name || "";
+        
+        const parts = [];
+        if (regionName) parts.push(regionName);
+        if (areaName) parts.push(areaName);
+        if (churchName) parts.push(churchName);
+        
+        setUserChurchInfo(parts.join(" | "));
       }
     };
 
@@ -63,7 +93,14 @@ const AppLayout = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-border bg-white shadow-sm sticky top-0 z-10 flex items-center justify-end px-4 md:px-6">
+          <header className="h-16 border-b border-border bg-white shadow-sm sticky top-0 z-10 flex items-center justify-between px-4 md:px-6">
+            {userChurchInfo && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Building2 className="w-4 h-4" />
+                <span className="font-medium">{userChurchInfo}</span>
+              </div>
+            )}
+            <div className="flex-1" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">

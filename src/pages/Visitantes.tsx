@@ -212,11 +212,20 @@ export default function Visitantes() {
         }
       } else {
         // Outros usuários veem apenas da sua igreja
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("church_id")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
+
+        if (profileError) {
+          toast({
+            title: "Erro ao carregar perfil",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          return;
+        }
 
         if (!profile?.church_id) {
           toast({
