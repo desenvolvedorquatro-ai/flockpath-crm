@@ -104,6 +104,8 @@ export default function Visitantes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [churchId, setChurchId] = useState<string | null>(null);
   const [view, setView] = useState<"card" | "list">("list");
@@ -448,6 +450,7 @@ export default function Visitantes() {
     }
 
     setFilteredVisitors(filtered);
+    setCurrentPage(1); // Reset para primeira página quando filtrar
    }, [searchTerm, statusFilter, visitors]);
 
   const openEditDialog = async (visitor: Visitor) => {
@@ -492,6 +495,7 @@ export default function Visitantes() {
         assistance_group_id: editFormData.assistance_group_id && editFormData.assistance_group_id !== "none" ? editFormData.assistance_group_id : null,
         data_nascimento: editDataNascimento ? format(editDataNascimento, "yyyy-MM-dd") : null,
         primeira_visita: editPrimeiraVisita ? format(editPrimeiraVisita, "yyyy-MM-dd") : null,
+        church_id: selectedVisitor.church_id, // Mantém a igreja do visitante
       })
       .eq("id", selectedVisitor.id);
 
@@ -949,7 +953,7 @@ export default function Visitantes() {
         </div>
       ) : view === "list" ? (
         <div className="glass-card rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-350px)]">
             <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow>
@@ -963,7 +967,9 @@ export default function Visitantes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVisitors.map((visitor) => {
+                {filteredVisitors
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((visitor) => {
                   const birthday = visitor.data_nascimento ? new Date(visitor.data_nascimento) : null;
                   const today = new Date();
                   const daysUntilBirthday = birthday 
@@ -1052,7 +1058,9 @@ export default function Visitantes() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVisitors.map((visitor) => (
+          {filteredVisitors
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((visitor) => (
             <Card key={visitor.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -1121,6 +1129,31 @@ export default function Visitantes() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Paginação */}
+      {filteredVisitors.length > itemsPerPage && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Página {currentPage} de {Math.ceil(filteredVisitors.length / itemsPerPage)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredVisitors.length / itemsPerPage), prev + 1))}
+            disabled={currentPage === Math.ceil(filteredVisitors.length / itemsPerPage)}
+          >
+            Próxima
+          </Button>
         </div>
       )}
 

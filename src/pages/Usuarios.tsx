@@ -88,6 +88,8 @@ export default function Usuarios() {
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [view, setView] = useState<"card" | "list">("list");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
 
   useEffect(() => {
     if (!roleLoading && isAdmin) {
@@ -495,6 +497,10 @@ export default function Usuarios() {
     profile.email?.toLowerCase().includes(search.toLowerCase())
   );
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   if (roleLoading || loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-muted-foreground">Carregando...</div>
@@ -538,7 +544,7 @@ export default function Usuarios() {
 
       {view === "list" ? (
         <div className="glass-card rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-350px)]">
             <table className="w-full min-w-[800px]">
               <thead className="bg-muted/50">
                 <tr>
@@ -552,7 +558,9 @@ export default function Usuarios() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredProfiles.map((profile) => (
+                {filteredProfiles
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((profile) => (
                   <tr key={profile.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 text-sm text-foreground">{profile.full_name}</td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{profile.email}</td>
@@ -624,7 +632,9 @@ export default function Usuarios() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProfiles.map((profile) => (
+          {filteredProfiles
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((profile) => (
             <Card key={profile.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -709,6 +719,31 @@ export default function Usuarios() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Paginação */}
+      {filteredProfiles.length > itemsPerPage && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Página {currentPage} de {Math.ceil(filteredProfiles.length / itemsPerPage)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredProfiles.length / itemsPerPage), prev + 1))}
+            disabled={currentPage === Math.ceil(filteredProfiles.length / itemsPerPage)}
+          >
+            Próxima
+          </Button>
         </div>
       )}
 
