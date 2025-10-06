@@ -38,6 +38,14 @@ const AppLayout = () => {
     if (!user) return;
     
     const fetchUserProfile = async () => {
+      // Verificar se é admin
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+
+      const isAdmin = roles?.some(r => r.role === "admin");
+
       const { data: profile } = await supabase
         .from("profiles")
         .select(`
@@ -62,7 +70,13 @@ const AppLayout = () => {
         setUserFullName(profile.full_name);
       }
 
-      // Montar informações da igreja
+      // Admin não precisa ter igreja, então não exibir
+      if (isAdmin) {
+        setUserChurchInfo("");
+        return;
+      }
+
+      // Montar informações da igreja para não-admin
       if (profile?.churches) {
         const church = profile.churches as any;
         const churchName = church.name || "";
@@ -75,6 +89,8 @@ const AppLayout = () => {
         if (churchName) parts.push(churchName);
         
         setUserChurchInfo(parts.join(" | "));
+      } else {
+        setUserChurchInfo("");
       }
     };
 

@@ -227,42 +227,35 @@ export default function Visitantes() {
           return;
         }
 
-        if (!profile?.church_id) {
-          toast({
-            title: "Igreja não encontrada",
-            description: "Você precisa estar vinculado a uma igreja.",
-            variant: "destructive",
-          });
-          return;
+        if (profile?.church_id) {
+          // Pré-carregar a igreja do usuário
+          setChurchId(profile.church_id);
+
+          const { data, error } = await supabase
+            .from("visitors")
+            .select("*")
+            .eq("church_id", profile.church_id)
+            .order("created_at", { ascending: false });
+
+          if (error) {
+            toast({
+              title: "Erro ao carregar visitantes",
+              description: error.message,
+              variant: "destructive",
+            });
+          } else {
+            setVisitors(data || []);
+            setFilteredVisitors(data || []);
+          }
+
+          const { data: groupsData } = await supabase
+            .from("assistance_groups")
+            .select("id, name")
+            .eq("church_id", profile.church_id)
+            .order("name");
+
+          setAssistanceGroups(groupsData || []);
         }
-
-        // Pré-carregar a igreja do usuário
-        setChurchId(profile.church_id);
-
-        const { data, error } = await supabase
-          .from("visitors")
-          .select("*")
-          .eq("church_id", profile.church_id)
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          toast({
-            title: "Erro ao carregar visitantes",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          setVisitors(data || []);
-          setFilteredVisitors(data || []);
-        }
-
-        const { data: groupsData } = await supabase
-          .from("assistance_groups")
-          .select("id, name")
-          .eq("church_id", profile.church_id)
-          .order("name");
-
-        setAssistanceGroups(groupsData || []);
       }
     };
 
