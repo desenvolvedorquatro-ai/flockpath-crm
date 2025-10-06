@@ -572,7 +572,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           primeira_visita: string | null
-          status: Database["public"]["Enums"]["visitor_status"] | null
+          status: Database["public"]["Enums"]["visitor_status"]
           updated_at: string | null
         }
         Insert: {
@@ -590,7 +590,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           primeira_visita?: string | null
-          status?: Database["public"]["Enums"]["visitor_status"] | null
+          status: Database["public"]["Enums"]["visitor_status"]
           updated_at?: string | null
         }
         Update: {
@@ -608,7 +608,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           primeira_visita?: string | null
-          status?: Database["public"]["Enums"]["visitor_status"] | null
+          status?: Database["public"]["Enums"]["visitor_status"]
           updated_at?: string | null
         }
         Relationships: [
@@ -676,9 +676,8 @@ export type Database = {
       visitor_status:
         | "visitante"
         | "interessado"
-        | "em_acompanhamento"
-        | "novo_membro"
-        | "engajado"
+        | "em_assistencia"
+        | "batizado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -818,9 +817,8 @@ export const Constants = {
       visitor_status: [
         "visitante",
         "interessado",
-        "em_acompanhamento",
-        "novo_membro",
-        "engajado",
+        "em_assistencia",
+        "batizado",
       ],
     },
   },
