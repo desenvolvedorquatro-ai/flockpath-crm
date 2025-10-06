@@ -270,6 +270,17 @@ export default function Visitantes() {
           // Pré-carregar a igreja do usuário
           setChurchId(profile.church_id);
 
+          // Carregar dados da igreja
+          const { data: churchData } = await supabase
+            .from("churches")
+            .select("*")
+            .eq("id", profile.church_id)
+            .maybeSingle();
+
+          if (churchData) {
+            setChurches([churchData]);
+          }
+
           const { data, error } = await supabase
             .from("visitors")
             .select(`
