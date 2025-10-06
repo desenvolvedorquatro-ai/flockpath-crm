@@ -56,6 +56,7 @@ interface Visitor {
   data_nascimento: string | null;
   primeira_visita: string | null;
   church_id: string;
+  church_name?: string | null;
   assistance_group_name?: string | null;
   last_interaction_type?: string | null;
   last_interaction_date?: string | null;
@@ -150,6 +151,7 @@ export default function Visitantes() {
           .from("visitors")
           .select(`
             *,
+            churches(name),
             assistance_groups!visitors_assistance_group_id_fkey(name),
             visitor_interactions(interaction_type, interaction_date)
           `)
@@ -162,11 +164,12 @@ export default function Visitantes() {
             variant: "destructive",
           });
         } else {
-          // Processar os dados para incluir último tipo de interação e nome do grupo
+          // Processar os dados para incluir último tipo de interação, nome do grupo e igreja
           const processedData = (data || []).map((v: any) => {
             const lastInteraction = v.visitor_interactions?.[0] || null;
             return {
               ...v,
+              church_name: v.churches?.name || null,
               assistance_group_name: v.assistance_groups?.name || null,
               last_interaction_type: lastInteraction?.interaction_type || null,
               last_interaction_date: lastInteraction?.interaction_date || null,
@@ -215,6 +218,7 @@ export default function Visitantes() {
             .from("visitors")
             .select(`
               *,
+              churches(name),
               assistance_groups!visitors_assistance_group_id_fkey(name),
               visitor_interactions(interaction_type, interaction_date)
             `)
@@ -232,6 +236,7 @@ export default function Visitantes() {
               const lastInteraction = v.visitor_interactions?.[0] || null;
               return {
                 ...v,
+                church_name: v.churches?.name || null,
                 assistance_group_name: v.assistance_groups?.name || null,
                 last_interaction_type: lastInteraction?.interaction_type || null,
                 last_interaction_date: lastInteraction?.interaction_date || null,
@@ -285,6 +290,7 @@ export default function Visitantes() {
             .from("visitors")
             .select(`
               *,
+              churches(name),
               assistance_groups!visitors_assistance_group_id_fkey(name),
               visitor_interactions(interaction_type, interaction_date)
             `)
@@ -302,6 +308,7 @@ export default function Visitantes() {
               const lastInteraction = v.visitor_interactions?.[0] || null;
               return {
                 ...v,
+                church_name: v.churches?.name || null,
                 assistance_group_name: v.assistance_groups?.name || null,
                 last_interaction_type: lastInteraction?.interaction_type || null,
                 last_interaction_date: lastInteraction?.interaction_date || null,
@@ -443,7 +450,7 @@ export default function Visitantes() {
     setFilteredVisitors(filtered);
    }, [searchTerm, statusFilter, visitors]);
 
-  const openEditDialog = (visitor: Visitor) => {
+  const openEditDialog = async (visitor: Visitor) => {
     setSelectedVisitor(visitor);
     setEditFormData({
       full_name: visitor.full_name,
@@ -456,6 +463,15 @@ export default function Visitantes() {
     });
     setEditDataNascimento(visitor.data_nascimento ? new Date(visitor.data_nascimento) : undefined);
     setEditPrimeiraVisita(visitor.primeira_visita ? new Date(visitor.primeira_visita) : undefined);
+    
+    // Carregar grupos de assistência apenas da igreja do visitante
+    const { data: groupsData } = await supabase
+      .from("assistance_groups")
+      .select("id, name")
+      .eq("church_id", visitor.church_id)
+      .order("name");
+    
+    setAssistanceGroups(groupsData || []);
     setIsEditDialogOpen(true);
   };
 
@@ -938,6 +954,7 @@ export default function Visitantes() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[150px]">Nome</TableHead>
+                  <TableHead className="hidden lg:table-cell min-w-[120px]">Igreja</TableHead>
                   <TableHead className="hidden sm:table-cell min-w-[130px]">Grupo</TableHead>
                   <TableHead className="hidden md:table-cell min-w-[160px]">Última Interação</TableHead>
                   <TableHead className="hidden md:table-cell min-w-[100px]">Aniversário</TableHead>
@@ -960,6 +977,9 @@ export default function Visitantes() {
                   return (
                     <TableRow key={visitor.id}>
                       <TableCell className="font-medium">{visitor.full_name}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                        {visitor.church_name || "-"}
+                      </TableCell>
                       <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                         {visitor.assistance_group_name || "-"}
                       </TableCell>
