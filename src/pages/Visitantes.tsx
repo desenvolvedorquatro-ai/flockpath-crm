@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2 } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,24 @@ interface AssistanceGroup {
   name: string;
 }
 
+interface Region {
+  id: string;
+  name: string;
+}
+
+interface Area {
+  id: string;
+  name: string;
+  region_id: string;
+}
+
+interface Church {
+  id: string;
+  name: string;
+  area_id: string | null;
+  region_id: string | null;
+}
+
 const statusColors: Record<string, string> = {
   visitante: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   interessado: "bg-purple-500/10 text-purple-500 border-purple-500/20",
@@ -88,6 +106,15 @@ export default function Visitantes() {
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [churchId, setChurchId] = useState<string | null>(null);
   const [view, setView] = useState<"card" | "list">("list");
+
+  // Estados para admin selecionar região, área e igreja
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [churches, setChurches] = useState<Church[]>([]);
+  const [selectedRegionId, setSelectedRegionId] = useState<string>("");
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
+  const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -129,6 +156,25 @@ export default function Visitantes() {
           .order("name");
 
         setAssistanceGroups(groupsData || []);
+
+        // Carregar regiões, áreas e igrejas para admin
+        const { data: regionsData } = await supabase
+          .from("regions")
+          .select("*")
+          .order("name");
+        setRegions(regionsData || []);
+
+        const { data: areasData } = await supabase
+          .from("areas")
+          .select("*")
+          .order("name");
+        setAreas(areasData || []);
+
+        const { data: churchesData } = await supabase
+          .from("churches")
+          .select("*")
+          .order("name");
+        setChurches(churchesData || []);
       } else if (isPastor) {
         // Pastor vê visitantes e grupos de todas as suas igrejas
         const { data: pastorChurches } = await supabase
@@ -181,6 +227,7 @@ export default function Visitantes() {
           return;
         }
 
+        // Pré-carregar a igreja do usuário
         setChurchId(profile.church_id);
 
         const { data, error } = await supabase
@@ -213,6 +260,33 @@ export default function Visitantes() {
     fetchChurchAndVisitors();
   }, [user, isAdmin, isPastor]);
 
+  // Filtrar áreas quando região é selecionada
+  useEffect(() => {
+    if (selectedRegionId) {
+      const filtered = areas.filter(a => a.region_id === selectedRegionId);
+      setFilteredAreas(filtered);
+      setSelectedAreaId("");
+      setChurchId(null);
+    } else {
+      setFilteredAreas([]);
+      setSelectedAreaId("");
+    }
+  }, [selectedRegionId, areas]);
+
+  // Filtrar igrejas quando área é selecionada
+  useEffect(() => {
+    if (selectedAreaId) {
+      const filtered = churches.filter(c => c.area_id === selectedAreaId);
+      setFilteredChurches(filtered);
+      setChurchId(null);
+    } else if (selectedRegionId) {
+      const filtered = churches.filter(c => c.region_id === selectedRegionId);
+      setFilteredChurches(filtered);
+    } else {
+      setFilteredChurches(churches);
+    }
+  }, [selectedAreaId, selectedRegionId, churches]);
+
   useEffect(() => {
     let filtered = visitors;
 
@@ -235,20 +309,10 @@ export default function Visitantes() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!churchId && !isAdmin && !isPastor) {
+    if (!churchId) {
       toast({
         title: "Erro",
-        description: "Igreja não encontrada.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Se admin/pastor e não tiver church_id, deve selecionar uma igreja
-    if ((isAdmin || isPastor) && !churchId) {
-      toast({
-        title: "Erro",
-        description: "Selecione uma igreja para o visitante.",
+        description: isAdmin ? "Selecione uma igreja para o visitante." : "Igreja não encontrada.",
         variant: "destructive",
       });
       return;
@@ -291,14 +355,25 @@ export default function Visitantes() {
       });
       setDataNascimento(undefined);
       setPrimeiraVisita(undefined);
+      
+      // Resetar seleções de admin
+      if (isAdmin) {
+        setSelectedRegionId("");
+        setSelectedAreaId("");
+        setChurchId(null);
+      }
 
       const { data } = await supabase
         .from("visitors")
         .select("*")
-        .eq("church_id", churchId)
         .order("created_at", { ascending: false });
 
-      setVisitors(data || []);
+      if (isAdmin) {
+        setVisitors(data || []);
+      } else {
+        const filtered = data?.filter(v => v.church_id === churchId) || [];
+        setVisitors(filtered);
+      }
     }
   };
 
@@ -319,6 +394,72 @@ export default function Visitantes() {
             <DialogTitle>Cadastrar Novo Visitante</DialogTitle>
           </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {isAdmin && (
+                <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Building2 className="w-4 h-4 text-primary" />
+                    <Label className="font-semibold">Selecione a Igreja do Visitante</Label>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="region">Região</Label>
+                      <Select
+                        value={selectedRegionId}
+                        onValueChange={setSelectedRegionId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione região" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card z-[100]">
+                          {regions.map((region) => (
+                            <SelectItem key={region.id} value={region.id}>
+                              {region.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="area">Área</Label>
+                      <Select
+                        value={selectedAreaId}
+                        onValueChange={setSelectedAreaId}
+                        disabled={!selectedRegionId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione área" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card z-[100]">
+                          {filteredAreas.map((area) => (
+                            <SelectItem key={area.id} value={area.id}>
+                              {area.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="church">Igreja *</Label>
+                      <Select
+                        value={churchId || ""}
+                        onValueChange={setChurchId}
+                        disabled={!selectedRegionId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione igreja" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card z-[100]">
+                          {filteredChurches.map((church) => (
+                            <SelectItem key={church.id} value={church.id}>
+                              {church.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="full_name">Nome completo *</Label>
