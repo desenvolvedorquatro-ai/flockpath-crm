@@ -373,6 +373,16 @@ export default function Usuarios() {
     e.preventDefault();
     if (!selectedUserId) return;
 
+    // Validar se igreja foi selecionada
+    if (!editUserData.church_id) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma igreja principal",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("profiles")
@@ -410,6 +420,10 @@ export default function Usuarios() {
 
       toast({ title: "Dados atualizados com sucesso!" });
       setIsEditDialogOpen(false);
+      setSelectedUserId(null);
+      setEditUserData({ full_name: "", phone: "", cpf: "", church_id: "", region_id: "", area_id: "" });
+      setEditMultiChurchAccess(false);
+      setEditSelectedChurches([]);
       fetchProfiles();
     } catch (error: any) {
       toast({
@@ -991,7 +1005,7 @@ export default function Usuarios() {
               <div>
                 <Label htmlFor="edit_region_id">Região</Label>
                 <Select
-                  value={editUserData.region_id || undefined}
+                  value={editUserData.region_id || ""}
                   onValueChange={(value) => {
                     setEditUserData({ ...editUserData, region_id: value, area_id: "", church_id: "" });
                     if (value) {
@@ -1006,7 +1020,7 @@ export default function Usuarios() {
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma região" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-card z-[100]">
                     {regions.map((region) => (
                       <SelectItem key={region.id} value={region.id}>
                         {region.name}
@@ -1019,7 +1033,7 @@ export default function Usuarios() {
               <div>
                 <Label htmlFor="edit_area_id">Área</Label>
                 <Select
-                  value={editUserData.area_id || undefined}
+                  value={editUserData.area_id || ""}
                   onValueChange={(value) => {
                     setEditUserData({ ...editUserData, area_id: value, church_id: "" });
                     if (value) {
@@ -1033,7 +1047,7 @@ export default function Usuarios() {
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma área" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-card z-[100]">
                     {filteredAreas.map((area) => (
                       <SelectItem key={area.id} value={area.id}>
                         {area.name}
@@ -1047,15 +1061,14 @@ export default function Usuarios() {
             <div>
               <Label htmlFor="edit_church_id">Igreja Principal *</Label>
               <Select
-                value={editUserData.church_id}
+                value={editUserData.church_id || ""}
                 onValueChange={(value) => setEditUserData({ ...editUserData, church_id: value })}
-                required
                 disabled={!editUserData.area_id}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma igreja" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card z-[100]">
                   {filteredChurches.map((church) => (
                     <SelectItem key={church.id} value={church.id}>
                       {church.name}
