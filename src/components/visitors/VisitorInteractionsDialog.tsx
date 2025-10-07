@@ -79,7 +79,7 @@ export function VisitorInteractionsDialog({
         .from('visitor_interactions')
         .select(`
           *,
-          profiles (
+          profiles!visitor_interactions_created_by_fkey (
             full_name
           )
         `)
