@@ -1,4 +1,4 @@
-import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map, Upload, Shield, FileBarChart } from "lucide-react";
+import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map, Upload, Shield, FileBarChart, CheckSquare, Calendar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -87,6 +87,26 @@ export function AppSidebar() {
                 }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
                     <FileBarChart className="w-6 h-6" />
                     <span>Relatórios</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/tarefas" onClick={handleMenuClick} className={({
+                  isActive
+                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
+                    <CheckSquare className="w-6 h-6" />
+                    <span>Tarefas</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/mapa-frequencia" onClick={handleMenuClick} className={({
+                  isActive
+                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
+                    <Calendar className="w-6 h-6" />
+                    <span>Mapa de Frequência</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -34,7 +34,7 @@ interface RolePermission {
   can_delete: boolean;
 }
 
-const MODULES: ModuleName[] = ["visitantes", "igrejas", "regioes", "areas", "grupos", "usuarios", "importacao", "interacoes"];
+const MODULES: ModuleName[] = ["visitantes", "igrejas", "regioes", "areas", "grupos", "usuarios", "importacao", "interacoes", "tarefas", "frequencia"];
 const MODULE_LABELS: Record<ModuleName, string> = {
   visitantes: "Visitantes",
   igrejas: "Igrejas",
@@ -43,6 +43,8 @@ const MODULE_LABELS: Record<ModuleName, string> = {
   grupos: "Grupos",
   usuarios: "Usuários",
   importacao: "Importação",
+  tarefas: "Tarefas",
+  frequencia: "Mapa de Frequência",
   interacoes: "Interações",
 };
 

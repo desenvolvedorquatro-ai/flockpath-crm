@@ -18,6 +18,8 @@ import Areas from "./pages/Areas";
 import Importacao from "./pages/Importacao";
 import GerenciarFuncoes from "./pages/GerenciarFuncoes";
 import Relatorios from "./pages/Relatorios";
+import Tarefas from "./pages/Tarefas";
+import MapaFrequencia from "./pages/MapaFrequencia";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./hooks/useAuth";
@@ -151,6 +153,8 @@ const AppLayout = () => {
               <Route path="/areas" element={<Areas />} />
               <Route path="/importacao" element={<Importacao />} />
               <Route path="/relatorios" element={<Relatorios />} />
+              <Route path="/tarefas" element={<Tarefas />} />
+              <Route path="/mapa-frequencia" element={<MapaFrequencia />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               <Route path="/gerenciar-funcoes" element={<GerenciarFuncoes />} />
               <Route path="*" element={<NotFound />} />
