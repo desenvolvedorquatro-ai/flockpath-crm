@@ -480,9 +480,17 @@ export default function Importacao() {
                 Importar Visitantes
               </CardTitle>
               <CardDescription>
-                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), nome_area, nome_regiao, email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo (opcionais)
-                <br/>
-                <em>A igreja deve estar cadastrada antes. Informar área e região ajuda a identificar a igreja correta.</em>
+                <div className="space-y-2">
+                  <div>
+                    <strong>Campos obrigatórios:</strong> nome, nome_igreja
+                  </div>
+                  <div>
+                    <strong>Campos opcionais:</strong> nome_area, nome_regiao, email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo
+                  </div>
+                  <div className="text-muted-foreground italic text-sm">
+                    💡 Dica: Informar área e região ajuda a identificar a igreja correta quando há igrejas com nomes similares
+                  </div>
+                </div>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
