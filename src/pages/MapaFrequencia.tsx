@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSunday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar } from "lucide-react";
+import { Calendar, Sun, Moon, Clock } from "lucide-react";
 
 interface Visitor {
   id: string;
@@ -110,6 +112,7 @@ export default function MapaFrequencia() {
 
   const fetchVisitors = async () => {
     try {
+      setLoading(true);
       let query = supabase
         .from("visitors")
         .select("id, full_name")
@@ -176,13 +179,16 @@ export default function MapaFrequencia() {
     );
   };
 
+  const getAttendanceCount = (visitorId: string) => {
+    return attendanceRecords.filter(record => record.visitor_id === visitorId).length;
+  };
+
   const toggleAttendance = async (visitorId: string, date: Date, serviceType: "ebd" | "noite" | "outro") => {
     try {
       const dateStr = format(date, "yyyy-MM-dd");
       const exists = hasAttendance(visitorId, date, serviceType);
 
       if (exists) {
-        // Remove attendance
         const { error } = await supabase
           .from("attendance_records")
           .delete()
@@ -192,7 +198,6 @@ export default function MapaFrequencia() {
 
         if (error) throw error;
       } else {
-        // Add attendance
         const { error } = await supabase
           .from("attendance_records")
           .insert({
@@ -231,23 +236,53 @@ export default function MapaFrequencia() {
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 space-y-6">
       <ModernHeader
         title="Mapa de Frequência"
         description="Acompanhe a frequência dos visitantes nos cultos"
         icon={Calendar}
       />
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
+      {/* Legenda */}
+      <Card className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-6 items-center justify-center">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center">
+                <Sun className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-sm font-medium">EBD (Escola Bíblica Dominical)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded bg-purple-500 flex items-center justify-center">
+                <Moon className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-sm font-medium">Culto Noite</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded bg-gray-500 flex items-center justify-center">
+                <Clock className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-sm font-medium">Outro Horário</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filtros */}
+      <Card className="shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Filtros
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="church">Igreja</Label>
+              <Label htmlFor="church" className="text-base font-semibold">Igreja</Label>
               <Select value={selectedChurch} onValueChange={setSelectedChurch}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Selecione uma igreja" />
                 </SelectTrigger>
                 <SelectContent>
@@ -261,13 +296,13 @@ export default function MapaFrequencia() {
             </div>
 
             <div>
-              <Label htmlFor="group">Grupo de Assistência</Label>
+              <Label htmlFor="group" className="text-base font-semibold">Grupo de Assistência</Label>
               <Select
                 value={selectedGroup}
                 onValueChange={setSelectedGroup}
                 disabled={!selectedChurch}
               >
-                <SelectTrigger>
+                <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Todos os GAs" />
                 </SelectTrigger>
                 <SelectContent>
@@ -282,12 +317,12 @@ export default function MapaFrequencia() {
             </div>
 
             <div>
-              <Label htmlFor="month">Mês</Label>
+              <Label htmlFor="month" className="text-base font-semibold">Mês</Label>
               <Select
                 value={format(selectedMonth, "yyyy-MM")}
                 onValueChange={(value) => setSelectedMonth(new Date(value + "-01"))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="mt-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -307,69 +342,132 @@ export default function MapaFrequencia() {
         </CardContent>
       </Card>
 
+      {/* Tabela de Frequência */}
       {(selectedChurch || selectedGroup) && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Frequência - {format(selectedMonth, "MMMM yyyy", { locale: ptBR })}</CardTitle>
+        <Card className="shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+            <CardTitle className="text-xl">
+              Frequência - {format(selectedMonth, "MMMM yyyy", { locale: ptBR })}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border p-2 sticky left-0 bg-background z-10">Visitante</th>
-                    {daysInMonth.map((day) => (
-                      <th key={day.toString()} className="border p-2 text-xs">
-                        <div>{format(day, "dd")}</div>
-                        <div className="text-muted-foreground">{format(day, "EEE", { locale: ptBR })}</div>
+          <CardContent className="pt-6">
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full border-collapse">
+                  <thead className="bg-muted/50 sticky top-0 z-20">
+                    <tr>
+                      <th className="border-r border-border p-3 sticky left-0 bg-muted z-30 min-w-[200px] text-left font-bold">
+                        Visitante
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {visitors.map((visitor) => (
-                    <tr key={visitor.id}>
-                      <td className="border p-2 sticky left-0 bg-background z-10 font-medium">
-                        {visitor.full_name}
-                      </td>
                       {daysInMonth.map((day) => (
-                        <td key={day.toString()} className="border p-1 text-center">
-                          {isSunday(day) ? (
-                            <div className="flex flex-col gap-1">
-                              <Checkbox
-                                checked={hasAttendance(visitor.id, day, "ebd")}
-                                onCheckedChange={() => toggleAttendance(visitor.id, day, "ebd")}
-                                disabled={!can("frequencia", "create")}
-                                title="EBD"
-                              />
-                              <Checkbox
-                                checked={hasAttendance(visitor.id, day, "noite")}
-                                onCheckedChange={() => toggleAttendance(visitor.id, day, "noite")}
-                                disabled={!can("frequencia", "create")}
-                                title="Noite"
-                              />
+                        <th
+                          key={day.toString()}
+                          className={`border-r border-border p-2 text-xs min-w-[80px] ${
+                            isSunday(day) ? "bg-amber-50 dark:bg-amber-950/20" : ""
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-1">
+                            {isSunday(day) && <Sun className="w-4 h-4 text-amber-500" />}
+                            <div className="font-bold">{format(day, "dd")}</div>
+                            <div className="text-muted-foreground uppercase">
+                              {format(day, "EEE", { locale: ptBR })}
                             </div>
-                          ) : (
-                            <Checkbox
-                              checked={hasAttendance(visitor.id, day, "outro")}
-                              onCheckedChange={() => toggleAttendance(visitor.id, day, "outro")}
-                              disabled={!can("frequencia", "create")}
-                            />
-                          )}
-                        </td>
+                          </div>
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                  {visitors.length === 0 && (
-                    <tr>
-                      <td colSpan={daysInMonth.length + 1} className="border p-4 text-center text-muted-foreground">
-                        Selecione uma igreja ou GA para visualizar os visitantes
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {visitors.map((visitor, index) => (
+                      <tr
+                        key={visitor.id}
+                        className={`hover:bg-accent/20 transition-colors ${
+                          index % 2 === 0 ? "bg-background" : "bg-muted/20"
+                        }`}
+                      >
+                        <td className="border-r border-b border-border p-3 sticky left-0 bg-inherit z-10 font-medium">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate">{visitor.full_name}</span>
+                            <Badge variant="secondary" className="shrink-0 text-xs">
+                              {getAttendanceCount(visitor.id)}
+                            </Badge>
+                          </div>
+                        </td>
+                        {daysInMonth.map((day) => (
+                          <td
+                            key={day.toString()}
+                            className={`border-r border-b border-border p-2 text-center ${
+                              isSunday(day) ? "bg-amber-50/50 dark:bg-amber-950/10" : ""
+                            }`}
+                          >
+                            {isSunday(day) ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <div
+                                  className="flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
+                                  title="EBD"
+                                >
+                                  <Checkbox
+                                    checked={hasAttendance(visitor.id, day, "ebd")}
+                                    onCheckedChange={() => toggleAttendance(visitor.id, day, "ebd")}
+                                    disabled={!can("frequencia", "create")}
+                                    className="w-5 h-5 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-600"
+                                  />
+                                </div>
+                                <div
+                                  className="flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
+                                  title="Noite"
+                                >
+                                  <Checkbox
+                                    checked={hasAttendance(visitor.id, day, "noite")}
+                                    onCheckedChange={() => toggleAttendance(visitor.id, day, "noite")}
+                                    disabled={!can("frequencia", "create")}
+                                    className="w-5 h-5 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-600"
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex justify-center">
+                                <Checkbox
+                                  checked={hasAttendance(visitor.id, day, "outro")}
+                                  onCheckedChange={() => toggleAttendance(visitor.id, day, "outro")}
+                                  disabled={!can("frequencia", "create")}
+                                  className="w-5 h-5 data-[state=checked]:bg-gray-500 data-[state=checked]:border-gray-600"
+                                  title="Outro horário"
+                                />
+                              </div>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                    {visitors.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={daysInMonth.length + 1}
+                          className="border p-8 text-center text-muted-foreground"
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <Calendar className="w-12 h-12 opacity-50" />
+                            <p className="text-lg font-medium">
+                              Nenhum visitante encontrado
+                            </p>
+                            <p className="text-sm">
+                              Selecione uma igreja ou grupo de assistência para visualizar os visitantes
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
