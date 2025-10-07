@@ -184,6 +184,15 @@ export default function MapaFrequencia() {
   };
 
   const toggleAttendance = async (visitorId: string, date: Date, serviceType: "ebd" | "noite" | "outro") => {
+    if (!selectedChurch) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma igreja antes de marcar frequência",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const dateStr = format(date, "yyyy-MM-dd");
       const exists = hasAttendance(visitorId, date, serviceType);

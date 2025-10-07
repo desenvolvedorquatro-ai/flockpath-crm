@@ -48,6 +48,7 @@ export default function Relatorios() {
   const [areaData, setAreaData] = useState<any[]>([]);
   const [candidatosBatismoData, setCandidatosBatismoData] = useState<any[]>([]);
   const [batizadosData, setBatizadosData] = useState<any[]>([]);
+  const [tarefasData, setTarefasData] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -244,6 +245,42 @@ export default function Relatorios() {
 
         setBatizadosData(batizadosReport);
       }
+
+      // Buscar dados de tarefas
+      let taskQuery = supabase.from("tasks").select(`
+        *,
+        churches(name),
+        assistance_groups(name)
+      `);
+
+      if (selectedChurch && selectedChurch !== "all") {
+        taskQuery = taskQuery.eq("church_id", selectedChurch);
+      }
+
+      if (startDate) {
+        taskQuery = taskQuery.gte("due_date", format(startDate, "yyyy-MM-dd"));
+      }
+      if (endDate) {
+        taskQuery = taskQuery.lte("due_date", format(endDate, "yyyy-MM-dd"));
+      }
+
+      const { data: tasks } = await taskQuery;
+
+      if (tasks) {
+        const statusCounts = tasks.reduce((acc: any, task: any) => {
+          const status = task.status === 'completed' ? 'Concluídas' : 
+                        task.status === 'overdue' ? 'Atrasadas' : 'No Prazo';
+          acc[status] = (acc[status] || 0) + 1;
+          return acc;
+        }, {});
+
+        const taskReport = Object.entries(statusCounts).map(([key, value]: [string, any]) => ({
+          name: key,
+          total: value
+        }));
+
+        setTarefasData(taskReport);
+      }
     } catch (error) {
       console.error("Erro ao carregar relatórios:", error);
       toast.error("Erro ao carregar dados dos relatórios");
@@ -335,7 +372,14 @@ export default function Relatorios() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={ptBR} />
+                <Calendar 
+                  mode="single" 
+                  selected={startDate} 
+                  onSelect={setStartDate} 
+                  initialFocus 
+                  locale={ptBR}
+                  className="pointer-events-auto"
+                />
               </PopoverContent>
             </Popover>
 
@@ -353,7 +397,14 @@ export default function Relatorios() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={ptBR} />
+                <Calendar 
+                  mode="single" 
+                  selected={endDate} 
+                  onSelect={setEndDate} 
+                  initialFocus 
+                  locale={ptBR}
+                  className="pointer-events-auto"
+                />
               </PopoverContent>
             </Popover>
           </div>
@@ -531,6 +582,30 @@ export default function Relatorios() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Tarefas */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Status das Tarefas</CardTitle>
+          <CardDescription>Distribuição de tarefas por status</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={tarefasData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="total" fill="#8b5cf6" />
+            </BarChart>
+          </ResponsiveContainer>
+          <Button onClick={() => exportToExcel(tarefasData, "relatorio_tarefas")} className="w-full mt-4">
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Excel
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Relatório Mensal */}
       <Card>
