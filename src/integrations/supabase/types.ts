@@ -90,6 +90,61 @@ export type Database = {
           },
         ]
       }
+      attendance_records: {
+        Row: {
+          assistance_group_id: string | null
+          attendance_date: string
+          church_id: string
+          created_at: string | null
+          id: string
+          recorded_by: string
+          service_type: string
+          visitor_id: string
+        }
+        Insert: {
+          assistance_group_id?: string | null
+          attendance_date: string
+          church_id: string
+          created_at?: string | null
+          id?: string
+          recorded_by: string
+          service_type: string
+          visitor_id: string
+        }
+        Update: {
+          assistance_group_id?: string | null
+          attendance_date?: string
+          church_id?: string
+          created_at?: string | null
+          id?: string
+          recorded_by?: string
+          service_type?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_assistance_group_id_fkey"
+            columns: ["assistance_group_id"]
+            isOneToOne: false
+            referencedRelation: "assistance_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       church_permissions: {
         Row: {
           church_id: string
@@ -370,6 +425,72 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "role_definitions"
             referencedColumns: ["role_name"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assigned_to: string
+          assistance_group_id: string
+          church_id: string
+          completed_date: string | null
+          completion_notes: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          due_date: string
+          id: string
+          interaction_type: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to: string
+          assistance_group_id: string
+          church_id: string
+          completed_date?: string | null
+          completion_notes?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          due_date: string
+          id?: string
+          interaction_type: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string
+          assistance_group_id?: string
+          church_id?: string
+          completed_date?: string | null
+          completion_notes?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          interaction_type?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assistance_group_id_fkey"
+            columns: ["assistance_group_id"]
+            isOneToOne: false
+            referencedRelation: "assistance_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
           },
         ]
       }
