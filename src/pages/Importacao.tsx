@@ -316,11 +316,15 @@ export default function Importacao() {
       }
     }
 
-    // Converter datas do formato DDMMAAAA para AAAA-MM-DD
+    // Converter datas do formato DDMMAAAA ou DD/MM/AAAA para AAAA-MM-DD
     const convertDateFormat = (date: string): string | null => {
       if (!date) return null;
       const dateStr = String(date).trim();
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        const [day, month, year] = dateStr.split('/');
+        return `${year}-${month}-${day}`;
+      }
       if (/^\d{8}$/.test(dateStr)) {
         const day = dateStr.substring(0, 2);
         const month = dateStr.substring(2, 4);
@@ -506,7 +510,7 @@ export default function Importacao() {
                       <li><strong>categoria</strong>: faixa etária (crianca, intermediario, adolescente, jovem, senhora, varao, idoso)</li>
                       <li>nome_area, nome_regiao: ajudam a identificar a igreja correta</li>
                       <li>email, telefone, endereco</li>
-                      <li><strong>data_visita, data_nascimento, data_batismo</strong>: use formato DDMMAAAA (ex: 15012025) ou AAAA-MM-DD</li>
+                      <li><strong>data_visita, data_nascimento, data_batismo</strong>: use formato DD/MM/AAAA, DDMMAAAA ou AAAA-MM-DD</li>
                       <li>convidado_por, observacoes</li>
                       <li>profissao, estado_civil, tem_filhos</li>
                       <li>candidato_batismo</li>

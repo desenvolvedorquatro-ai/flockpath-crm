@@ -24,7 +24,7 @@ export const validatePhone = (phone: string): boolean => {
   return phoneRegex.test(phone.replace(/\s/g, ""));
 };
 
-// Converte data de DDMMAAAA para AAAA-MM-DD
+// Converte data de DDMMAAAA ou DD/MM/AAAA para AAAA-MM-DD
 export const convertDateFormat = (date: string): string | null => {
   if (!date) return null;
   
@@ -33,6 +33,12 @@ export const convertDateFormat = (date: string): string | null => {
   // Se já está no formato AAAA-MM-DD, retorna como está
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     return dateStr;
+  }
+  
+  // Se está no formato DD/MM/AAAA (com barras)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split('/');
+    return `${year}-${month}-${day}`;
   }
   
   // Se está no formato DDMMAAAA (8 dígitos)
@@ -224,15 +230,15 @@ const validateVisitante = async (row: any): Promise<string[]> => {
   }
 
   if (row.data_visita && !validateDate(row.data_visita)) {
-    errors.push("Data de visita inválida (use formato DDMMAAAA ou AAAA-MM-DD)");
+    errors.push("Data de visita inválida (use formato DD/MM/AAAA, DDMMAAAA ou AAAA-MM-DD)");
   }
 
   if (row.data_nascimento && !validateDate(row.data_nascimento)) {
-    errors.push("Data de nascimento inválida (use formato DDMMAAAA ou AAAA-MM-DD)");
+    errors.push("Data de nascimento inválida (use formato DD/MM/AAAA, DDMMAAAA ou AAAA-MM-DD)");
   }
 
   if (row.data_batismo && !validateDate(row.data_batismo)) {
-    errors.push("Data de batismo inválida (use formato DDMMAAAA ou AAAA-MM-DD)");
+    errors.push("Data de batismo inválida (use formato DD/MM/AAAA, DDMMAAAA ou AAAA-MM-DD)");
   }
 
   // Validar status se fornecido
