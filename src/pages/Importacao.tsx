@@ -316,9 +316,20 @@ export default function Importacao() {
       }
     }
 
-    // Converter datas do formato DDMMAAAA ou DD/MM/AAAA para AAAA-MM-DD
-    const convertDateFormat = (date: string): string | null => {
+    // Converter datas do formato DDMMAAAA, DD/MM/AAAA ou número serial do Excel para AAAA-MM-DD
+    const convertDateFormat = (date: string | number): string | null => {
       if (!date) return null;
+      
+      // Se for número (serial do Excel)
+      if (typeof date === 'number') {
+        const excelEpoch = new Date(1899, 11, 30);
+        const convertedDate = new Date(excelEpoch.getTime() + date * 86400000);
+        const year = convertedDate.getFullYear();
+        const month = String(convertedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(convertedDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+      
       const dateStr = String(date).trim();
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {

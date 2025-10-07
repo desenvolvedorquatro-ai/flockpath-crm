@@ -24,9 +24,19 @@ export const validatePhone = (phone: string): boolean => {
   return phoneRegex.test(phone.replace(/\s/g, ""));
 };
 
-// Converte data de DDMMAAAA ou DD/MM/AAAA para AAAA-MM-DD
-export const convertDateFormat = (date: string): string | null => {
+// Converte data de DDMMAAAA ou DD/MM/AAAA ou número serial do Excel para AAAA-MM-DD
+export const convertDateFormat = (date: string | number): string | null => {
   if (!date) return null;
+  
+  // Se for número (serial do Excel)
+  if (typeof date === 'number') {
+    const excelEpoch = new Date(1899, 11, 30);
+    const convertedDate = new Date(excelEpoch.getTime() + date * 86400000);
+    const year = convertedDate.getFullYear();
+    const month = String(convertedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(convertedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
   
   const dateStr = String(date).trim();
   
@@ -53,7 +63,7 @@ export const convertDateFormat = (date: string): string | null => {
 };
 
 // Validação de data
-export const validateDate = (date: string): boolean => {
+export const validateDate = (date: string | number): boolean => {
   if (!date) return true; // data opcional
   
   const convertedDate = convertDateFormat(date);
@@ -85,15 +95,33 @@ export const validateAreaExists = async (areaName: string): Promise<boolean> => 
   return !!data;
 };
 
-// Verificar existência de igreja
-export const validateChurchExists = async (churchName: string): Promise<boolean> => {
+// Verificar existência de igreja (com suporte a múltiplas igrejas com mesmo nome)
+export const validateChurchExists = async (
+  churchName: string,
+  areaName?: string,
+  regionName?: string
+): Promise<boolean> => {
   if (!churchName) return false;
-  const { data } = await supabase
+  
+  let query = supabase
     .from("churches")
-    .select("id")
-    .eq("name", churchName)
-    .maybeSingle();
-  return !!data;
+    .select("id, areas(name, regions(name))")
+    .eq("name", churchName);
+  
+  const { data: churches } = await query;
+  
+  if (!churches || churches.length === 0) return false;
+  
+  // Se tem área ou região especificada, valida se existe uma igreja compatível
+  if (areaName || regionName) {
+    return churches.some(church => {
+      const areaMatch = !areaName || church.areas?.name === areaName;
+      const regionMatch = !regionName || church.areas?.regions?.name === regionName;
+      return areaMatch && regionMatch;
+    });
+  }
+  
+  return true;
 };
 
 // Verificar existência de pastor
@@ -215,7 +243,11 @@ const validateVisitante = async (row: any): Promise<string[]> => {
   if (!row.nome_igreja || String(row.nome_igreja).trim() === "") {
     errors.push("Nome da igreja é obrigatório");
   } else {
-    const churchExists = await validateChurchExists(row.nome_igreja);
+    const churchExists = await validateChurchExists(
+      row.nome_igreja,
+      row.nome_area,
+      row.nome_regiao
+    );
     if (!churchExists) {
       errors.push(`Igreja '${row.nome_igreja}' não encontrada`);
     }
