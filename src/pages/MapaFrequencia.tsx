@@ -241,6 +241,7 @@ export default function MapaFrequencia() {
         title="Mapa de Frequência"
         description="Acompanhe a frequência dos visitantes nos cultos"
         icon={Calendar}
+        colorScheme="cyan-blue"
       />
 
       {/* Legenda */}

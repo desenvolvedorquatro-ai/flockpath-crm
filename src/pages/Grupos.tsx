@@ -16,6 +16,7 @@ import { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 type AssistanceGroup = Tables<"assistance_groups"> & {
   churches: { name: string } | null;
+  profiles?: { full_name: string } | null;
 };
 
 type Church = Tables<"churches">;
@@ -85,7 +86,24 @@ export default function Grupos() {
         .order("name");
 
       if (error) throw error;
-      setGroups(data || []);
+      
+      // Buscar nomes dos responsáveis
+      const groupsWithResponsible = await Promise.all(
+        (data || []).map(async (group) => {
+          if (group.responsible_id) {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", group.responsible_id)
+              .single();
+            
+            return { ...group, profiles: profileData };
+          }
+          return { ...group, profiles: null };
+        })
+      );
+      
+      setGroups(groupsWithResponsible as AssistanceGroup[]);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar grupos",
@@ -288,6 +306,7 @@ export default function Grupos() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Igreja</TableHead>
+                  <TableHead>Responsável</TableHead>
                   <TableHead>Descrição</TableHead>
                   {(isAdmin || isPastor) && <TableHead className="text-right">Ações</TableHead>}
                 </TableRow>
@@ -297,6 +316,7 @@ export default function Grupos() {
                   <TableRow key={group.id}>
                     <TableCell className="font-medium">{group.name}</TableCell>
                     <TableCell>{group.churches?.name || "-"}</TableCell>
+                    <TableCell>{group.profiles?.full_name || "-"}</TableCell>
                     <TableCell className="max-w-xs truncate">{group.description || "-"}</TableCell>
                     {(isAdmin || isPastor) && (
                       <TableCell className="text-right">
@@ -333,6 +353,13 @@ export default function Grupos() {
                   </div>
                 </div>
               </div>
+
+              {group.profiles && (
+                <div className="mb-3 flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Responsável:</span>
+                  <span className="font-medium text-foreground">{group.profiles.full_name}</span>
+                </div>
+              )}
 
               {group.description && (
                 <p className="text-sm text-muted-foreground mb-4">{group.description}</p>

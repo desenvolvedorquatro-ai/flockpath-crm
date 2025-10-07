@@ -46,7 +46,7 @@ interface Church {
 interface AssistanceGroup {
   id: string;
   name: string;
-  leader_id: string | null;
+  responsible_id: string | null;
   church_id: string;
 }
 
@@ -144,7 +144,7 @@ export default function Tarefas() {
   const fetchAssistanceGroups = async () => {
     const { data, error } = await supabase
       .from("assistance_groups")
-      .select("id, name, leader_id, church_id")
+      .select("id, name, responsible_id, church_id")
       .order("name");
 
     if (error) {
@@ -159,7 +159,7 @@ export default function Tarefas() {
     try {
       const selectedGroup = assistanceGroups.find(ag => ag.id === formData.assistance_group_id);
       
-      if (!selectedGroup?.leader_id) {
+      if (!selectedGroup?.responsible_id) {
         toast({
           title: "Erro",
           description: "O grupo selecionado não possui um responsável atribuído.",
@@ -173,7 +173,7 @@ export default function Tarefas() {
         description: formData.description,
         church_id: formData.church_id,
         assistance_group_id: formData.assistance_group_id,
-        assigned_to: selectedGroup.leader_id,
+        assigned_to: selectedGroup.responsible_id,
         created_by: user!.id,
         interaction_type: formData.interaction_type,
         due_date: format(formData.due_date, "yyyy-MM-dd"),
@@ -277,6 +277,7 @@ export default function Tarefas() {
         title="Tarefas"
         description="Gerencie tarefas atribuídas aos responsáveis dos GAs"
         icon={CheckSquare}
+        colorScheme="blue-purple"
         onAction={can("tarefas", "create") && (isPastor || isAdmin) ? () => setDialogOpen(true) : undefined}
         actionText="Nova Tarefa"
       />
