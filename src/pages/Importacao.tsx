@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "endereco", "data_visita", "convidado_por", "observacoes", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "endereco", "data_visita", "convidado_por", "observacoes", "status", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -485,7 +485,7 @@ export default function Importacao() {
                     <strong>Campos obrigatórios:</strong> nome, nome_igreja
                   </div>
                   <div>
-                    <strong>Campos opcionais:</strong> nome_area, nome_regiao, email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo
+                    <strong>Campos opcionais:</strong> nome_area, nome_regiao, email, telefone, endereco, data_visita, convidado_por, observacoes, status (visitante, em_assistencia, batizado), profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo
                   </div>
                   <div className="text-muted-foreground italic text-sm">
                     💡 Dica: Informar área e região ajuda a identificar a igreja correta quando há igrejas com nomes similares
