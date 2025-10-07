@@ -569,6 +569,7 @@ export type Database = {
           candidato_batismo: boolean | null
           categoria: Database["public"]["Enums"]["visitor_category"] | null
           church_id: string
+          convidado_por: string | null
           created_at: string | null
           data_batismo: string | null
           data_nascimento: string | null
@@ -594,6 +595,7 @@ export type Database = {
           candidato_batismo?: boolean | null
           categoria?: Database["public"]["Enums"]["visitor_category"] | null
           church_id: string
+          convidado_por?: string | null
           created_at?: string | null
           data_batismo?: string | null
           data_nascimento?: string | null
@@ -619,6 +621,7 @@ export type Database = {
           candidato_batismo?: boolean | null
           categoria?: Database["public"]["Enums"]["visitor_category"] | null
           church_id?: string
+          convidado_por?: string | null
           created_at?: string | null
           data_batismo?: string | null
           data_nascimento?: string | null
