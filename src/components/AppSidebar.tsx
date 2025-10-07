@@ -31,6 +31,18 @@ const menuItems = [{
   title: "Usuários",
   url: "/usuarios",
   icon: UserCog
+}, {
+  title: "Tarefas",
+  url: "/tarefas",
+  icon: CheckSquare
+}, {
+  title: "Relatórios",
+  url: "/relatorios",
+  icon: FileBarChart
+}, {
+  title: "Mapa de Frequência",
+  url: "/mapa-frequencia",
+  icon: Calendar
 }];
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
@@ -77,36 +89,6 @@ export function AppSidebar() {
                 }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
                     <Upload className="w-6 h-6" />
                     <span>Importação</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/relatorios" onClick={handleMenuClick} className={({
-                  isActive
-                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
-                    <FileBarChart className="w-6 h-6" />
-                    <span>Relatórios</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/tarefas" onClick={handleMenuClick} className={({
-                  isActive
-                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
-                    <CheckSquare className="w-6 h-6" />
-                    <span>Tarefas</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/mapa-frequencia" onClick={handleMenuClick} className={({
-                  isActive
-                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
-                    <Calendar className="w-6 h-6" />
-                    <span>Mapa de Frequência</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
