@@ -15,8 +15,8 @@ export function FunnelChart({ stages }: FunnelChartProps) {
   const maxCount = stages.length > 0 ? stages[0].count : 1;
 
   return (
-    <Card className="p-4 md:p-6 bg-card border border-border shadow-apple-lg">
-      <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+    <Card className="p-4 md:p-6 bg-card border border-border shadow-apple-lg max-h-[600px] flex flex-col">
+      <div className="space-y-2 flex-1 flex flex-col justify-center">
         {stages.map((stage, index) => {
           const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
           const minWidth = 20; // Minimum width percentage for visibility
@@ -28,7 +28,7 @@ export function FunnelChart({ stages }: FunnelChartProps) {
                 className="mx-auto transition-all duration-500 rounded-lg shadow-md hover:shadow-lg relative overflow-hidden group"
                 style={{
                   width: `${actualWidth}%`,
-                  minHeight: "60px",
+                  height: "clamp(50px, 8vh, 80px)",
                   background: `linear-gradient(135deg, ${stage.color} 0%, ${stage.color}dd 100%)`,
                 }}
               >
