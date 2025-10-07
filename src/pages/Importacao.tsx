@@ -355,13 +355,13 @@ export default function Importacao() {
       invited_by: row.convidado_por || null,
       notes: row.observacoes || null,
       status: row.status || "visitante",
-      category: row.categoria || null,
-      occupation: row.profissao || null,
+      categoria: row.categoria || null,
+      profissao: row.profissao || null,
       estado_civil: row.estado_civil || null,
-      birth_date: convertDateFormat(row.data_nascimento),
-      tem_filhos: row.tem_filhos || null,
-      baptism_candidate: row.candidato_batismo || false,
-      baptism_date: convertDateFormat(row.data_batismo),
+      data_nascimento: convertDateFormat(row.data_nascimento),
+      tem_filhos: row.tem_filhos === "Sim" ? true : row.tem_filhos === "Não" ? false : null,
+      candidato_batismo: row.candidato_batismo === "Sim" ? true : row.candidato_batismo === "Não" ? false : row.candidato_batismo || false,
+      data_batismo: convertDateFormat(row.data_batismo),
     });
 
     if (error) throw error;
