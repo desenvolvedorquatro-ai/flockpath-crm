@@ -13,11 +13,11 @@ interface FunnelChartProps {
 
 export function FunnelChart({ stages }: FunnelChartProps) {
   const maxCount = stages.length > 0 ? stages[0].count : 1;
-  const itemHeight = stages.length <= 3 ? "clamp(50px, 7vh, 75px)" : "clamp(40px, 5vh, 60px)";
+  const itemHeight = stages.length <= 3 ? "clamp(45px, 6vh, 65px)" : "clamp(35px, 4vh, 55px)";
 
   return (
-    <Card className="p-4 md:p-6 bg-card border border-border shadow-apple-lg max-h-[500px] flex flex-col overflow-hidden">
-      <div className="space-y-1.5 flex-1 flex flex-col justify-start min-h-0">
+    <Card className="p-3 md:p-4 bg-card border border-border shadow-apple-lg max-h-[450px] flex flex-col overflow-hidden">
+      <div className="space-y-1 flex-1 flex flex-col justify-start min-h-0 overflow-y-auto">
         {stages.map((stage, index) => {
           const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
           const minWidth = 20; // Minimum width percentage for visibility

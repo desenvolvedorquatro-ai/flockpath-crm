@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ModernHeader } from "@/components/ModernHeader";
+import { PaginationControls } from "@/components/PaginationControls";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -64,6 +65,8 @@ export default function Tarefas() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
   
   const [formData, setFormData] = useState({
     title: "",
@@ -258,6 +261,12 @@ export default function Tarefas() {
     }
   };
 
+  // Paginação
+  const paginatedTasks = tasks.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   if (!can("tarefas", "view")) {
     return (
       <div className="container py-8">
@@ -277,7 +286,7 @@ export default function Tarefas() {
         title="Tarefas"
         description="Gerencie tarefas atribuídas aos responsáveis dos GAs"
         icon={CheckSquare}
-        colorScheme="blue-purple"
+        colorScheme="red-coral"
         onAction={can("tarefas", "create") && (isPastor || isAdmin) ? () => setDialogOpen(true) : undefined}
         actionText="Nova Tarefa"
       />
@@ -290,53 +299,61 @@ export default function Tarefas() {
           {loading ? (
             <p>Carregando...</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Igreja</TableHead>
-                  <TableHead>GA</TableHead>
-                  <TableHead>Tipo de Interação</TableHead>
-                  <TableHead>Prazo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.title}</TableCell>
-                    <TableCell>{task.churches?.name}</TableCell>
-                    <TableCell>{task.assistance_groups?.name}</TableCell>
-                    <TableCell>{task.interaction_type}</TableCell>
-                    <TableCell>{format(new Date(task.due_date), "dd/MM/yyyy")}</TableCell>
-                    <TableCell>{getStatusBadge(task.status)}</TableCell>
-                    <TableCell>
-                      {task.status !== "completed" && can("tarefas", "edit") && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingTask(task);
-                            setCompletionDialogOpen(true);
-                          }}
-                        >
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Concluir
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {tasks.length === 0 && (
+            <>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      Nenhuma tarefa encontrada
-                    </TableCell>
+                    <TableHead>Título</TableHead>
+                    <TableHead>Igreja</TableHead>
+                    <TableHead>GA</TableHead>
+                    <TableHead>Tipo de Interação</TableHead>
+                    <TableHead>Prazo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedTasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="font-medium">{task.title}</TableCell>
+                      <TableCell>{task.churches?.name}</TableCell>
+                      <TableCell>{task.assistance_groups?.name}</TableCell>
+                      <TableCell>{task.interaction_type}</TableCell>
+                      <TableCell>{format(new Date(task.due_date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{getStatusBadge(task.status)}</TableCell>
+                      <TableCell>
+                        {task.status !== "completed" && can("tarefas", "edit") && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingTask(task);
+                              setCompletionDialogOpen(true);
+                            }}
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Concluir
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {paginatedTasks.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                        Nenhuma tarefa encontrada
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <PaginationControls
+                currentPage={currentPage}
+                totalItems={tasks.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
           )}
         </CardContent>
       </Card>
