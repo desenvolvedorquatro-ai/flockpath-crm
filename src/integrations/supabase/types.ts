@@ -520,9 +520,11 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string
+          frequencia: string | null
           id: string
           interaction_date: string
           interaction_type: string
+          ultimo_culto: string | null
           updated_at: string | null
           visitor_id: string
         }
@@ -530,9 +532,11 @@ export type Database = {
           created_at?: string | null
           created_by: string
           description: string
+          frequencia?: string | null
           id?: string
           interaction_date?: string
           interaction_type: string
+          ultimo_culto?: string | null
           updated_at?: string | null
           visitor_id: string
         }
@@ -540,9 +544,11 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           description?: string
+          frequencia?: string | null
           id?: string
           interaction_date?: string
           interaction_type?: string
+          ultimo_culto?: string | null
           updated_at?: string | null
           visitor_id?: string
         }

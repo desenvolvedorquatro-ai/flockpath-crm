@@ -37,7 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "@/hooks/use-toast";
-import { VisitorInteractions } from "@/components/VisitorInteractions";
+import { VisitorInteractionsDialog } from "@/components/visitors/VisitorInteractionsDialog";
 import { ModernHeader } from "@/components/ModernHeader";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -1243,12 +1243,6 @@ export default function Visitantes() {
                     <span className="text-muted-foreground">{sexoLabels[visitor.sexo]}</span>
                   </div>
                 )}
-                {visitor.profissao && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Briefcase className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{visitor.profissao}</span>
-                  </div>
-                )}
                 {visitor.email && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="w-4 h-4" />
@@ -1628,19 +1622,14 @@ export default function Visitantes() {
       </Dialog>
 
       {/* Dialog de Interações */}
-      <Dialog open={isInteractionsDialogOpen} onOpenChange={setIsInteractionsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Interações - {selectedVisitor?.full_name}</DialogTitle>
-          </DialogHeader>
-          {selectedVisitor && (
-            <VisitorInteractions
-              visitorId={selectedVisitor.id}
-              visitorName={selectedVisitor.full_name}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {selectedVisitor && (
+        <VisitorInteractionsDialog
+          open={isInteractionsDialogOpen}
+          onOpenChange={setIsInteractionsDialogOpen}
+          visitorId={selectedVisitor.id}
+          visitorName={selectedVisitor.full_name}
+        />
+      )}
     </div>
   );
 }
