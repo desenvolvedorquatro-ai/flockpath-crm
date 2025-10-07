@@ -17,6 +17,7 @@ import Regioes from "./pages/Regioes";
 import Areas from "./pages/Areas";
 import Importacao from "./pages/Importacao";
 import GerenciarFuncoes from "./pages/GerenciarFuncoes";
+import Relatorios from "./pages/Relatorios";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./hooks/useAuth";
@@ -149,6 +150,7 @@ const AppLayout = () => {
               <Route path="/regioes" element={<Regioes />} />
               <Route path="/areas" element={<Areas />} />
               <Route path="/importacao" element={<Importacao />} />
+              <Route path="/relatorios" element={<Relatorios />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               <Route path="/gerenciar-funcoes" element={<GerenciarFuncoes />} />
               <Route path="*" element={<NotFound />} />

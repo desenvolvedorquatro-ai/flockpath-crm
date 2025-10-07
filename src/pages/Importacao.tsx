@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "endereco", "data_visita", "convidado_por", "observacoes"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "endereco", "data_visita", "convidado_por", "observacoes", "profissao", "estado_civil", "data_nascimento", "tem_filhos"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -308,10 +308,14 @@ export default function Importacao() {
       phone: row.telefone || null,
       church_id: church.id,
       address: row.endereco || null,
-      first_visit_date: row.data_visita || new Date().toISOString().split('T')[0],
-      invited_by: row.convidado_por || null,
-      notes: row.observacoes || null,
+      primeira_visita: row.data_visita || new Date().toISOString().split('T')[0],
+      convidado_por: row.convidado_por || null,
+      observacoes: row.observacoes || null,
       status: "visitante",
+      profissao: row.profissao || null,
+      estado_civil: row.estado_civil || null,
+      data_nascimento: row.data_nascimento || null,
+      tem_filhos: row.tem_filhos || null,
     });
 
     if (error) throw error;
@@ -460,7 +464,7 @@ export default function Importacao() {
                 Importar Visitantes
               </CardTitle>
               <CardDescription>
-                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, endereco, data_visita, convidado_por, observacoes (opcionais)
+                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos (opcionais)
                 <br/>
                 <em>A igreja deve estar cadastrada antes</em>
               </CardDescription>
