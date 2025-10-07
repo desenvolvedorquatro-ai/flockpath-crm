@@ -316,23 +316,37 @@ export default function Importacao() {
       }
     }
 
+    // Converter datas do formato DDMMAAAA para AAAA-MM-DD
+    const convertDateFormat = (date: string): string | null => {
+      if (!date) return null;
+      const dateStr = String(date).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+      if (/^\d{8}$/.test(dateStr)) {
+        const day = dateStr.substring(0, 2);
+        const month = dateStr.substring(2, 4);
+        const year = dateStr.substring(4, 8);
+        return `${year}-${month}-${day}`;
+      }
+      return null;
+    };
+
     const { error } = await supabase.from("visitors").insert({
       full_name: row.nome,
       email: row.email || null,
       phone: row.telefone || null,
       church_id: church.id,
       address: row.endereco || null,
-      primeira_visita: row.data_visita || new Date().toISOString().split('T')[0],
+      primeira_visita: convertDateFormat(row.data_visita) || new Date().toISOString().split('T')[0],
       convidado_por: row.convidado_por || null,
       observacoes: row.observacoes || null,
       status: row.status || "visitante",
       categoria: row.categoria || null,
       profissao: row.profissao || null,
       estado_civil: row.estado_civil || null,
-      data_nascimento: row.data_nascimento || null,
+      data_nascimento: convertDateFormat(row.data_nascimento),
       tem_filhos: row.tem_filhos || null,
       candidato_batismo: row.candidato_batismo || false,
-      data_batismo: row.data_batismo || null,
+      data_batismo: convertDateFormat(row.data_batismo),
     });
 
     if (error) throw error;
@@ -492,9 +506,10 @@ export default function Importacao() {
                       <li><strong>categoria</strong>: faixa etária (crianca, intermediario, adolescente, jovem, senhora, varao, idoso)</li>
                       <li>nome_area, nome_regiao: ajudam a identificar a igreja correta</li>
                       <li>email, telefone, endereco</li>
-                      <li>data_visita, convidado_por, observacoes</li>
-                      <li>profissao, estado_civil, data_nascimento, tem_filhos</li>
-                      <li>candidato_batismo, data_batismo</li>
+                      <li><strong>data_visita, data_nascimento, data_batismo</strong>: use formato DDMMAAAA (ex: 15012025) ou AAAA-MM-DD</li>
+                      <li>convidado_por, observacoes</li>
+                      <li>profissao, estado_civil, tem_filhos</li>
+                      <li>candidato_batismo</li>
                     </ul>
                   </div>
                   <div className="text-muted-foreground italic text-sm mt-2">
