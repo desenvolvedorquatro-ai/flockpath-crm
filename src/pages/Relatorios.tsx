@@ -21,7 +21,8 @@ type Region = Tables<"regions">;
 type Area = Tables<"areas">;
 type Church = Tables<"churches">;
 
-const COLORS = ['#f97316', '#fb923c', '#fdba74', '#fed7aa', '#ffedd5'];
+// Red-coral palette from design system
+const COLORS = ['hsl(5 53% 48%)', 'hsl(5 63% 58%)', 'hsl(5 73% 68%)', 'hsl(5 43% 38%)', 'hsl(5 33% 28%)'];
 
 export default function Relatorios() {
   const { user } = useAuth();
@@ -49,6 +50,9 @@ export default function Relatorios() {
   const [candidatosBatismoData, setCandidatosBatismoData] = useState<any[]>([]);
   const [batizadosData, setBatizadosData] = useState<any[]>([]);
   const [tarefasData, setTarefasData] = useState<any[]>([]);
+  const [frequenciaTipoData, setFrequenciaTipoData] = useState<any[]>([]);
+  const [frequenciaMensalData, setFrequenciaMensalData] = useState<any[]>([]);
+  const [topFrequentadoresData, setTopFrequentadoresData] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -281,6 +285,74 @@ export default function Relatorios() {
 
         setTarefasData(taskReport);
       }
+
+      // Buscar dados de frequência
+      let attendanceQuery = supabase.from("attendance_records").select(`
+        *,
+        visitors(full_name, church_id)
+      `);
+
+      if (selectedChurch && selectedChurch !== "all") {
+        attendanceQuery = attendanceQuery.eq("visitors.church_id", selectedChurch);
+      }
+
+      if (startDate) {
+        attendanceQuery = attendanceQuery.gte("attendance_date", format(startDate, "yyyy-MM-dd"));
+      }
+      if (endDate) {
+        attendanceQuery = attendanceQuery.lte("attendance_date", format(endDate, "yyyy-MM-dd"));
+      }
+
+      const { data: attendance } = await attendanceQuery;
+
+      if (attendance) {
+        // Frequência por tipo de culto
+        const tipoCounts = attendance.reduce((acc: any, record: any) => {
+          const tipo = record.service_type === 'ebd' ? 'EBD' :
+                      record.service_type === 'noite' ? 'Culto Noite' : 'Outro';
+          acc[tipo] = (acc[tipo] || 0) + 1;
+          return acc;
+        }, {});
+
+        const tipoReport = Object.entries(tipoCounts).map(([key, value]: [string, any]) => ({
+          name: key,
+          total: value
+        }));
+        setFrequenciaTipoData(tipoReport);
+
+        // Frequência mensal
+        const monthAttendanceCounts = attendance.reduce((acc: any, record: any) => {
+          if (record.attendance_date) {
+            const date = new Date(record.attendance_date);
+            const month = format(date, "MMM/yyyy", { locale: ptBR });
+            acc[month] = (acc[month] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        const monthAttendanceReport = Object.entries(monthAttendanceCounts).map(([key, value]: [string, any]) => ({
+          mes: key,
+          presencas: value
+        }));
+        setFrequenciaMensalData(monthAttendanceReport);
+
+        // Top 10 frequentadores
+        const visitorAttendance = attendance.reduce((acc: any, record: any) => {
+          const visitorName = record.visitors?.full_name || 'Desconhecido';
+          acc[visitorName] = (acc[visitorName] || 0) + 1;
+          return acc;
+        }, {});
+
+        const topFrequentadores = Object.entries(visitorAttendance)
+          .map(([key, value]: [string, any]) => ({
+            name: key,
+            total: value
+          }))
+          .sort((a, b) => b.total - a.total)
+          .slice(0, 10);
+
+        setTopFrequentadoresData(topFrequentadores);
+      }
     } catch (error) {
       console.error("Erro ao carregar relatórios:", error);
       toast.error("Erro ao carregar dados dos relatórios");
@@ -457,7 +529,7 @@ export default function Relatorios() {
                 <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="total" fill="#f97316" />
+                <Bar dataKey="total" fill="hsl(5 53% 48%)" />
               </BarChart>
             </ResponsiveContainer>
             <Button onClick={() => exportToExcel(igrejaData, "relatorio_igrejas")} className="w-full mt-4">
@@ -514,7 +586,7 @@ export default function Relatorios() {
                 <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="total" fill="#fb923c" />
+                <Bar dataKey="total" fill="hsl(5 63% 58%)" />
               </BarChart>
             </ResponsiveContainer>
             <Button onClick={() => exportToExcel(areaData, "relatorio_areas")} className="w-full mt-4">
@@ -572,7 +644,7 @@ export default function Relatorios() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="batizados" fill="#fdba74" />
+                <Bar dataKey="batizados" fill="hsl(5 73% 68%)" />
               </BarChart>
             </ResponsiveContainer>
             <Button onClick={() => exportToExcel(batizadosData, "relatorio_batizados")} className="w-full mt-4">
@@ -597,10 +669,91 @@ export default function Relatorios() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="total" fill="#8b5cf6" />
+              <Bar dataKey="total" fill="hsl(5 53% 48%)" />
             </BarChart>
           </ResponsiveContainer>
           <Button onClick={() => exportToExcel(tarefasData, "relatorio_tarefas")} className="w-full mt-4">
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Excel
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Frequência por Tipo de Culto */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Frequência por Tipo de Culto</CardTitle>
+            <CardDescription>Distribuição de presenças por tipo de culto</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={frequenciaTipoData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, total }) => `${name}: ${total}`}
+                  outerRadius={80}
+                  fill="hsl(5 53% 48%)"
+                  dataKey="total"
+                >
+                  {frequenciaTipoData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <Button onClick={() => exportToExcel(frequenciaTipoData, "relatorio_frequencia_tipo")} className="w-full mt-4">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top 10 Frequentadores</CardTitle>
+            <CardDescription>Visitantes com maior frequência</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topFrequentadoresData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="total" fill="hsl(5 53% 48%)" />
+              </BarChart>
+            </ResponsiveContainer>
+            <Button onClick={() => exportToExcel(topFrequentadoresData, "relatorio_top_frequentadores")} className="w-full mt-4">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Frequência Mensal */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Frequência Mensal</CardTitle>
+          <CardDescription>Evolução mensal de presenças nos cultos</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={frequenciaMensalData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="presencas" fill="hsl(5 63% 58%)" />
+            </BarChart>
+          </ResponsiveContainer>
+          <Button onClick={() => exportToExcel(frequenciaMensalData, "relatorio_frequencia_mensal")} className="w-full mt-4">
             <Download className="mr-2 h-4 w-4" />
             Exportar Excel
           </Button>
@@ -621,7 +774,7 @@ export default function Relatorios() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="visitantes" fill="#fb923c" />
+              <Bar dataKey="visitantes" fill="hsl(5 63% 58%)" />
             </BarChart>
           </ResponsiveContainer>
           <Button onClick={() => exportToExcel(mensalData, "relatorio_mensal")} className="w-full mt-4">
