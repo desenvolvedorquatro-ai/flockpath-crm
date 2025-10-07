@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingDown } from "lucide-react";
+import { statusHexColors } from "@/lib/visitorStatus";
 
 interface FunnelStage {
   title: string;
@@ -19,11 +20,11 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
   
   // Calculate dynamic height based on number of stages for optimal UX
   const getItemHeight = () => {
-    if (stages.length <= 2) return "80px";
-    if (stages.length <= 3) return "70px";
-    if (stages.length <= 4) return "60px";
-    if (stages.length <= 5) return "52px";
-    return "45px";
+    if (stages.length <= 2) return "70px";
+    if (stages.length <= 3) return "58px";
+    if (stages.length <= 4) return "50px";
+    if (stages.length <= 5) return "44px";
+    return "38px";
   };
 
   if (isLoading) {
@@ -69,22 +70,20 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
         </CardTitle>
       </CardHeader>
       
-      <div className="px-4 pb-4 space-y-2">
+      <div className="px-4 pb-3 space-y-1 max-h-[380px] overflow-hidden">
         {stages.map((stage, index) => {
           const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
           const minWidth = 25; // Minimum width for visibility and accessibility
           const actualWidth = Math.max(widthPercentage, stage.count > 0 ? minWidth : 0);
           
-          // Progressive color intensity using design system
-          const getStageGradient = (index: number) => {
-            const intensities = [
-              'from-primary via-primary to-primary-glow',
-              'from-primary/90 via-primary/85 to-primary-glow/90',
-              'from-primary/80 via-primary/75 to-primary-glow/80',
-              'from-primary/70 via-primary/65 to-primary-glow/70',
-              'from-primary/60 via-primary/55 to-primary-glow/60',
-            ];
-            return intensities[Math.min(index, intensities.length - 1)];
+          // Map stage titles to dashboard icon colors
+          const getStageColor = (title: string) => {
+            const colorMap: Record<string, string> = {
+              'Visitante': 'from-blue-500 via-blue-600 to-blue-700',      // Azul (#3B82F6)
+              'Em Assistência': 'from-orange-500 via-orange-600 to-orange-700', // Laranja (#F59E0B)
+              'Batizados': 'from-green-500 via-green-600 to-green-700',   // Verde (#10B981)
+            };
+            return colorMap[title] || 'from-primary via-primary to-primary-glow';
           };
 
           return (
@@ -100,7 +99,7 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                 className={`
                   mx-auto rounded-xl relative overflow-hidden
                   transition-all duration-500 ease-out
-                  bg-gradient-to-r ${getStageGradient(index)}
+                  bg-gradient-to-r ${getStageColor(stage.title)}
                   hover:scale-[1.02] hover:shadow-glow
                   cursor-pointer
                   border-2 border-primary/20 hover:border-primary/40
@@ -114,16 +113,16 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                 
                 {/* Content container */}
-                <div className="relative h-full flex items-center justify-center px-4 py-2">
+                <div className="relative h-full flex items-center justify-center px-3 py-1.5">
                   <div className="flex flex-col items-center justify-center text-center w-full gap-1">
                     {/* Stage title */}
-                    <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm">
+                    <span className="text-white font-semibold text-xs md:text-sm leading-tight tracking-wide drop-shadow-sm">
                       {stage.title}
                     </span>
                     
                     {/* Metrics */}
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-white text-xl md:text-2xl font-bold drop-shadow-md tabular-nums">
+                      <span className="text-white text-lg md:text-xl font-bold drop-shadow-md tabular-nums">
                         {stage.count}
                       </span>
                       <span className="text-white/90 text-xs md:text-sm font-medium bg-white/10 px-2 py-0.5 rounded-full backdrop-blur-sm">
@@ -147,18 +146,6 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
           );
         })}
       </div>
-
-      {/* Footer with conversion insight */}
-      {stages.length > 1 && stages[0].count > 0 && (
-        <div className="px-4 pb-4 pt-2 border-t border-border/50 bg-muted/30">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Taxa de conversão final</span>
-            <span className="font-semibold text-primary">
-              {((stages[stages.length - 1].count / stages[0].count) * 100).toFixed(1)}%
-            </span>
-          </div>
-        </div>
-      )}
     </Card>
   );
 }
