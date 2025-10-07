@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "endereco", "data_visita", "convidado_por", "observacoes", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "endereco", "data_visita", "convidado_por", "observacoes", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -291,15 +291,29 @@ export default function Importacao() {
       throw new Error("Nome do visitante e igreja são obrigatórios");
     }
 
-    // Buscar igreja pelo nome
-    const { data: church } = await supabase
+    // Buscar igreja pelo nome, com filtros opcionais de área e região para maior precisão
+    let churchQuery = supabase
       .from("churches")
-      .select("id")
-      .eq("name", row.nome_igreja)
-      .maybeSingle();
+      .select("id, areas(name, regions(name))")
+      .eq("name", row.nome_igreja);
 
-    if (!church) {
+    const { data: churches } = await churchQuery;
+
+    if (!churches || churches.length === 0) {
       throw new Error(`Igreja '${row.nome_igreja}' não encontrada`);
+    }
+
+    // Se forneceu área ou região, filtra para encontrar a igreja correta
+    let church = churches[0];
+    if (churches.length > 1 && (row.nome_area || row.nome_regiao)) {
+      const filtered = churches.find(c => {
+        const areaMatch = !row.nome_area || c.areas?.name === row.nome_area;
+        const regionMatch = !row.nome_regiao || c.areas?.regions?.name === row.nome_regiao;
+        return areaMatch && regionMatch;
+      });
+      if (filtered) {
+        church = filtered;
+      }
     }
 
     const { error } = await supabase.from("visitors").insert({
@@ -466,9 +480,9 @@ export default function Importacao() {
                 Importar Visitantes
               </CardTitle>
               <CardDescription>
-                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo (opcionais)
+                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), nome_area, nome_regiao, email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo (opcionais)
                 <br/>
-                <em>A igreja deve estar cadastrada antes. Status válidos: visitante, em_assistencia, batizado</em>
+                <em>A igreja deve estar cadastrada antes. Informar área e região ajuda a identificar a igreja correta.</em>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
