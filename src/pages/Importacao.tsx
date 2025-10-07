@@ -485,9 +485,17 @@ export default function Importacao() {
                     <strong>Campos obrigatórios:</strong> nome, nome_igreja
                   </div>
                   <div>
-                    <strong>Campos opcionais:</strong> nome_area, nome_regiao, email, telefone, endereco, data_visita, convidado_por, observacoes, status (visitante, em_assistencia, batizado), profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo
+                    <strong>Campos opcionais:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li><strong>status</strong>: categoria do visitante (visitante, em_assistencia, batizado)</li>
+                      <li>nome_area, nome_regiao: ajudam a identificar a igreja correta</li>
+                      <li>email, telefone, endereco</li>
+                      <li>data_visita, convidado_por, observacoes</li>
+                      <li>profissao, estado_civil, data_nascimento, tem_filhos</li>
+                      <li>candidato_batismo, data_batismo</li>
+                    </ul>
                   </div>
-                  <div className="text-muted-foreground italic text-sm">
+                  <div className="text-muted-foreground italic text-sm mt-2">
                     💡 Dica: Informar área e região ajuda a identificar a igreja correta quando há igrejas com nomes similares
                   </div>
                 </div>
