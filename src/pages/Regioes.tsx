@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapPin, Trash2, Edit } from "lucide-react";
+import { MapPin, Trash2, Edit, Map, Building2, Users } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ModernHeader } from "@/components/ModernHeader";
@@ -20,6 +20,13 @@ interface Region {
   created_at: string;
 }
 
+interface RegionStats {
+  regionId: string;
+  areas: number;
+  churches: number;
+  visitors: number;
+}
+
 interface User {
   id: string;
   full_name: string;
@@ -30,6 +37,7 @@ export default function Regioes() {
   const { isAdmin, isPastor } = useUserRole();
   const [regions, setRegions] = useState<Region[]>([]);
   const [pastors, setPastors] = useState<User[]>([]);
+  const [stats, setStats] = useState<RegionStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRegion, setEditingRegion] = useState<Region | null>(null);
@@ -44,6 +52,7 @@ export default function Regioes() {
   useEffect(() => {
     fetchRegions();
     fetchPastors();
+    fetchStats();
   }, []);
 
   const fetchRegions = async () => {
@@ -86,6 +95,39 @@ export default function Regioes() {
     
     setPastors(pastorsList);
   };
+
+  const fetchStats = async () => {
+    const [areasRes, churchesRes, visitorsRes] = await Promise.all([
+      supabase.from("areas").select("id, region_id"),
+      supabase.from("churches").select("id, region_id"),
+      supabase.from("visitors").select("id, church_id, churches!inner(region_id)"),
+    ]);
+
+    const regionStats: RegionStats[] = regions.map(region => {
+      const areasCount = areasRes.data?.filter(a => a.region_id === region.id).length || 0;
+      const churchesCount = churchesRes.data?.filter(c => c.region_id === region.id).length || 0;
+      
+      // Filtrar visitantes pela region_id através da church
+      const visitorsCount = visitorsRes.data?.filter((v: any) => 
+        v.churches?.region_id === region.id
+      ).length || 0;
+      
+      return {
+        regionId: region.id,
+        areas: areasCount,
+        churches: churchesCount,
+        visitors: visitorsCount,
+      };
+    });
+
+    setStats(regionStats);
+  };
+
+  useEffect(() => {
+    if (regions.length > 0) {
+      fetchStats();
+    }
+  }, [regions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,74 +308,119 @@ export default function Regioes() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Pastor Responsável</TableHead>
-                  {(isAdmin || isPastor) && <TableHead className="text-right">Ações</TableHead>}
+                  <TableHead className="text-center">Áreas</TableHead>
+                  <TableHead className="text-center">Igrejas</TableHead>
+                  <TableHead className="text-center">Visitantes</TableHead>
+                  {(isAdmin || isPastor) && <TableHead className="text-center">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRegions.map((region) => (
-                  <TableRow key={region.id}>
-                    <TableCell className="font-medium">{region.name}</TableCell>
-                    <TableCell>{pastors.find(p => p.id === region.pastor_id)?.full_name || "Não definido"}</TableCell>
-                    {(isAdmin || isPastor) && (
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(region)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(region.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                {filteredRegions.map((region) => {
+                  const regionStat = stats.find(s => s.regionId === region.id);
+                  return (
+                    <TableRow key={region.id}>
+                      <TableCell className="font-medium">{region.name}</TableCell>
+                      <TableCell>{pastors.find(p => p.id === region.pastor_id)?.full_name || "Não definido"}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Map className="w-4 h-4 text-muted-foreground" />
+                          <span>{regionStat?.areas || 0}</span>
                         </div>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          <span>{regionStat?.churches || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span>{regionStat?.visitors || 0}</span>
+                        </div>
+                      </TableCell>
+                      {(isAdmin || isPastor) && (
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(region)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(region.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRegions.map((region) => (
-            <Card key={region.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{region.name}</CardTitle>
-                    <CardDescription>
-                      Pastor: {pastors.find(p => p.id === region.pastor_id)?.full_name || "Não definido"}
-                    </CardDescription>
-                  </div>
-                  {(isAdmin || isPastor) && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditDialog(region)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(region.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+          {filteredRegions.map((region) => {
+            const regionStat = stats.find(s => s.regionId === region.id);
+            return (
+              <Card key={region.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl">{region.name}</CardTitle>
+                      <CardDescription className="mt-1">
+                        Pastor: {pastors.find(p => p.id === region.pastor_id)?.full_name || "Não definido"}
+                      </CardDescription>
+                      
+                      <div className="mt-4 grid grid-cols-3 gap-4">
+                        <div className="flex flex-col items-center p-3 bg-muted/50 rounded-lg">
+                          <Map className="w-5 h-5 text-primary mb-1" />
+                          <span className="text-2xl font-bold">{regionStat?.areas || 0}</span>
+                          <span className="text-xs text-muted-foreground">Áreas</span>
+                        </div>
+                        <div className="flex flex-col items-center p-3 bg-muted/50 rounded-lg">
+                          <Building2 className="w-5 h-5 text-primary mb-1" />
+                          <span className="text-2xl font-bold">{regionStat?.churches || 0}</span>
+                          <span className="text-xs text-muted-foreground">Igrejas</span>
+                        </div>
+                        <div className="flex flex-col items-center p-3 bg-muted/50 rounded-lg">
+                          <Users className="w-5 h-5 text-primary mb-1" />
+                          <span className="text-2xl font-bold">{regionStat?.visitors || 0}</span>
+                          <span className="text-xs text-muted-foreground">Visitantes</span>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
+                    {(isAdmin || isPastor) && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(region)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(region.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

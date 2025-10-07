@@ -1,4 +1,4 @@
-import { Building2, Search, Edit, Trash2 } from "lucide-react";
+import { Building2, Search, Edit, Trash2, Users } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,6 +23,7 @@ export default function Igrejas() {
   const [regions, setRegions] = useState<Region[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
   const [pastors, setPastors] = useState<User[]>([]);
+  const [visitorsCount, setVisitorsCount] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -49,6 +50,7 @@ export default function Igrejas() {
     fetchRegions();
     fetchAreas();
     fetchPastors();
+    fetchVisitorsCount();
   }, []);
 
   const fetchRegions = async () => {
@@ -95,6 +97,21 @@ export default function Igrejas() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVisitorsCount = async () => {
+    const { data } = await supabase
+      .from("visitors")
+      .select("church_id");
+
+    if (data) {
+      const counts: Record<string, number> = {};
+      data.forEach((visitor: any) => {
+        const churchId = visitor.church_id;
+        counts[churchId] = (counts[churchId] || 0) + 1;
+      });
+      setVisitorsCount(counts);
     }
   };
 
@@ -368,7 +385,8 @@ export default function Igrejas() {
                   <TableHead>Pastor</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Telefone</TableHead>
-                  {isAdmin && <TableHead className="text-right">Ações</TableHead>}
+                  <TableHead className="text-center">Visitantes</TableHead>
+                  {isAdmin && <TableHead className="text-center">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -379,9 +397,15 @@ export default function Igrejas() {
                     <TableCell>{church.pastor_name || "-"}</TableCell>
                     <TableCell>{church.email || "-"}</TableCell>
                     <TableCell>{church.phone || "-"}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span>{visitorsCount[church.id] || 0}</span>
+                      </div>
+                    </TableCell>
                     {isAdmin && (
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
+                      <TableCell className="text-center">
+                        <div className="flex gap-2 justify-center">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(church)}>
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -426,8 +450,16 @@ export default function Igrejas() {
               )}
               
               {church.phone && (
-                <p className="text-sm text-muted-foreground mb-4">{church.phone}</p>
+                <p className="text-sm text-muted-foreground mb-2">{church.phone}</p>
               )}
+
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  <span className="text-2xl font-bold">{visitorsCount[church.id] || 0}</span>
+                  <span className="text-sm text-muted-foreground">Visitantes</span>
+                </div>
+              </div>
 
               {isAdmin && (
                 <div className="flex gap-2 mt-4">

@@ -44,6 +44,10 @@ export default function Relatorios() {
   const [statusData, setStatusData] = useState<any[]>([]);
   const [igrejaData, setIgrejaData] = useState<any[]>([]);
   const [mensalData, setMensalData] = useState<any[]>([]);
+  const [categoriaData, setCategoriaData] = useState<any[]>([]);
+  const [areaData, setAreaData] = useState<any[]>([]);
+  const [candidatosBatismoData, setCandidatosBatismoData] = useState<any[]>([]);
+  const [batizadosData, setBatizadosData] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -155,9 +159,11 @@ export default function Relatorios() {
 
         // Relatório Mensal
         const monthCounts = visitors.reduce((acc: any, v: any) => {
-          const date = new Date(v.primeira_visita);
-          const month = format(date, "MMM/yyyy", { locale: ptBR });
-          acc[month] = (acc[month] || 0) + 1;
+          if (v.primeira_visita) {
+            const date = new Date(v.primeira_visita);
+            const month = format(date, "MMM/yyyy", { locale: ptBR });
+            acc[month] = (acc[month] || 0) + 1;
+          }
           return acc;
         }, {});
 
@@ -167,6 +173,77 @@ export default function Relatorios() {
         }));
 
         setMensalData(monthReport);
+
+        // Relatório por Categoria
+        const categoriaCounts = visitors.reduce((acc: any, v: any) => {
+          const categoria = v.categoria || 'não_definida';
+          acc[categoria] = (acc[categoria] || 0) + 1;
+          return acc;
+        }, {});
+
+        const categoriaLabels: Record<string, string> = {
+          crianca: 'Criança',
+          intermediario: 'Intermediário',
+          adolescente: 'Adolescente',
+          jovem: 'Jovem',
+          senhora: 'Senhora',
+          varao: 'Varão',
+          idoso: 'Idoso',
+          não_definida: 'Não definida'
+        };
+
+        const categoriaReport = Object.entries(categoriaCounts).map(([key, value]: [string, any]) => ({
+          name: categoriaLabels[key] || key,
+          value: value
+        }));
+
+        setCategoriaData(categoriaReport);
+
+        // Relatório por Área
+        const areaCounts = visitors.reduce((acc: any, v: any) => {
+          const areaName = v.churches?.areas?.name || 'Sem Área';
+          acc[areaName] = (acc[areaName] || 0) + 1;
+          return acc;
+        }, {});
+
+        const areaReport = Object.entries(areaCounts)
+          .map(([key, value]: [string, any]) => ({
+            name: key,
+            total: value
+          }))
+          .sort((a, b) => b.total - a.total)
+          .slice(0, 10);
+
+        setAreaData(areaReport);
+
+        // Candidatos a Batismo
+        const candidatos = visitors.filter((v: any) => v.candidato_batismo);
+        const candidatosReport = [{
+          name: 'Candidatos a Batismo',
+          total: candidatos.length
+        }, {
+          name: 'Não Candidatos',
+          total: visitors.length - candidatos.length
+        }];
+        setCandidatosBatismoData(candidatosReport);
+
+        // Batizados por período
+        const batizados = visitors.filter((v: any) => v.status === 'batizado' && v.data_batismo);
+        const batizadosPorMes = batizados.reduce((acc: any, v: any) => {
+          if (v.data_batismo) {
+            const date = new Date(v.data_batismo);
+            const month = format(date, "MMM/yyyy", { locale: ptBR });
+            acc[month] = (acc[month] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        const batizadosReport = Object.entries(batizadosPorMes).map(([key, value]: [string, any]) => ({
+          mes: key,
+          batizados: value
+        }));
+
+        setBatizadosData(batizadosReport);
       }
     } catch (error) {
       console.error("Erro ao carregar relatórios:", error);
@@ -334,6 +411,121 @@ export default function Relatorios() {
               </BarChart>
             </ResponsiveContainer>
             <Button onClick={() => exportToExcel(igrejaData, "relatorio_igrejas")} className="w-full mt-4">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Relatório por Categoria e Área */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Visitantes por Categoria</CardTitle>
+            <CardDescription>Distribuição por faixa etária</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={categoriaData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {categoriaData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <Button onClick={() => exportToExcel(categoriaData, "relatorio_categoria")} className="w-full mt-4">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top 10 Áreas</CardTitle>
+            <CardDescription>Áreas com mais visitantes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={areaData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="total" fill="#fb923c" />
+              </BarChart>
+            </ResponsiveContainer>
+            <Button onClick={() => exportToExcel(areaData, "relatorio_areas")} className="w-full mt-4">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Candidatos a Batismo e Batizados */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Candidatos a Batismo</CardTitle>
+            <CardDescription>Visitantes candidatos ao batismo</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={candidatosBatismoData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, total }) => `${name}: ${total}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="total"
+                >
+                  {candidatosBatismoData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <Button onClick={() => exportToExcel(candidatosBatismoData, "relatorio_candidatos_batismo")} className="w-full mt-4">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar Excel
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Batismos por Período</CardTitle>
+            <CardDescription>Batismos realizados ao longo do tempo</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={batizadosData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="mes" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="batizados" fill="#fdba74" />
+              </BarChart>
+            </ResponsiveContainer>
+            <Button onClick={() => exportToExcel(batizadosData, "relatorio_batizados")} className="w-full mt-4">
               <Download className="mr-2 h-4 w-4" />
               Exportar Excel
             </Button>

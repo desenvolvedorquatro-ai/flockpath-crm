@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Map, Trash2, Edit } from "lucide-react";
+import { Map, Trash2, Edit, Building2, Users } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ModernHeader } from "@/components/ModernHeader";
@@ -21,6 +21,12 @@ interface Area {
   created_at: string;
 }
 
+interface AreaStats {
+  areaId: string;
+  churches: number;
+  visitors: number;
+}
+
 interface Region {
   id: string;
   name: string;
@@ -37,6 +43,7 @@ export default function Areas() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [pastors, setPastors] = useState<User[]>([]);
+  const [stats, setStats] = useState<AreaStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
@@ -53,6 +60,7 @@ export default function Areas() {
     fetchAreas();
     fetchRegions();
     fetchPastors();
+    fetchStats();
   }, []);
 
   const fetchAreas = async () => {
@@ -108,6 +116,36 @@ export default function Areas() {
     
     setPastors(pastorsList);
   };
+
+  const fetchStats = async () => {
+    const [churchesRes, visitorsRes] = await Promise.all([
+      supabase.from("churches").select("id, area_id"),
+      supabase.from("visitors").select("id, church_id, churches!inner(area_id)"),
+    ]);
+
+    const areaStats: AreaStats[] = areas.map(area => {
+      const churchesCount = churchesRes.data?.filter(c => c.area_id === area.id).length || 0;
+      
+      // Filtrar visitantes pela area_id através da church
+      const visitorsCount = visitorsRes.data?.filter((v: any) => 
+        v.churches?.area_id === area.id
+      ).length || 0;
+      
+      return {
+        areaId: area.id,
+        churches: churchesCount,
+        visitors: visitorsCount,
+      };
+    });
+
+    setStats(areaStats);
+  };
+
+  useEffect(() => {
+    if (areas.length > 0) {
+      fetchStats();
+    }
+  }, [areas]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -311,77 +349,110 @@ export default function Areas() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Região</TableHead>
                   <TableHead>Pastor Responsável</TableHead>
-                  {(isAdmin || isPastor) && <TableHead className="text-right">Ações</TableHead>}
+                  <TableHead className="text-center">Igrejas</TableHead>
+                  <TableHead className="text-center">Visitantes</TableHead>
+                  {(isAdmin || isPastor) && <TableHead className="text-center">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAreas.map((area) => (
-                  <TableRow key={area.id}>
-                    <TableCell className="font-medium">{area.name}</TableCell>
-                    <TableCell>{regions.find(r => r.id === area.region_id)?.name || "N/A"}</TableCell>
-                    <TableCell>{pastors.find(p => p.id === area.pastor_id)?.full_name || "Não definido"}</TableCell>
-                    {(isAdmin || isPastor) && (
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(area)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(area.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                {filteredAreas.map((area) => {
+                  const areaStat = stats.find(s => s.areaId === area.id);
+                  return (
+                    <TableRow key={area.id}>
+                      <TableCell className="font-medium">{area.name}</TableCell>
+                      <TableCell>{regions.find(r => r.id === area.region_id)?.name || "N/A"}</TableCell>
+                      <TableCell>{pastors.find(p => p.id === area.pastor_id)?.full_name || "Não definido"}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          <span>{areaStat?.churches || 0}</span>
                         </div>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span>{areaStat?.visitors || 0}</span>
+                        </div>
+                      </TableCell>
+                      {(isAdmin || isPastor) && (
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(area)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(area.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAreas.map((area) => (
-            <Card key={area.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{area.name}</CardTitle>
-                    <CardDescription>
-                      Região: {regions.find(r => r.id === area.region_id)?.name || "N/A"}
-                      <br />
-                      Pastor: {pastors.find(p => p.id === area.pastor_id)?.full_name || "Não definido"}
-                    </CardDescription>
-                  </div>
-                  {(isAdmin || isPastor) && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditDialog(area)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(area.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+          {filteredAreas.map((area) => {
+            const areaStat = stats.find(s => s.areaId === area.id);
+            return (
+              <Card key={area.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl">{area.name}</CardTitle>
+                      <CardDescription className="mt-1">
+                        Região: {regions.find(r => r.id === area.region_id)?.name || "N/A"}
+                        <br />
+                        Pastor: {pastors.find(p => p.id === area.pastor_id)?.full_name || "Não definido"}
+                      </CardDescription>
+                      
+                      <div className="mt-4 grid grid-cols-2 gap-4">
+                        <div className="flex flex-col items-center p-3 bg-muted/50 rounded-lg">
+                          <Building2 className="w-5 h-5 text-primary mb-1" />
+                          <span className="text-2xl font-bold">{areaStat?.churches || 0}</span>
+                          <span className="text-xs text-muted-foreground">Igrejas</span>
+                        </div>
+                        <div className="flex flex-col items-center p-3 bg-muted/50 rounded-lg">
+                          <Users className="w-5 h-5 text-primary mb-1" />
+                          <span className="text-2xl font-bold">{areaStat?.visitors || 0}</span>
+                          <span className="text-xs text-muted-foreground">Visitantes</span>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
+                    {(isAdmin || isPastor) && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(area)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(area.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
