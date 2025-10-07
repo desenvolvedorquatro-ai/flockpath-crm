@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, Users, UserPlus, TrendingUp, Calendar as CalendarIcon, MapPin, Building2, Church } from "lucide-react";
+import { BarChart3, Users, UserPlus, TrendingUp, Target, Calendar as CalendarIcon, MapPin, Building2, Church } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PipelineStage } from "@/components/dashboard/PipelineStage";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ModernHeader } from "@/components/ModernHeader";
-import { statusLabels, statusHexColors } from "@/lib/visitorStatus";
+import { statusLabels, statusHexColors, conversionRateColor } from "@/lib/visitorStatus";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -40,7 +40,6 @@ export default function Dashboard() {
   });
   const [pipelineData, setPipelineData] = useState([
     { title: "Visitante", count: 0, color: statusHexColors.visitante, percentage: 0 },
-    { title: "Interessado", count: 0, color: statusHexColors.interessado, percentage: 0 },
     { title: "Em Assistência", count: 0, color: statusHexColors.em_assistencia, percentage: 0 },
     { title: "Batizados", count: 0, color: statusHexColors.batizado, percentage: 0 },
   ]);
@@ -219,13 +218,11 @@ export default function Dashboard() {
         });
 
         const visitante = visitors.filter((v) => v.status === "visitante").length;
-        const interessado = visitors.filter((v) => v.status === "interessado").length;
         const emAssist = visitors.filter((v) => v.status === "em_assistencia").length;
         const batizado = visitors.filter((v) => v.status === "batizado").length;
 
         setPipelineData([
           { title: "Visitante", count: visitante, color: statusHexColors.visitante, percentage: total > 0 ? Math.round((visitante / total) * 100) : 0 },
-          { title: "Interessado", count: interessado, color: statusHexColors.interessado, percentage: total > 0 ? Math.round((interessado / total) * 100) : 0 },
           { title: "Em Assistência", count: emAssist, color: statusHexColors.em_assistencia, percentage: total > 0 ? Math.round((emAssist / total) * 100) : 0 },
           { title: "Batizados", count: batizado, color: statusHexColors.batizado, percentage: total > 0 ? Math.round((batizado / total) * 100) : 0 },
         ]);
@@ -260,7 +257,7 @@ export default function Dashboard() {
     { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.visitante },
     { title: "Batizados", value: stats.batizados, icon: UserPlus, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.batizado },
     { title: "Em Assistência", value: stats.emAssistencia, icon: TrendingUp, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.em_assistencia },
-    { title: "Taxa de Conversão", value: stats.conversionRate, icon: BarChart3, trend: { value: 0, isPositive: true }, iconColor: undefined },
+    { title: "Taxa de Conversão", value: stats.conversionRate, icon: Target, trend: { value: 0, isPositive: true }, iconColor: conversionRateColor },
   ];
 
   return (

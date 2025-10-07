@@ -132,7 +132,6 @@ export default function Relatorios() {
         const total = visitors.length;
         const statusReport = Object.entries(statusCounts).map(([key, value]: [string, any]) => ({
           name: key === 'visitante' ? 'Visitante' : 
-                key === 'interessado' ? 'Interessado' : 
                 key === 'em_assistencia' ? 'Em Assistência' : 'Batizado',
           value: value,
           percentage: ((value / total) * 100).toFixed(1)

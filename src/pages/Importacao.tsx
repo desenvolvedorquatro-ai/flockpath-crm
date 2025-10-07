@@ -311,11 +311,13 @@ export default function Importacao() {
       primeira_visita: row.data_visita || new Date().toISOString().split('T')[0],
       convidado_por: row.convidado_por || null,
       observacoes: row.observacoes || null,
-      status: "visitante",
+      status: row.status || "visitante",
       profissao: row.profissao || null,
       estado_civil: row.estado_civil || null,
       data_nascimento: row.data_nascimento || null,
       tem_filhos: row.tem_filhos || null,
+      candidato_batismo: row.candidato_batismo || false,
+      data_batismo: row.data_batismo || null,
     });
 
     if (error) throw error;
@@ -464,9 +466,9 @@ export default function Importacao() {
                 Importar Visitantes
               </CardTitle>
               <CardDescription>
-                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos (opcionais)
+                Campos: <strong>nome, nome_igreja</strong> (obrigatórios), email, telefone, endereco, data_visita, convidado_por, observacoes, profissao, estado_civil, data_nascimento, tem_filhos, candidato_batismo, data_batismo (opcionais)
                 <br/>
-                <em>A igreja deve estar cadastrada antes</em>
+                <em>A igreja deve estar cadastrada antes. Status válidos: visitante, em_assistencia, batizado</em>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

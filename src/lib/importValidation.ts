@@ -203,6 +203,15 @@ const validateVisitante = async (row: any): Promise<string[]> => {
     errors.push("Data de visita inválida (use formato AAAA-MM-DD)");
   }
 
+  if (row.data_batismo && !validateDate(row.data_batismo)) {
+    errors.push("Data de batismo inválida (use formato AAAA-MM-DD)");
+  }
+
+  // Validar status se fornecido
+  if (row.status && !['visitante', 'em_assistencia', 'batizado'].includes(row.status)) {
+    errors.push("Status inválido. Use: visitante, em_assistencia ou batizado");
+  }
+
   return errors;
 };
 

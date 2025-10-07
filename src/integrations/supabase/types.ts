@@ -709,11 +709,7 @@ export type Database = {
         | "varao"
         | "idoso"
       visitor_gender: "masculino" | "feminino"
-      visitor_status:
-        | "visitante"
-        | "interessado"
-        | "em_assistencia"
-        | "batizado"
+      visitor_status: "visitante" | "em_assistencia" | "batizado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -860,12 +856,7 @@ export const Constants = {
         "idoso",
       ],
       visitor_gender: ["masculino", "feminino"],
-      visitor_status: [
-        "visitante",
-        "interessado",
-        "em_assistencia",
-        "batizado",
-      ],
+      visitor_status: ["visitante", "em_assistencia", "batizado"],
     },
   },
 } as const
