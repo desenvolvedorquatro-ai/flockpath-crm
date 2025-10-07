@@ -13,11 +13,15 @@ interface FunnelChartProps {
 
 export function FunnelChart({ stages }: FunnelChartProps) {
   const maxCount = stages.length > 0 ? stages[0].count : 1;
-  const itemHeight = stages.length <= 3 ? "clamp(45px, 6vh, 65px)" : "clamp(35px, 4vh, 55px)";
+  const itemHeight = 
+    stages.length <= 2 ? "clamp(45px, 5.5vh, 60px)" :
+    stages.length <= 4 ? "clamp(35px, 4vh, 50px)" :
+    stages.length <= 6 ? "clamp(28px, 3vh, 40px)" :
+    "clamp(25px, 2.5vh, 35px)";
 
   return (
-    <Card className="p-3 md:p-4 bg-card border border-border shadow-apple-lg max-h-[450px] flex flex-col overflow-hidden">
-      <div className="space-y-1 flex-1 flex flex-col justify-start min-h-0 overflow-y-auto">
+    <Card className="p-3 md:p-4 bg-card border border-border shadow-apple-lg max-h-[400px] flex flex-col overflow-hidden">
+      <div className="space-y-0.5 flex-1 flex flex-col justify-start min-h-0 overflow-hidden">
         {stages.map((stage, index) => {
           const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
           const minWidth = 20; // Minimum width percentage for visibility
@@ -35,15 +39,15 @@ export function FunnelChart({ stages }: FunnelChartProps) {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
                 
-                <div className="relative h-full flex flex-col justify-center items-center text-center px-3 md:px-4 py-2">
+                <div className="relative h-full flex flex-col justify-center items-center text-center px-2 md:px-3 py-1.5">
                   <span className="text-white font-semibold text-xs md:text-sm leading-tight">
                     {stage.title}
                   </span>
                   <div className="mt-1 flex flex-col md:flex-row md:items-center md:gap-2">
-                    <span className="text-white text-lg md:text-2xl font-bold">
+                    <span className="text-white text-base md:text-xl font-bold">
                       {stage.count}
                     </span>
-                    <span className="text-white/90 text-xs md:text-sm">
+                    <span className="text-white/90 text-[10px] md:text-xs">
                       ({stage.percentage}%)
                     </span>
                   </div>

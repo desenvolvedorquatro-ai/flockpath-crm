@@ -110,11 +110,6 @@ export default function Tarefas() {
         `)
         .order("due_date", { ascending: true });
 
-      // Se não for pastor/admin, mostra apenas tarefas atribuídas ao usuário
-      if (!isPastor && !isAdmin) {
-        query = query.eq("assigned_to", user!.id);
-      }
-
       const { data, error } = await query;
 
       if (error) throw error;
