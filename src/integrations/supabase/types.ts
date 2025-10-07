@@ -574,6 +574,7 @@ export type Database = {
           data_batismo: string | null
           data_nascimento: string | null
           email: string | null
+          estado_civil: string | null
           first_visit_date: string | null
           full_name: string
           group_id: string | null
@@ -587,6 +588,7 @@ export type Database = {
           responsavel_assistencia: string | null
           sexo: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
+          tem_filhos: boolean | null
           updated_at: string | null
         }
         Insert: {
@@ -600,6 +602,7 @@ export type Database = {
           data_batismo?: string | null
           data_nascimento?: string | null
           email?: string | null
+          estado_civil?: string | null
           first_visit_date?: string | null
           full_name: string
           group_id?: string | null
@@ -613,6 +616,7 @@ export type Database = {
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
+          tem_filhos?: boolean | null
           updated_at?: string | null
         }
         Update: {
@@ -626,6 +630,7 @@ export type Database = {
           data_batismo?: string | null
           data_nascimento?: string | null
           email?: string | null
+          estado_civil?: string | null
           first_visit_date?: string | null
           full_name?: string
           group_id?: string | null
@@ -639,6 +644,7 @@ export type Database = {
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status?: Database["public"]["Enums"]["visitor_status"]
+          tem_filhos?: boolean | null
           updated_at?: string | null
         }
         Relationships: [
