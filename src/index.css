@@ -167,6 +167,18 @@ All colors MUST be HSL.
     @apply bg-card rounded-xl p-3 border-2 border-dashed transition-all duration-300;
     @apply hover:border-primary hover:bg-card/80 cursor-pointer;
   }
+
+  /* Funnel chart animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 @layer utilities {
