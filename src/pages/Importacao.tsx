@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "endereco", "data_visita", "convidado_por", "observacoes", "profissao", "estado_civil", "data_nascimento", "tem_filhos"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "endereco", "data_visita", "convidado_por", "observacoes", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
         filename = "template_visitantes.xlsx";
         break;
     }

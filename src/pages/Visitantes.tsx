@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "@/hooks/use-toast";
 import { VisitorInteractionsDialog } from "@/components/visitors/VisitorInteractionsDialog";
+import { VisitorTransferDialog } from "@/components/visitors/VisitorTransferDialog";
 import { ModernHeader } from "@/components/ModernHeader";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -66,6 +67,10 @@ interface Visitor {
   profissao: string | null;
   responsavel_assistencia: string | null;
   participacao_seminario: string | null;
+  candidato_batismo: boolean | null;
+  data_batismo: string | null;
+  area_id: string | null;
+  region_id: string | null;
 }
 
 interface AssistanceGroup {
@@ -137,6 +142,7 @@ export default function Visitantes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
@@ -166,6 +172,7 @@ export default function Visitantes() {
     profissao: "",
     responsavel_assistencia: "",
     participacao_seminario: "",
+    candidato_batismo: false,
   });
   const [editFormData, setEditFormData] = useState({
     full_name: "",
@@ -180,11 +187,14 @@ export default function Visitantes() {
     profissao: "",
     responsavel_assistencia: "",
     participacao_seminario: "",
+    candidato_batismo: false,
   });
   const [dataNascimento, setDataNascimento] = useState<Date | undefined>();
   const [primeiraVisita, setPrimeiraVisita] = useState<Date | undefined>();
   const [editDataNascimento, setEditDataNascimento] = useState<Date | undefined>();
   const [editPrimeiraVisita, setEditPrimeiraVisita] = useState<Date | undefined>();
+  const [dataBatismo, setDataBatismo] = useState<Date | undefined>();
+  const [editDataBatismo, setEditDataBatismo] = useState<Date | undefined>();
 
   useEffect(() => {
     if (!user) return;
@@ -511,9 +521,11 @@ export default function Visitantes() {
       profissao: visitor.profissao || "",
       responsavel_assistencia: visitor.responsavel_assistencia || "",
       participacao_seminario: visitor.participacao_seminario || "",
+      candidato_batismo: visitor.candidato_batismo || false,
     });
     setEditDataNascimento(visitor.data_nascimento ? new Date(visitor.data_nascimento) : undefined);
     setEditPrimeiraVisita(visitor.primeira_visita ? new Date(visitor.primeira_visita) : undefined);
+    setEditDataBatismo(visitor.data_batismo ? new Date(visitor.data_batismo) : undefined);
     
     // Carregar grupos de assistência apenas da igreja do visitante
     const { data: groupsData } = await supabase
@@ -549,6 +561,8 @@ export default function Visitantes() {
         profissao: editFormData.profissao.trim() || null,
         responsavel_assistencia: editFormData.responsavel_assistencia.trim() || null,
         participacao_seminario: editFormData.participacao_seminario.trim() || null,
+        candidato_batismo: editFormData.candidato_batismo,
+        data_batismo: editDataBatismo ? format(editDataBatismo, "yyyy-MM-dd") : null,
       })
       .eq("id", selectedVisitor.id);
 
@@ -651,6 +665,8 @@ export default function Visitantes() {
       profissao: formData.profissao.trim() || null,
       responsavel_assistencia: formData.responsavel_assistencia.trim() || null,
       participacao_seminario: formData.participacao_seminario.trim() || null,
+      candidato_batismo: formData.candidato_batismo,
+      data_batismo: dataBatismo ? format(dataBatismo, "yyyy-MM-dd") : null,
     }]);
 
     if (error) {
@@ -679,9 +695,11 @@ export default function Visitantes() {
         profissao: "",
         responsavel_assistencia: "",
         participacao_seminario: "",
+        candidato_batismo: false,
       });
       setDataNascimento(undefined);
       setPrimeiraVisita(undefined);
+      setDataBatismo(undefined);
       
       // Resetar seleções de admin
       if (isAdmin) {
@@ -696,9 +714,9 @@ export default function Visitantes() {
         .order("created_at", { ascending: false });
 
       if (isAdmin) {
-        setVisitors(data || []);
+        setVisitors((data as any[]) || []);
       } else {
-        const filtered = data?.filter(v => v.church_id === churchId) || [];
+        const filtered = (data as any[])?.filter(v => v.church_id === churchId) || [];
         setVisitors(filtered);
       }
     }
@@ -1039,6 +1057,55 @@ export default function Visitantes() {
                   className="min-h-[80px]"
                 />
               </div>
+              <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="candidato_batismo"
+                    checked={formData.candidato_batismo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, candidato_batismo: e.target.checked })
+                    }
+                    className="w-4 h-4 rounded border-border"
+                  />
+                  <Label htmlFor="candidato_batismo" className="font-semibold cursor-pointer">
+                    Candidato a Batismo?
+                  </Label>
+                </div>
+                {formData.status === "batizado" && (
+                  <div className="space-y-2">
+                    <Label>Data do Batismo</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !dataBatismo && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dataBatismo ? (
+                            format(dataBatismo, "dd/MM/yyyy", { locale: ptBR })
+                          ) : (
+                            <span>Selecione uma data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={dataBatismo}
+                          onSelect={setDataBatismo}
+                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </div>
               <Button
                 type="submit"
                 className="w-full btn-hover-lift bg-gradient-to-r from-primary to-primary-glow"
@@ -1099,12 +1166,11 @@ export default function Visitantes() {
                   <TableHead className="hidden xl:table-cell min-w-[80px]">Idade</TableHead>
                   <TableHead className="hidden xl:table-cell min-w-[100px]">Sexo</TableHead>
                   <TableHead className="hidden xl:table-cell min-w-[120px]">Categoria</TableHead>
-                  <TableHead className="hidden xl:table-cell min-w-[130px]">Profissão</TableHead>
                   <TableHead className="hidden lg:table-cell min-w-[120px]">Igreja</TableHead>
                   <TableHead className="hidden sm:table-cell min-w-[130px]">Grupo</TableHead>
                   <TableHead className="hidden md:table-cell min-w-[160px]">Última Interação</TableHead>
                   <TableHead className="min-w-[120px]">Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="text-center min-w-[180px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1130,9 +1196,6 @@ export default function Visitantes() {
                         ) : (
                           "-"
                         )}
-                      </TableCell>
-                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                        {visitor.profissao || "-"}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                         {visitor.church_name || "-"}
@@ -1162,15 +1225,14 @@ export default function Visitantes() {
                           {statusLabels[visitor.status]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
+                      <TableCell className="text-center">
+                        <div className="flex gap-2 justify-center">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(visitor)}
                           >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
+                            <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -1180,8 +1242,17 @@ export default function Visitantes() {
                               setIsInteractionsDialogOpen(true);
                             }}
                           >
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Interações
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedVisitor(visitor);
+                              setIsTransferDialogOpen(true);
+                            }}
+                          >
+                            <ArrowRightLeft className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -1273,6 +1344,20 @@ export default function Visitantes() {
                     <span className="text-muted-foreground">{visitor.participacao_seminario}</span>
                   </div>
                 )}
+                {visitor.candidato_batismo && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <span className="font-medium text-foreground">Candidato a Batismo</span>
+                  </div>
+                )}
+                {visitor.data_batismo && (
+                  <div className="text-sm">
+                    <span className="font-medium text-foreground">Data do Batismo:</span>{" "}
+                    <span className="text-muted-foreground">
+                      {format(new Date(visitor.data_batismo), "dd/MM/yyyy", { locale: ptBR })}
+                    </span>
+                  </div>
+                )}
                 <div className="flex gap-2 mt-3">
                   <Button
                     variant="outline"
@@ -1294,6 +1379,18 @@ export default function Visitantes() {
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Interações
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedVisitor(visitor);
+                      setIsTransferDialogOpen(true);
+                    }}
+                  >
+                    <ArrowRightLeft className="h-4 w-4 mr-2" />
+                    Transferir
                   </Button>
                 </div>
               </CardContent>
@@ -1605,6 +1702,57 @@ export default function Visitantes() {
               />
             </div>
 
+            {/* Candidato a Batismo */}
+            <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit_candidato_batismo"
+                  checked={editFormData.candidato_batismo}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, candidato_batismo: e.target.checked })
+                  }
+                  className="w-4 h-4 rounded border-border"
+                />
+                <Label htmlFor="edit_candidato_batismo" className="font-semibold cursor-pointer">
+                  Candidato a Batismo?
+                </Label>
+              </div>
+              {editFormData.status === "batizado" && (
+                <div className="space-y-2">
+                  <Label>Data do Batismo</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !editDataBatismo && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {editDataBatismo ? (
+                          format(editDataBatismo, "dd/MM/yyyy", { locale: ptBR })
+                        ) : (
+                          <span>Selecione uma data</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={editDataBatismo}
+                        onSelect={setEditDataBatismo}
+                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+            </div>
+
             {/* Botões */}
             <div className="flex gap-3 justify-end pt-4">
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -1628,6 +1776,30 @@ export default function Visitantes() {
           onOpenChange={setIsInteractionsDialogOpen}
           visitorId={selectedVisitor.id}
           visitorName={selectedVisitor.full_name}
+        />
+      )}
+
+      {/* Dialog de Transferência */}
+      {selectedVisitor && (
+        <VisitorTransferDialog
+          open={isTransferDialogOpen}
+          onOpenChange={setIsTransferDialogOpen}
+          visitorId={selectedVisitor.id}
+          visitorName={selectedVisitor.full_name}
+          currentChurchId={selectedVisitor.church_id}
+          currentChurchName={selectedVisitor.church_name}
+          onTransferComplete={() => {
+            const reloadData = async () => {
+              if (isAdmin) {
+                const { data } = await supabase.from("visitors").select("*").order("created_at", { ascending: false });
+                setVisitors((data as any[]) || []);
+              } else if (churchId) {
+                const { data } = await supabase.from("visitors").select("*").eq("church_id", churchId).order("created_at", { ascending: false });
+                setVisitors((data as any[]) || []);
+              }
+            };
+            reloadData();
+          }}
         />
       )}
     </div>

@@ -566,9 +566,11 @@ export type Database = {
         Row: {
           address: string | null
           assistance_group_id: string | null
+          candidato_batismo: boolean | null
           categoria: Database["public"]["Enums"]["visitor_category"] | null
           church_id: string
           created_at: string | null
+          data_batismo: string | null
           data_nascimento: string | null
           email: string | null
           first_visit_date: string | null
@@ -589,9 +591,11 @@ export type Database = {
         Insert: {
           address?: string | null
           assistance_group_id?: string | null
+          candidato_batismo?: boolean | null
           categoria?: Database["public"]["Enums"]["visitor_category"] | null
           church_id: string
           created_at?: string | null
+          data_batismo?: string | null
           data_nascimento?: string | null
           email?: string | null
           first_visit_date?: string | null
@@ -612,9 +616,11 @@ export type Database = {
         Update: {
           address?: string | null
           assistance_group_id?: string | null
+          candidato_batismo?: boolean | null
           categoria?: Database["public"]["Enums"]["visitor_category"] | null
           church_id?: string
           created_at?: string | null
+          data_batismo?: string | null
           data_nascimento?: string | null
           email?: string | null
           first_visit_date?: string | null
