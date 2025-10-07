@@ -115,14 +115,14 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                 
                 {/* Content container */}
                 <div className="relative h-full flex items-center justify-center px-4 py-2">
-                  <div className="flex flex-col md:flex-row md:items-center md:gap-3 text-center md:text-left w-full">
+                  <div className="flex flex-col items-center justify-center text-center w-full gap-1">
                     {/* Stage title */}
                     <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm">
                       {stage.title}
                     </span>
                     
                     {/* Metrics */}
-                    <div className="flex items-center justify-center md:justify-start gap-2 mt-1 md:mt-0 md:ml-auto">
+                    <div className="flex items-center justify-center gap-2">
                       <span className="text-white text-xl md:text-2xl font-bold drop-shadow-md tabular-nums">
                         {stage.count}
                       </span>
