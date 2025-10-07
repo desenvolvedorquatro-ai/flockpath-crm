@@ -56,18 +56,20 @@ Deno.serve(async (req) => {
 
     console.log('[CREATE-USER] Usuário criado no Auth:', authData.user.id)
 
-    // Atualizar perfil
+    // Inserir/Atualizar perfil (upsert)
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .update({
+      .upsert({
+        id: authData.user.id,
         full_name: requestData.full_name,
-        phone: requestData.phone,
-        cpf: requestData.cpf,
+        phone: requestData.phone || null,
+        cpf: requestData.cpf || null, // null se vazio para evitar constraint violation
         church_id: requestData.church_id,
         region_id: requestData.region_id || null,
         area_id: requestData.area_id || null,
+      }, {
+        onConflict: 'id'
       })
-      .eq('id', authData.user.id)
 
     if (profileError) {
       console.error('[CREATE-USER] Erro ao atualizar perfil:', profileError)

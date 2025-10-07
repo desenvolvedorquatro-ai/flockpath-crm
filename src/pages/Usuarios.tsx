@@ -74,6 +74,8 @@ export default function Usuarios() {
   });
   const [multiChurchAccess, setMultiChurchAccess] = useState(false);
   const [selectedChurches, setSelectedChurches] = useState<string[]>([]);
+  const [newUserFilteredAreas, setNewUserFilteredAreas] = useState<Area[]>([]);
+  const [newUserFilteredChurches, setNewUserFilteredChurches] = useState<Church[]>([]);
   const [editUserData, setEditUserData] = useState({
     full_name: "",
     phone: "",
@@ -275,11 +277,11 @@ export default function Usuarios() {
       // Criar usuário usando edge function (não faz logout do admin)
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
-          email: newUserData.email,
+          email: newUserData.email.trim(),
           password: newUserData.password,
-          full_name: newUserData.full_name,
-          phone: newUserData.phone,
-          cpf: newUserData.cpf,
+          full_name: newUserData.full_name.trim(),
+          phone: newUserData.phone.trim() || null,
+          cpf: newUserData.cpf.trim() || null, // null se vazio
           church_id: newUserData.church_id,
           region_id: newUserData.region_id || null,
           area_id: newUserData.area_id || null,
@@ -295,6 +297,8 @@ export default function Usuarios() {
       setNewUserData({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cpf: "", church_id: "", region_id: "", area_id: "" });
       setMultiChurchAccess(false);
       setSelectedChurches([]);
+      setNewUserFilteredAreas([]);
+      setNewUserFilteredChurches([]);
       fetchProfiles();
     } catch (error: any) {
       toast({
@@ -368,9 +372,9 @@ export default function Usuarios() {
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: editUserData.full_name,
-          phone: editUserData.phone,
-          cpf: editUserData.cpf,
+          full_name: editUserData.full_name.trim(),
+          phone: editUserData.phone.trim() || null,
+          cpf: editUserData.cpf.trim() || null, // null se vazio
           church_id: editUserData.church_id,
           region_id: editUserData.region_id || null,
           area_id: editUserData.area_id || null,
@@ -840,11 +844,11 @@ export default function Usuarios() {
                   onValueChange={(value) => {
                     setNewUserData({ ...newUserData, region_id: value, area_id: "", church_id: "" });
                     if (value) {
-                      setFilteredAreas(areas.filter(area => area.region_id === value));
-                      setFilteredChurches([]);
+                      setNewUserFilteredAreas(areas.filter(area => area.region_id === value));
+                      setNewUserFilteredChurches([]);
                     } else {
-                      setFilteredAreas([]);
-                      setFilteredChurches([]);
+                      setNewUserFilteredAreas([]);
+                      setNewUserFilteredChurches([]);
                     }
                   }}
                 >
@@ -868,9 +872,9 @@ export default function Usuarios() {
                   onValueChange={(value) => {
                     setNewUserData({ ...newUserData, area_id: value, church_id: "" });
                     if (value) {
-                      setFilteredChurches(churches.filter(church => church.area_id === value));
+                      setNewUserFilteredChurches(churches.filter(church => church.area_id === value));
                     } else {
-                      setFilteredChurches([]);
+                      setNewUserFilteredChurches([]);
                     }
                   }}
                   disabled={!newUserData.region_id}
@@ -879,7 +883,7 @@ export default function Usuarios() {
                     <SelectValue placeholder="Selecione uma área" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredAreas.map((area) => (
+                    {newUserFilteredAreas.map((area) => (
                       <SelectItem key={area.id} value={area.id}>
                         {area.name}
                       </SelectItem>
@@ -901,7 +905,7 @@ export default function Usuarios() {
                   <SelectValue placeholder="Selecione uma igreja" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredChurches.map((church) => (
+                  {newUserFilteredChurches.map((church) => (
                     <SelectItem key={church.id} value={church.id}>
                       {church.name}
                     </SelectItem>
