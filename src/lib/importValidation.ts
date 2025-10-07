@@ -212,6 +212,11 @@ const validateVisitante = async (row: any): Promise<string[]> => {
     errors.push("Status inválido. Use: visitante, em_assistencia ou batizado");
   }
 
+  // Validar categoria se fornecido
+  if (row.categoria && !['crianca', 'intermediario', 'adolescente', 'jovem', 'senhora', 'varao', 'idoso'].includes(row.categoria)) {
+    errors.push("Categoria inválida. Use: crianca, intermediario, adolescente, jovem, senhora, varao ou idoso");
+  }
+
   return errors;
 };
 

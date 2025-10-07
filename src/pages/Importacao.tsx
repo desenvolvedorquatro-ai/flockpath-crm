@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "endereco", "data_visita", "convidado_por", "observacoes", "status", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "endereco", "data_visita", "convidado_por", "observacoes", "status", "categoria", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -326,6 +326,7 @@ export default function Importacao() {
       convidado_por: row.convidado_por || null,
       observacoes: row.observacoes || null,
       status: row.status || "visitante",
+      categoria: row.categoria || null,
       profissao: row.profissao || null,
       estado_civil: row.estado_civil || null,
       data_nascimento: row.data_nascimento || null,
@@ -488,6 +489,7 @@ export default function Importacao() {
                     <strong>Campos opcionais:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
                       <li><strong>status</strong>: categoria do visitante (visitante, em_assistencia, batizado)</li>
+                      <li><strong>categoria</strong>: faixa etária (crianca, intermediario, adolescente, jovem, senhora, varao, idoso)</li>
                       <li>nome_area, nome_regiao: ajudam a identificar a igreja correta</li>
                       <li>email, telefone, endereco</li>
                       <li>data_visita, convidado_por, observacoes</li>
