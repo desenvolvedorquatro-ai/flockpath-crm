@@ -560,6 +560,7 @@ export type Database = {
         Row: {
           address: string | null
           assistance_group_id: string | null
+          categoria: Database["public"]["Enums"]["visitor_category"] | null
           church_id: string
           created_at: string | null
           data_nascimento: string | null
@@ -570,14 +571,19 @@ export type Database = {
           id: string
           invited_by: string | null
           notes: string | null
+          participacao_seminario: string | null
           phone: string | null
           primeira_visita: string | null
+          profissao: string | null
+          responsavel_assistencia: string | null
+          sexo: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
           updated_at: string | null
         }
         Insert: {
           address?: string | null
           assistance_group_id?: string | null
+          categoria?: Database["public"]["Enums"]["visitor_category"] | null
           church_id: string
           created_at?: string | null
           data_nascimento?: string | null
@@ -588,14 +594,19 @@ export type Database = {
           id?: string
           invited_by?: string | null
           notes?: string | null
+          participacao_seminario?: string | null
           phone?: string | null
           primeira_visita?: string | null
+          profissao?: string | null
+          responsavel_assistencia?: string | null
+          sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
           updated_at?: string | null
         }
         Update: {
           address?: string | null
           assistance_group_id?: string | null
+          categoria?: Database["public"]["Enums"]["visitor_category"] | null
           church_id?: string
           created_at?: string | null
           data_nascimento?: string | null
@@ -606,8 +617,12 @@ export type Database = {
           id?: string
           invited_by?: string | null
           notes?: string | null
+          participacao_seminario?: string | null
           phone?: string | null
           primeira_visita?: string | null
+          profissao?: string | null
+          responsavel_assistencia?: string | null
+          sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status?: Database["public"]["Enums"]["visitor_status"]
           updated_at?: string | null
         }
@@ -673,6 +688,15 @@ export type Database = {
         | "pastor_coordenador"
         | "pastor_regiao"
         | "pastor_geral"
+      visitor_category:
+        | "crianca"
+        | "intermediario"
+        | "adolescente"
+        | "jovem"
+        | "senhora"
+        | "varao"
+        | "idoso"
+      visitor_gender: "masculino" | "feminino"
       visitor_status:
         | "visitante"
         | "interessado"
@@ -814,6 +838,16 @@ export const Constants = {
         "pastor_regiao",
         "pastor_geral",
       ],
+      visitor_category: [
+        "crianca",
+        "intermediario",
+        "adolescente",
+        "jovem",
+        "senhora",
+        "varao",
+        "idoso",
+      ],
+      visitor_gender: ["masculino", "feminino"],
       visitor_status: [
         "visitante",
         "interessado",

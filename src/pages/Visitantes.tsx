@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -60,6 +61,11 @@ interface Visitor {
   assistance_group_name?: string | null;
   last_interaction_type?: string | null;
   last_interaction_date?: string | null;
+  categoria: string | null;
+  sexo: string | null;
+  profissao: string | null;
+  responsavel_assistencia: string | null;
+  participacao_seminario: string | null;
 }
 
 interface AssistanceGroup {
@@ -91,6 +97,33 @@ const interactionTypeLabels: Record<string, string> = {
   mensagem: "Mensagem",
   reuniao: "Reunião",
   outro: "Outro",
+};
+
+const categoriaLabels: Record<string, string> = {
+  crianca: "Criança",
+  intermediario: "Intermediário",
+  adolescente: "Adolescente",
+  jovem: "Jovem",
+  senhora: "Senhora",
+  varao: "Varão",
+  idoso: "Idoso",
+};
+
+const sexoLabels: Record<string, string> = {
+  masculino: "Masculino",
+  feminino: "Feminino",
+};
+
+const calcularIdade = (dataNascimento: string | null): number | null => {
+  if (!dataNascimento) return null;
+  const hoje = new Date();
+  const nascimento = new Date(dataNascimento);
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const mes = hoje.getMonth() - nascimento.getMonth();
+  if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+    idade--;
+  }
+  return idade;
 };
 
 export default function Visitantes() {
@@ -128,6 +161,11 @@ export default function Visitantes() {
     invited_by: "",
     status: "visitante",
     assistance_group_id: "none",
+    categoria: "",
+    sexo: "",
+    profissao: "",
+    responsavel_assistencia: "",
+    participacao_seminario: "",
   });
   const [editFormData, setEditFormData] = useState({
     full_name: "",
@@ -137,6 +175,11 @@ export default function Visitantes() {
     invited_by: "",
     status: "visitante",
     assistance_group_id: "none",
+    categoria: "",
+    sexo: "",
+    profissao: "",
+    responsavel_assistencia: "",
+    participacao_seminario: "",
   });
   const [dataNascimento, setDataNascimento] = useState<Date | undefined>();
   const [primeiraVisita, setPrimeiraVisita] = useState<Date | undefined>();
@@ -463,6 +506,11 @@ export default function Visitantes() {
       invited_by: visitor.invited_by || "",
       status: visitor.status,
       assistance_group_id: visitor.assistance_group_id || "none",
+      categoria: visitor.categoria || "",
+      sexo: visitor.sexo || "",
+      profissao: visitor.profissao || "",
+      responsavel_assistencia: visitor.responsavel_assistencia || "",
+      participacao_seminario: visitor.participacao_seminario || "",
     });
     setEditDataNascimento(visitor.data_nascimento ? new Date(visitor.data_nascimento) : undefined);
     setEditPrimeiraVisita(visitor.primeira_visita ? new Date(visitor.primeira_visita) : undefined);
@@ -486,16 +534,21 @@ export default function Visitantes() {
     const { error } = await supabase
       .from("visitors")
       .update({
-        full_name: editFormData.full_name,
-        phone: editFormData.phone || null,
-        email: editFormData.email || null,
-        address: editFormData.address || null,
-        invited_by: editFormData.invited_by || null,
+        full_name: editFormData.full_name.trim(),
+        phone: editFormData.phone.trim() || null,
+        email: editFormData.email.trim() || null,
+        address: editFormData.address.trim() || null,
+        invited_by: editFormData.invited_by.trim() || null,
         status: editFormData.status as "visitante" | "interessado" | "em_assistencia" | "batizado",
         assistance_group_id: editFormData.assistance_group_id && editFormData.assistance_group_id !== "none" ? editFormData.assistance_group_id : null,
         data_nascimento: editDataNascimento ? format(editDataNascimento, "yyyy-MM-dd") : null,
         primeira_visita: editPrimeiraVisita ? format(editPrimeiraVisita, "yyyy-MM-dd") : null,
-        church_id: selectedVisitor.church_id, // Mantém a igreja do visitante
+        church_id: selectedVisitor.church_id,
+        categoria: (editFormData.categoria as any) || null,
+        sexo: (editFormData.sexo as any) || null,
+        profissao: editFormData.profissao.trim() || null,
+        responsavel_assistencia: editFormData.responsavel_assistencia.trim() || null,
+        participacao_seminario: editFormData.participacao_seminario.trim() || null,
       })
       .eq("id", selectedVisitor.id);
 
@@ -583,16 +636,21 @@ export default function Visitantes() {
     }
 
     const { error } = await supabase.from("visitors").insert([{
-      full_name: formData.full_name,
-      phone: formData.phone || null,
-      email: formData.email || null,
-      address: formData.address || null,
-      invited_by: formData.invited_by || null,
+      full_name: formData.full_name.trim(),
+      phone: formData.phone.trim() || null,
+      email: formData.email.trim() || null,
+      address: formData.address.trim() || null,
+      invited_by: formData.invited_by.trim() || null,
       status: formData.status as "visitante" | "interessado" | "em_assistencia" | "batizado",
       church_id: churchId,
       assistance_group_id: formData.assistance_group_id && formData.assistance_group_id !== "none" ? formData.assistance_group_id : null,
       data_nascimento: dataNascimento ? format(dataNascimento, "yyyy-MM-dd") : null,
       primeira_visita: primeiraVisita ? format(primeiraVisita, "yyyy-MM-dd") : null,
+      categoria: (formData.categoria as any) || null,
+      sexo: (formData.sexo as any) || null,
+      profissao: formData.profissao.trim() || null,
+      responsavel_assistencia: formData.responsavel_assistencia.trim() || null,
+      participacao_seminario: formData.participacao_seminario.trim() || null,
     }]);
 
     if (error) {
@@ -616,6 +674,11 @@ export default function Visitantes() {
         invited_by: "",
         status: "visitante",
         assistance_group_id: "none",
+        categoria: "",
+        sexo: "",
+        profissao: "",
+        responsavel_assistencia: "",
+        participacao_seminario: "",
       });
       setDataNascimento(undefined);
       setPrimeiraVisita(undefined);
@@ -901,6 +964,81 @@ export default function Visitantes() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="categoria">Categoria</Label>
+                  <Select
+                    value={formData.categoria}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, categoria: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione categoria" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card">
+                      <SelectItem value="crianca">Criança</SelectItem>
+                      <SelectItem value="intermediario">Intermediário</SelectItem>
+                      <SelectItem value="adolescente">Adolescente</SelectItem>
+                      <SelectItem value="jovem">Jovem</SelectItem>
+                      <SelectItem value="senhora">Senhora</SelectItem>
+                      <SelectItem value="varao">Varão</SelectItem>
+                      <SelectItem value="idoso">Idoso</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sexo">Sexo</Label>
+                  <Select
+                    value={formData.sexo}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, sexo: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione sexo" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card">
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profissao">Profissão</Label>
+                <Input
+                  id="profissao"
+                  value={formData.profissao}
+                  onChange={(e) =>
+                    setFormData({ ...formData, profissao: e.target.value })
+                  }
+                  placeholder="Ex: Engenheiro, Professor, etc."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="responsavel_assistencia">Responsável pela Assistência</Label>
+                <Input
+                  id="responsavel_assistencia"
+                  value={formData.responsavel_assistencia}
+                  onChange={(e) =>
+                    setFormData({ ...formData, responsavel_assistencia: e.target.value })
+                  }
+                  placeholder="Nome do responsável"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="participacao_seminario">Participação em Seminário</Label>
+                <Textarea
+                  id="participacao_seminario"
+                  value={formData.participacao_seminario}
+                  onChange={(e) =>
+                    setFormData({ ...formData, participacao_seminario: e.target.value })
+                  }
+                  placeholder="Descreva os seminários e eventos que participou"
+                  className="min-h-[80px]"
+                />
+              </div>
               <Button
                 type="submit"
                 className="w-full btn-hover-lift bg-gradient-to-r from-primary to-primary-glow"
@@ -958,10 +1096,13 @@ export default function Visitantes() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[150px]">Nome</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[80px]">Idade</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[100px]">Sexo</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[120px]">Categoria</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[130px]">Profissão</TableHead>
                   <TableHead className="hidden lg:table-cell min-w-[120px]">Igreja</TableHead>
                   <TableHead className="hidden sm:table-cell min-w-[130px]">Grupo</TableHead>
                   <TableHead className="hidden md:table-cell min-w-[160px]">Última Interação</TableHead>
-                  <TableHead className="hidden md:table-cell min-w-[100px]">Aniversário</TableHead>
                   <TableHead className="min-w-[120px]">Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -970,19 +1111,29 @@ export default function Visitantes() {
                 {filteredVisitors
                   .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                   .map((visitor) => {
-                  const birthday = visitor.data_nascimento ? new Date(visitor.data_nascimento) : null;
-                  const today = new Date();
-                  const daysUntilBirthday = birthday 
-                    ? differenceInDays(
-                        new Date(today.getFullYear(), birthday.getMonth(), birthday.getDate()),
-                        today
-                      )
-                    : null;
-                  const isUpcomingBirthday = daysUntilBirthday !== null && daysUntilBirthday >= 0 && daysUntilBirthday <= 7;
+                  const idade = calcularIdade(visitor.data_nascimento);
 
                   return (
                     <TableRow key={visitor.id}>
                       <TableCell className="font-medium">{visitor.full_name}</TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                        {idade !== null ? `${idade} anos` : "-"}
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                        {visitor.sexo ? sexoLabels[visitor.sexo] : "-"}
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        {visitor.categoria ? (
+                          <Badge variant="outline" className="text-xs">
+                            {categoriaLabels[visitor.categoria]}
+                          </Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                        {visitor.profissao || "-"}
+                      </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                         {visitor.church_name || "-"}
                       </TableCell>
@@ -1001,21 +1152,6 @@ export default function Visitantes() {
                           </div>
                         ) : (
                           "-"
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {birthday ? (
-                          <div className="flex items-center gap-2">
-                            {isUpcomingBirthday && <Cake className="w-4 h-4 text-green-500" />}
-                            <span className={cn(
-                              "text-sm",
-                              isUpcomingBirthday ? "text-green-600 font-semibold" : "text-muted-foreground"
-                            )}>
-                              {format(birthday, "dd/MM")}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -1070,17 +1206,49 @@ export default function Visitantes() {
                     </div>
                     <div>
                       <CardTitle className="text-lg">{visitor.full_name}</CardTitle>
-                      <Badge
-                        variant="outline"
-                        className={`${statusColors[visitor.status]} text-xs mt-1`}
-                      >
-                        {statusLabels[visitor.status]}
-                      </Badge>
+                      <div className="flex gap-2 mt-1 flex-wrap">
+                        <Badge
+                          variant="outline"
+                          className={`${statusColors[visitor.status]} text-xs`}
+                        >
+                          {statusLabels[visitor.status]}
+                        </Badge>
+                        {visitor.categoria && (
+                          <Badge variant="secondary" className="text-xs">
+                            {categoriaLabels[visitor.categoria]}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                {visitor.data_nascimento && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Cake className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      {format(new Date(visitor.data_nascimento), "dd/MM/yyyy", { locale: ptBR })}
+                    </span>
+                    {calcularIdade(visitor.data_nascimento) && (
+                      <Badge variant="outline" className="text-xs">
+                        {calcularIdade(visitor.data_nascimento)} anos
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                {visitor.sexo && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <User2 className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{sexoLabels[visitor.sexo]}</span>
+                  </div>
+                )}
+                {visitor.profissao && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Briefcase className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{visitor.profissao}</span>
+                  </div>
+                )}
                 {visitor.email && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="w-4 h-4" />
@@ -1093,14 +1261,22 @@ export default function Visitantes() {
                     {visitor.phone}
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(visitor.first_visit_date).toLocaleDateString("pt-BR")}
-                </div>
+                {visitor.responsavel_assistencia && (
+                  <div className="text-sm">
+                    <span className="font-medium text-foreground">Responsável:</span>{" "}
+                    <span className="text-muted-foreground">{visitor.responsavel_assistencia}</span>
+                  </div>
+                )}
                 {visitor.invited_by && (
                   <div className="text-sm">
                     <span className="font-medium text-foreground">Convidado por:</span>{" "}
                     <span className="text-muted-foreground">{visitor.invited_by}</span>
+                  </div>
+                )}
+                {visitor.participacao_seminario && (
+                  <div className="text-sm">
+                    <span className="font-medium text-foreground">Seminários:</span>{" "}
+                    <span className="text-muted-foreground">{visitor.participacao_seminario}</span>
                   </div>
                 )}
                 <div className="flex gap-2 mt-3">
@@ -1350,6 +1526,89 @@ export default function Visitantes() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Categoria e Sexo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit_categoria">Categoria</Label>
+                <Select
+                  value={editFormData.categoria}
+                  onValueChange={(value) =>
+                    setEditFormData({ ...editFormData, categoria: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione categoria" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="crianca">Criança</SelectItem>
+                    <SelectItem value="intermediario">Intermediário</SelectItem>
+                    <SelectItem value="adolescente">Adolescente</SelectItem>
+                    <SelectItem value="jovem">Jovem</SelectItem>
+                    <SelectItem value="senhora">Senhora</SelectItem>
+                    <SelectItem value="varao">Varão</SelectItem>
+                    <SelectItem value="idoso">Idoso</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_sexo">Sexo</Label>
+                <Select
+                  value={editFormData.sexo}
+                  onValueChange={(value) =>
+                    setEditFormData({ ...editFormData, sexo: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione sexo" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="feminino">Feminino</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Profissão */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_profissao">Profissão</Label>
+              <Input
+                id="edit_profissao"
+                value={editFormData.profissao}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, profissao: e.target.value })
+                }
+                placeholder="Ex: Engenheiro, Professor, etc."
+              />
+            </div>
+
+            {/* Responsável pela Assistência */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_responsavel_assistencia">Responsável pela Assistência</Label>
+              <Input
+                id="edit_responsavel_assistencia"
+                value={editFormData.responsavel_assistencia}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, responsavel_assistencia: e.target.value })
+                }
+                placeholder="Nome do responsável"
+              />
+            </div>
+
+            {/* Participação em Seminário */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_participacao_seminario">Participação em Seminário</Label>
+              <Textarea
+                id="edit_participacao_seminario"
+                value={editFormData.participacao_seminario}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, participacao_seminario: e.target.value })
+                }
+                placeholder="Descreva os seminários e eventos que participou"
+                className="min-h-[80px]"
+              />
             </div>
 
             {/* Botões */}
