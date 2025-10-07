@@ -16,7 +16,7 @@ export function FunnelChart({ stages }: FunnelChartProps) {
 
   return (
     <Card className="p-4 md:p-6 bg-card border border-border shadow-apple-lg">
-      <div className="space-y-2">
+      <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
         {stages.map((stage, index) => {
           const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
           const minWidth = 20; // Minimum width percentage for visibility
