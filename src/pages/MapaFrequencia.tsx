@@ -51,7 +51,7 @@ export default function MapaFrequencia() {
   const [loading, setLoading] = useState(true);
 
   const [selectedChurch, setSelectedChurch] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   const daysInMonth = eachDayOfInterval({
@@ -118,7 +118,7 @@ export default function MapaFrequencia() {
         .select("id, full_name")
         .order("full_name");
 
-      if (selectedGroup) {
+      if (selectedGroup && selectedGroup !== "all") {
         query = query.eq("assistance_group_id", selectedGroup);
       } else if (selectedChurch) {
         query = query.eq("church_id", selectedChurch);
@@ -150,7 +150,7 @@ export default function MapaFrequencia() {
         .gte("attendance_date", startDate)
         .lte("attendance_date", endDate);
 
-      if (selectedGroup) {
+      if (selectedGroup && selectedGroup !== "all") {
         query = query.eq("assistance_group_id", selectedGroup);
       } else if (selectedChurch) {
         query = query.eq("church_id", selectedChurch);
@@ -205,7 +205,7 @@ export default function MapaFrequencia() {
             attendance_date: dateStr,
             service_type: serviceType,
             church_id: selectedChurch,
-            assistance_group_id: selectedGroup || null,
+            assistance_group_id: selectedGroup !== "all" ? selectedGroup : null,
             recorded_by: user!.id,
           });
 
@@ -306,7 +306,7 @@ export default function MapaFrequencia() {
                   <SelectValue placeholder="Todos os GAs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os GAs</SelectItem>
+                  <SelectItem value="all">Todos os GAs</SelectItem>
                   {filteredGroups.map((group) => (
                     <SelectItem key={group.id} value={group.id}>
                       {group.name}
