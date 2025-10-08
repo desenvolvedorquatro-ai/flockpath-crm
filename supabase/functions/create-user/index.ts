@@ -11,6 +11,8 @@ interface CreateUserRequest {
   full_name: string
   phone: string
   cpf: string
+  city: string
+  state: string
   church_id: string
   region_id?: string
   area_id?: string
@@ -63,7 +65,9 @@ Deno.serve(async (req) => {
         id: authData.user.id,
         full_name: requestData.full_name,
         phone: requestData.phone || null,
-        cpf: requestData.cpf || null, // null se vazio para evitar constraint violation
+        cpf: requestData.cpf || null,
+        city: requestData.city || null,
+        state: requestData.state || null,
         church_id: requestData.church_id,
         region_id: requestData.region_id || null,
         area_id: requestData.area_id || null,

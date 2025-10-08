@@ -276,6 +276,7 @@ export type Database = {
         Row: {
           area_id: string | null
           church_id: string | null
+          city: string | null
           cpf: string | null
           created_at: string | null
           email: string | null
@@ -283,11 +284,13 @@ export type Database = {
           id: string
           phone: string | null
           region_id: string | null
+          state: string | null
           updated_at: string | null
         }
         Insert: {
           area_id?: string | null
           church_id?: string | null
+          city?: string | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
@@ -295,11 +298,13 @@ export type Database = {
           id: string
           phone?: string | null
           region_id?: string | null
+          state?: string | null
           updated_at?: string | null
         }
         Update: {
           area_id?: string | null
           church_id?: string | null
+          city?: string | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
@@ -307,6 +312,7 @@ export type Database = {
           id?: string
           phone?: string | null
           region_id?: string | null
+          state?: string | null
           updated_at?: string | null
         }
         Relationships: [

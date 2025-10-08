@@ -16,7 +16,7 @@ import { Tables, TablesInsert } from "@/integrations/supabase/types";
 type Church = Tables<"churches">;
 type Region = Tables<"regions">;
 type Area = Tables<"areas">;
-type User = { id: string; full_name: string; email: string };
+type User = { id: string; full_name: string; email: string; city: string; state: string };
 
 export default function Igrejas() {
   const [churches, setChurches] = useState<Church[]>([]);
@@ -68,14 +68,16 @@ export default function Igrejas() {
       .from("user_roles")
       .select(`
         user_id,
-        profiles!user_roles_user_id_fkey(full_name, email)
+        profiles!user_roles_user_id_fkey(full_name, email, city, state)
       `)
       .eq("role", "pastor");
 
     const pastorsList = data?.map(r => ({
       id: r.user_id,
       full_name: (r.profiles as any)?.full_name || "Sem nome",
-      email: (r.profiles as any)?.email || "Sem email"
+      email: (r.profiles as any)?.email || "Sem email",
+      city: (r.profiles as any)?.city || "",
+      state: (r.profiles as any)?.state || ""
     })) || [];
     setPastors(pastorsList);
   };
@@ -287,7 +289,21 @@ export default function Igrejas() {
                     <Label htmlFor="pastor_id">Pastor Responsável</Label>
                     <Select
                       value={formData.pastor_id}
-                      onValueChange={(value) => setFormData({ ...formData, pastor_id: value })}
+                      onValueChange={(value) => {
+                        const selectedPastor = pastors.find(p => p.id === value);
+                        if (selectedPastor) {
+                          setFormData({ 
+                            ...formData, 
+                            pastor_id: value,
+                            pastor_name: selectedPastor.full_name,
+                            email: selectedPastor.email,
+                            city: selectedPastor.city,
+                            state: selectedPastor.state
+                          });
+                        } else {
+                          setFormData({ ...formData, pastor_id: value });
+                        }
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um pastor" />

@@ -68,6 +68,8 @@ export default function Usuarios() {
     full_name: "",
     phone: "",
     cpf: "",
+    city: "",
+    state: "",
     church_id: "",
     region_id: "",
     area_id: "",
@@ -80,6 +82,8 @@ export default function Usuarios() {
     full_name: "",
     phone: "",
     cpf: "",
+    city: "",
+    state: "",
     church_id: "",
     region_id: "",
     area_id: "",
@@ -281,7 +285,9 @@ export default function Usuarios() {
           password: newUserData.password,
           full_name: newUserData.full_name.trim(),
           phone: newUserData.phone.trim() || null,
-          cpf: newUserData.cpf.trim() || null, // null se vazio
+          cpf: newUserData.cpf.trim() || null,
+          city: newUserData.city.trim() || null,
+          state: newUserData.state || null,
           church_id: newUserData.church_id,
           region_id: newUserData.region_id || null,
           area_id: newUserData.area_id || null,
@@ -294,7 +300,7 @@ export default function Usuarios() {
 
       toast({ title: "Usuário criado com sucesso!" });
       setIsCreateDialogOpen(false);
-      setNewUserData({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cpf: "", church_id: "", region_id: "", area_id: "" });
+      setNewUserData({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cpf: "", city: "", state: "", church_id: "", region_id: "", area_id: "" });
       setMultiChurchAccess(false);
       setSelectedChurches([]);
       setNewUserFilteredAreas([]);
@@ -317,6 +323,8 @@ export default function Usuarios() {
         full_name: user.full_name || "",
         phone: user.phone || "",
         cpf: user.cpf || "",
+        city: user.city || "",
+        state: user.state || "",
         church_id: user.church_id || "",
         region_id: user.region_id || "",
         area_id: user.area_id || "",
@@ -374,7 +382,9 @@ export default function Usuarios() {
         .update({
           full_name: editUserData.full_name.trim(),
           phone: editUserData.phone.trim() || null,
-          cpf: editUserData.cpf.trim() || null, // null se vazio
+          cpf: editUserData.cpf.trim() || null,
+          city: editUserData.city.trim() || null,
+          state: editUserData.state || null,
           church_id: editUserData.church_id,
           region_id: editUserData.region_id || null,
           area_id: editUserData.area_id || null,
@@ -410,7 +420,7 @@ export default function Usuarios() {
       
       setIsEditDialogOpen(false);
       setSelectedUserId(null);
-      setEditUserData({ full_name: "", phone: "", cpf: "", church_id: "", region_id: "", area_id: "" });
+      setEditUserData({ full_name: "", phone: "", cpf: "", city: "", state: "", church_id: "", region_id: "", area_id: "" });
       setEditMultiChurchAccess(false);
       setEditSelectedChurches([]);
     } catch (error: any) {
@@ -812,6 +822,57 @@ export default function Usuarios() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  value={newUserData.city}
+                  onChange={(e) => setNewUserData({ ...newUserData, city: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="state">Estado</Label>
+                <Select
+                  value={newUserData.state}
+                  onValueChange={(value) => setNewUserData({ ...newUserData, state: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card z-[100]">
+                    <SelectItem value="AC">AC</SelectItem>
+                    <SelectItem value="AL">AL</SelectItem>
+                    <SelectItem value="AP">AP</SelectItem>
+                    <SelectItem value="AM">AM</SelectItem>
+                    <SelectItem value="BA">BA</SelectItem>
+                    <SelectItem value="CE">CE</SelectItem>
+                    <SelectItem value="DF">DF</SelectItem>
+                    <SelectItem value="ES">ES</SelectItem>
+                    <SelectItem value="GO">GO</SelectItem>
+                    <SelectItem value="MA">MA</SelectItem>
+                    <SelectItem value="MT">MT</SelectItem>
+                    <SelectItem value="MS">MS</SelectItem>
+                    <SelectItem value="MG">MG</SelectItem>
+                    <SelectItem value="PA">PA</SelectItem>
+                    <SelectItem value="PB">PB</SelectItem>
+                    <SelectItem value="PR">PR</SelectItem>
+                    <SelectItem value="PE">PE</SelectItem>
+                    <SelectItem value="PI">PI</SelectItem>
+                    <SelectItem value="RJ">RJ</SelectItem>
+                    <SelectItem value="RN">RN</SelectItem>
+                    <SelectItem value="RS">RS</SelectItem>
+                    <SelectItem value="RO">RO</SelectItem>
+                    <SelectItem value="RR">RR</SelectItem>
+                    <SelectItem value="SC">SC</SelectItem>
+                    <SelectItem value="SP">SP</SelectItem>
+                    <SelectItem value="SE">SE</SelectItem>
+                    <SelectItem value="TO">TO</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="password">Senha *</Label>
                 <Input
                   id="password"
@@ -1020,6 +1081,57 @@ export default function Usuarios() {
                 value={editUserData.phone}
                 onChange={(e) => setEditUserData({ ...editUserData, phone: e.target.value })}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_city">Cidade</Label>
+                <Input
+                  id="edit_city"
+                  value={editUserData.city}
+                  onChange={(e) => setEditUserData({ ...editUserData, city: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_state">Estado</Label>
+                <Select
+                  value={editUserData.state || ""}
+                  onValueChange={(value) => setEditUserData({ ...editUserData, state: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card z-[100]">
+                    <SelectItem value="AC">AC</SelectItem>
+                    <SelectItem value="AL">AL</SelectItem>
+                    <SelectItem value="AP">AP</SelectItem>
+                    <SelectItem value="AM">AM</SelectItem>
+                    <SelectItem value="BA">BA</SelectItem>
+                    <SelectItem value="CE">CE</SelectItem>
+                    <SelectItem value="DF">DF</SelectItem>
+                    <SelectItem value="ES">ES</SelectItem>
+                    <SelectItem value="GO">GO</SelectItem>
+                    <SelectItem value="MA">MA</SelectItem>
+                    <SelectItem value="MT">MT</SelectItem>
+                    <SelectItem value="MS">MS</SelectItem>
+                    <SelectItem value="MG">MG</SelectItem>
+                    <SelectItem value="PA">PA</SelectItem>
+                    <SelectItem value="PB">PB</SelectItem>
+                    <SelectItem value="PR">PR</SelectItem>
+                    <SelectItem value="PE">PE</SelectItem>
+                    <SelectItem value="PI">PI</SelectItem>
+                    <SelectItem value="RJ">RJ</SelectItem>
+                    <SelectItem value="RN">RN</SelectItem>
+                    <SelectItem value="RS">RS</SelectItem>
+                    <SelectItem value="RO">RO</SelectItem>
+                    <SelectItem value="RR">RR</SelectItem>
+                    <SelectItem value="SC">SC</SelectItem>
+                    <SelectItem value="SP">SP</SelectItem>
+                    <SelectItem value="SE">SE</SelectItem>
+                    <SelectItem value="TO">TO</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
