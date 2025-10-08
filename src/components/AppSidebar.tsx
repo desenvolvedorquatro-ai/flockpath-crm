@@ -28,10 +28,6 @@ const menuItems = [{
   url: "/grupos",
   icon: UsersRound
 }, {
-  title: "Usuários",
-  url: "/usuarios",
-  icon: UserCog
-}, {
   title: "Tarefas",
   url: "/tarefas",
   icon: CheckSquare
@@ -82,6 +78,16 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-base">Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/usuarios" onClick={handleMenuClick} className={({
+                  isActive
+                }) => isActive ? "bg-primary/10 text-primary border-l-4 border-primary text-lg" : "text-lg"}>
+                    <UserCog className="w-6 h-6" />
+                    <span>Usuários</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/importacao" onClick={handleMenuClick} className={({
