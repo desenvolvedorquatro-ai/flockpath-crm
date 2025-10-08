@@ -16,7 +16,7 @@ import { Tables, TablesInsert } from "@/integrations/supabase/types";
 type Church = Tables<"churches">;
 type Region = Tables<"regions">;
 type Area = Tables<"areas">;
-type User = { id: string; full_name: string; email: string; city: string; state: string };
+type User = { id: string; full_name: string; email: string; phone: string; city: string; state: string };
 
 export default function Igrejas() {
   const [churches, setChurches] = useState<Church[]>([]);
@@ -68,7 +68,7 @@ export default function Igrejas() {
       .from("user_roles")
       .select(`
         user_id,
-        profiles!user_roles_user_id_fkey(full_name, email, city, state)
+        profiles!user_roles_user_id_fkey(full_name, email, phone, city, state)
       `)
       .eq("role", "pastor");
 
@@ -76,6 +76,7 @@ export default function Igrejas() {
       id: r.user_id,
       full_name: (r.profiles as any)?.full_name || "Sem nome",
       email: (r.profiles as any)?.email || "Sem email",
+      phone: (r.profiles as any)?.phone || "",
       city: (r.profiles as any)?.city || "",
       state: (r.profiles as any)?.state || ""
     })) || [];
@@ -202,7 +203,7 @@ export default function Igrejas() {
           name: church.name,
           pastor_name: selectedPastor.full_name,
           email: selectedPastor.email,
-          phone: church.phone || "",
+          phone: selectedPastor.phone,
           address: church.address || "",
           city: selectedPastor.city,
           state: selectedPastor.state,
@@ -320,6 +321,7 @@ export default function Igrejas() {
                             pastor_id: value,
                             pastor_name: selectedPastor.full_name,
                             email: selectedPastor.email,
+                            phone: selectedPastor.phone,
                             city: selectedPastor.city,
                             state: selectedPastor.state
                           });
