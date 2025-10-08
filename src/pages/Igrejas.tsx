@@ -191,8 +191,31 @@ export default function Igrejas() {
     setEditingChurch(null);
   };
 
-  const openEditDialog = (church: Church) => {
+  const openEditDialog = async (church: Church) => {
     setEditingChurch(church);
+    
+    // Se existe pastor_id, buscar dados atualizados do pastor
+    if (church.pastor_id && church.pastor_id !== "none") {
+      const selectedPastor = pastors.find(p => p.id === church.pastor_id);
+      if (selectedPastor) {
+        setFormData({
+          name: church.name,
+          pastor_name: selectedPastor.full_name,
+          email: selectedPastor.email,
+          phone: church.phone || "",
+          address: church.address || "",
+          city: selectedPastor.city,
+          state: selectedPastor.state,
+          region_id: church.region_id || "none",
+          area_id: church.area_id || "none",
+          pastor_id: church.pastor_id,
+        });
+        setIsDialogOpen(true);
+        return;
+      }
+    }
+    
+    // Se não tem pastor ou pastor não encontrado, usar dados da igreja
     setFormData({
       name: church.name,
       pastor_name: church.pastor_name || "",
