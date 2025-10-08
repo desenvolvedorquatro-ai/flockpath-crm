@@ -53,6 +53,7 @@ export default function Relatorios() {
   const [frequenciaTipoData, setFrequenciaTipoData] = useState<any[]>([]);
   const [frequenciaMensalData, setFrequenciaMensalData] = useState<any[]>([]);
   const [topFrequentadoresData, setTopFrequentadoresData] = useState<any[]>([]);
+  const [frequenciaDetalhadaData, setFrequenciaDetalhadaData] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -352,6 +353,63 @@ export default function Relatorios() {
           .slice(0, 10);
 
         setTopFrequentadoresData(topFrequentadores);
+
+        // Relatório detalhado de frequência por visitante e igreja
+        const frequenciaDetalhada: any[] = [];
+        const visitorMap = new Map();
+
+        attendance.forEach((record: any) => {
+          const visitorId = record.visitor_id;
+          const visitorName = record.visitors?.full_name || 'Desconhecido';
+          const churchId = record.visitors?.church_id;
+
+          if (!visitorMap.has(visitorId)) {
+            visitorMap.set(visitorId, {
+              visitor_id: visitorId,
+              visitor_name: visitorName,
+              church_id: churchId,
+              months: new Map()
+            });
+          }
+
+          if (record.attendance_date) {
+            const date = new Date(record.attendance_date);
+            const monthKey = format(date, "MMM/yyyy", { locale: ptBR });
+            
+            const visitor = visitorMap.get(visitorId);
+            if (!visitor.months.has(monthKey)) {
+              visitor.months.set(monthKey, 0);
+            }
+            visitor.months.set(monthKey, visitor.months.get(monthKey) + 1);
+          }
+        });
+
+        // Buscar informações das igrejas para cada visitante
+        visitorMap.forEach((visitor) => {
+          const church = churches.find(c => c.id === visitor.church_id);
+          const churchName = church?.name || 'Sem Igreja';
+
+          visitor.months.forEach((count, month) => {
+            frequenciaDetalhada.push({
+              visitante: visitor.visitor_name,
+              igreja: churchName,
+              mes: month,
+              total_cultos: count
+            });
+          });
+        });
+
+        // Ordenar por mês e visitante
+        frequenciaDetalhada.sort((a, b) => {
+          const dateA = new Date(a.mes.split('/').reverse().join('-'));
+          const dateB = new Date(b.mes.split('/').reverse().join('-'));
+          if (dateA.getTime() !== dateB.getTime()) {
+            return dateB.getTime() - dateA.getTime();
+          }
+          return b.total_cultos - a.total_cultos;
+        });
+
+        setFrequenciaDetalhadaData(frequenciaDetalhada);
       }
     } catch (error) {
       console.error("Erro ao carregar relatórios:", error);
@@ -761,7 +819,7 @@ export default function Relatorios() {
       </Card>
 
       {/* Relatório Mensal */}
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle>Visitantes por Mês</CardTitle>
           <CardDescription>Evolução mensal de visitantes</CardDescription>
@@ -780,6 +838,55 @@ export default function Relatorios() {
           <Button onClick={() => exportToExcel(mensalData, "relatorio_mensal")} className="w-full mt-4">
             <Download className="mr-2 h-4 w-4" />
             Exportar Excel
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Relatório Detalhado de Frequência */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Frequência Detalhada por Visitante</CardTitle>
+          <CardDescription>Quantidade de cultos por mês, visitante e igreja</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2 font-semibold">Visitante</th>
+                  <th className="text-left p-2 font-semibold">Igreja</th>
+                  <th className="text-left p-2 font-semibold">Mês</th>
+                  <th className="text-right p-2 font-semibold">Total de Cultos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {frequenciaDetalhadaData.length > 0 ? (
+                  frequenciaDetalhadaData.slice(0, 50).map((item, index) => (
+                    <tr key={index} className="border-b hover:bg-muted/50">
+                      <td className="p-2">{item.visitante}</td>
+                      <td className="p-2">{item.igreja}</td>
+                      <td className="p-2">{item.mes}</td>
+                      <td className="text-right p-2">{item.total_cultos}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="text-center p-4 text-muted-foreground">
+                      Nenhum dado de frequência disponível
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            {frequenciaDetalhadaData.length > 50 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Mostrando 50 de {frequenciaDetalhadaData.length} registros. Exporte para Excel para ver todos.
+              </p>
+            )}
+          </div>
+          <Button onClick={() => exportToExcel(frequenciaDetalhadaData, "relatorio_frequencia_detalhada")} className="w-full mt-4">
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Excel - {frequenciaDetalhadaData.length} registros
           </Button>
         </CardContent>
       </Card>
