@@ -25,31 +25,20 @@ type Church = Tables<"churches">;
 type Region = Tables<"regions">;
 type Area = Tables<"areas">;
 
-const roleLabels: Record<string, string> = {
-  admin: "Administrador",
-  pastor: "Pastor",
-  pastor_geral: "Pastor Geral",
-  pastor_regiao: "Pastor de Região",
-  pastor_coordenador: "Pastor Coordenador",
-  group_leader: "Líder de Grupo",
-  user: "Usuário",
-};
-
-const roleColors: Record<string, string> = {
-  admin: "bg-red-500",
-  pastor: "bg-purple-500",
-  pastor_geral: "bg-blue-500",
-  pastor_regiao: "bg-indigo-500",
-  pastor_coordenador: "bg-cyan-500",
-  group_leader: "bg-green-500",
-  user: "bg-gray-500",
-};
+interface RoleDefinition {
+  id: string;
+  role_name: string;
+  display_name: string;
+  description: string;
+  color: string;
+}
 
 export default function Usuarios() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [churches, setChurches] = useState<Church[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<RoleDefinition[]>([]);
   const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
   const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +92,7 @@ export default function Usuarios() {
       fetchChurches();
       fetchRegions();
       fetchAreas();
+      fetchRoles();
     }
   }, [roleLoading, isAdmin]);
 
@@ -158,6 +148,34 @@ export default function Usuarios() {
         variant: "destructive",
       });
     }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("role_definitions")
+        .select("*")
+        .order("display_name");
+
+      if (error) throw error;
+      setAvailableRoles(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar funções",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getRoleLabel = (roleName: string) => {
+    const role = availableRoles.find(r => r.role_name === roleName);
+    return role?.display_name || roleName;
+  };
+
+  const getRoleColor = (roleName: string) => {
+    const role = availableRoles.find(r => r.role_name === roleName);
+    return role?.color || "bg-gray-500";
   };
 
   const fetchProfiles = async () => {
@@ -593,9 +611,9 @@ export default function Usuarios() {
                           profile.user_roles.map((ur, idx) => (
                             <Badge
                               key={idx}
-                              className={`${roleColors[ur.role]} text-white`}
+                              className={`${getRoleColor(ur.role)} text-white`}
                             >
-                              {roleLabels[ur.role]}
+                              {getRoleLabel(ur.role)}
                             </Badge>
                           ))
                         ) : (
@@ -688,8 +706,8 @@ export default function Usuarios() {
                   <div className="flex flex-wrap gap-2">
                     {profile.user_roles && profile.user_roles.length > 0 ? (
                       profile.user_roles.map((ur, idx) => (
-                        <Badge key={idx} className={`${roleColors[ur.role]} text-white`}>
-                          {roleLabels[ur.role]}
+                        <Badge key={idx} className={`${getRoleColor(ur.role)} text-white`}>
+                          {getRoleLabel(ur.role)}
                         </Badge>
                       ))
                     ) : (
@@ -1328,13 +1346,11 @@ export default function Usuarios() {
                   <SelectValue placeholder="Selecione uma função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="pastor">Pastor</SelectItem>
-                  <SelectItem value="pastor_geral">Pastor Geral</SelectItem>
-                  <SelectItem value="pastor_regiao">Pastor de Região</SelectItem>
-                  <SelectItem value="pastor_coordenador">Pastor Coordenador</SelectItem>
-                  <SelectItem value="group_leader">Líder de Grupo</SelectItem>
-                  <SelectItem value="user">Usuário</SelectItem>
+                  {availableRoles.map((role) => (
+                    <SelectItem key={role.id} value={role.role_name}>
+                      {role.display_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
