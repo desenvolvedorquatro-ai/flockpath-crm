@@ -62,7 +62,6 @@ export function VisitorInteractionsDialog({
     interaction_type: '',
     interaction_date: new Date(),
     ultimo_culto: null as Date | null,
-    frequencia: '',
     description: ''
   });
 
@@ -115,7 +114,6 @@ export function VisitorInteractionsDialog({
           interaction_type: formData.interaction_type,
           interaction_date: format(formData.interaction_date, 'yyyy-MM-dd'),
           ultimo_culto: formData.ultimo_culto ? format(formData.ultimo_culto, 'yyyy-MM-dd') : null,
-          frequencia: formData.frequencia || null,
           description: formData.description.trim(),
           created_by: user.id
         });
@@ -128,7 +126,6 @@ export function VisitorInteractionsDialog({
         interaction_type: '',
         interaction_date: new Date(),
         ultimo_culto: null,
-        frequencia: '',
         description: ''
       });
       fetchInteractions();
@@ -172,20 +169,6 @@ export function VisitorInteractionsDialog({
                     </p>
                   </div>
                   <Calendar className="w-8 h-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Frequência</p>
-                    <p className="text-lg font-semibold capitalize">
-                      {currentFrequencia || 'N/A'}
-                    </p>
-                  </div>
-                  <TrendingUp className="w-8 h-8 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
@@ -277,23 +260,6 @@ export function VisitorInteractionsDialog({
                             />
                           </PopoverContent>
                         </Popover>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Frequência</Label>
-                        <Select
-                          value={formData.frequencia}
-                          onValueChange={(value) => setFormData({ ...formData, frequencia: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a frequência" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="semanal">Semanal</SelectItem>
-                            <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                            <SelectItem value="mensal">Mensal</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                     </div>
 

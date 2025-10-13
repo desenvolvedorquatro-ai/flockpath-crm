@@ -85,12 +85,6 @@ export function InteractionTimeline({ interactions }: InteractionTimelineProps) 
                   <span>Último culto: {format(new Date(interaction.ultimo_culto), "dd/MM/yyyy", { locale: ptBR })}</span>
                 </div>
               )}
-              
-              {interaction.frequencia && (
-                <Badge variant="outline" className="text-xs">
-                  Frequência: {frequenciaLabels[interaction.frequencia]}
-                </Badge>
-              )}
 
               {interaction.profiles?.full_name && (
                 <div className="flex items-center gap-1 ml-auto">

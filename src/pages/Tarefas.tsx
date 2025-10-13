@@ -65,6 +65,8 @@ export default function Tarefas() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
   
@@ -317,19 +319,32 @@ export default function Tarefas() {
                       <TableCell>{format(new Date(task.due_date), "dd/MM/yyyy")}</TableCell>
                       <TableCell>{getStatusBadge(task.status)}</TableCell>
                       <TableCell>
-                        {task.status !== "completed" && can("tarefas", "edit") && (
+                        <div className="flex gap-2">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setEditingTask(task);
-                              setCompletionDialogOpen(true);
+                              setViewingTask(task);
+                              setViewDialogOpen(true);
                             }}
                           >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Concluir
+                            <Edit className="mr-2 h-4 w-4" />
+                            Visualizar
                           </Button>
-                        )}
+                          {task.status !== "completed" && can("tarefas", "edit") && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingTask(task);
+                                setCompletionDialogOpen(true);
+                              }}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Concluir
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -464,6 +479,77 @@ export default function Tarefas() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog para visualizar tarefa */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Tarefa</DialogTitle>
+          </DialogHeader>
+          {viewingTask && (
+            <div className="space-y-4">
+              <div>
+                <Label>Título</Label>
+                <Input value={viewingTask.title} disabled />
+              </div>
+
+              <div>
+                <Label>Descrição</Label>
+                <Textarea value={viewingTask.description || ""} disabled rows={3} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Igreja</Label>
+                  <Input value={viewingTask.churches?.name || ""} disabled />
+                </div>
+
+                <div>
+                  <Label>Grupo de Assistência</Label>
+                  <Input value={viewingTask.assistance_groups?.name || ""} disabled />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tipo de Interação</Label>
+                  <Input value={viewingTask.interaction_type} disabled />
+                </div>
+
+                <div>
+                  <Label>Prazo</Label>
+                  <Input value={format(new Date(viewingTask.due_date), "dd/MM/yyyy")} disabled />
+                </div>
+              </div>
+
+              <div>
+                <Label>Status</Label>
+                <div className="mt-2">{getStatusBadge(viewingTask.status)}</div>
+              </div>
+
+              {viewingTask.completed_date && (
+                <>
+                  <div>
+                    <Label>Data de Conclusão</Label>
+                    <Input value={format(new Date(viewingTask.completed_date), "dd/MM/yyyy")} disabled />
+                  </div>
+
+                  <div>
+                    <Label>Observações da Conclusão</Label>
+                    <Textarea value={viewingTask.completion_notes || ""} disabled rows={3} />
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog para concluir tarefa */}
       <Dialog open={completionDialogOpen} onOpenChange={setCompletionDialogOpen}>
         <DialogContent>
@@ -489,7 +575,6 @@ export default function Tarefas() {
                     selected={completionData.completed_date}
                     onSelect={(date) => date && setCompletionData({ ...completionData, completed_date: date })}
                     initialFocus
-                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>

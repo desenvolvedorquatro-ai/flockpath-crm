@@ -692,6 +692,7 @@ export type Database = {
       visitors: {
         Row: {
           address: string | null
+          area_id: string | null
           assistance_group_id: string | null
           candidato_batismo: boolean | null
           categoria: Database["public"]["Enums"]["visitor_category"] | null
@@ -712,6 +713,7 @@ export type Database = {
           phone: string | null
           primeira_visita: string | null
           profissao: string | null
+          region_id: string | null
           responsavel_assistencia: string | null
           sexo: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
@@ -720,6 +722,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          area_id?: string | null
           assistance_group_id?: string | null
           candidato_batismo?: boolean | null
           categoria?: Database["public"]["Enums"]["visitor_category"] | null
@@ -740,6 +743,7 @@ export type Database = {
           phone?: string | null
           primeira_visita?: string | null
           profissao?: string | null
+          region_id?: string | null
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
@@ -748,6 +752,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          area_id?: string | null
           assistance_group_id?: string | null
           candidato_batismo?: boolean | null
           categoria?: Database["public"]["Enums"]["visitor_category"] | null
@@ -768,6 +773,7 @@ export type Database = {
           phone?: string | null
           primeira_visita?: string | null
           profissao?: string | null
+          region_id?: string | null
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status?: Database["public"]["Enums"]["visitor_status"]
@@ -775,6 +781,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "visitors_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "visitors_assistance_group_id_fkey"
             columns: ["assistance_group_id"]
@@ -794,6 +807,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "assistance_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visitors_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
