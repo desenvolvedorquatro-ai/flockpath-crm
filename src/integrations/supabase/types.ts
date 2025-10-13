@@ -848,12 +848,22 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_user_church_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          church_id: string
+        }[]
+      }
       has_role: {
         Args: { _role: string; _user_id: string }
         Returns: boolean
       }
       is_user_assigned_to_church: {
         Args: { _user_id: string }
+        Returns: boolean
+      }
+      user_belongs_to_church: {
+        Args: { _church_id: string; _user_id: string }
         Returns: boolean
       }
       user_has_church_access: {
