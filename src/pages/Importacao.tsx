@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "endereco", "data_visita", "convidado_por", "observacoes", "status", "categoria", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo"];
+        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "nome_grupo", "endereco", "data_visita", "convidado_por", "observacoes", "status", "categoria", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo", "resgate"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -316,6 +316,21 @@ export default function Importacao() {
       }
     }
 
+    // Buscar grupo de assistência se fornecido
+    let assistance_group_id = null;
+    if (row.nome_grupo) {
+      const { data: group } = await supabase
+        .from("assistance_groups")
+        .select("id")
+        .eq("name", row.nome_grupo)
+        .eq("church_id", church.id)
+        .maybeSingle();
+      
+      if (group) {
+        assistance_group_id = group.id;
+      }
+    }
+
     // Converter datas do formato DDMMAAAA, DD/MM/AAAA ou número serial do Excel para AAAA-MM-DD
     const convertDateFormat = (date: string | number): string | null => {
       if (!date) return null;
@@ -350,6 +365,7 @@ export default function Importacao() {
       email: row.email || null,
       phone: row.telefone || null,
       church_id: church.id,
+      assistance_group_id,
       address: row.endereco || null,
       first_visit_date: convertDateFormat(row.data_visita) || new Date().toISOString().split('T')[0],
       invited_by: row.convidado_por || null,
@@ -362,6 +378,7 @@ export default function Importacao() {
       tem_filhos: row.tem_filhos === "Sim" ? true : row.tem_filhos === "Não" ? false : null,
       candidato_batismo: row.candidato_batismo === "Sim" ? true : row.candidato_batismo === "Não" ? false : row.candidato_batismo || false,
       data_batismo: convertDateFormat(row.data_batismo),
+      resgate: row.resgate === "Sim" ? true : row.resgate === "Não" ? false : false,
     });
 
     if (error) throw error;
@@ -517,14 +534,15 @@ export default function Importacao() {
                   <div>
                     <strong>Campos opcionais:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
-                      <li><strong>status</strong>: categoria do visitante (visitante, em_assistencia, batizado)</li>
-                      <li><strong>categoria</strong>: faixa etária (crianca, intermediario, adolescente, jovem, senhora, varao, idoso)</li>
+                      <li><strong>status</strong>: interessado, visitante, visitante_frequente, candidato_batismo, membro</li>
+                      <li><strong>categoria</strong>: crianca, intermediario, adolescente, jovem, senhora, varao, idoso</li>
+                      <li><strong>nome_grupo</strong>: nome do grupo de assistência (deve estar cadastrado na igreja)</li>
                       <li>nome_area, nome_regiao: ajudam a identificar a igreja correta</li>
                       <li>email, telefone, endereco</li>
-                      <li><strong>data_visita, data_nascimento, data_batismo</strong>: use formato DD/MM/AAAA, DDMMAAAA ou AAAA-MM-DD</li>
+                      <li><strong>data_visita, data_nascimento, data_batismo</strong>: formato DD/MM/AAAA, DDMMAAAA ou AAAA-MM-DD</li>
                       <li>convidado_por, observacoes</li>
-                      <li>profissao, estado_civil, tem_filhos</li>
-                      <li>candidato_batismo</li>
+                      <li>profissao, estado_civil, tem_filhos (Sim/Não)</li>
+                      <li>candidato_batismo (Sim/Não), resgate (Sim/Não)</li>
                     </ul>
                   </div>
                   <div className="text-muted-foreground italic text-sm mt-2">

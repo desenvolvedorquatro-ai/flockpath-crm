@@ -135,6 +135,21 @@ export const validatePastorExists = async (email: string): Promise<boolean> => {
   return !!data;
 };
 
+// Verificar existência de grupo de assistência
+export const validateAssistanceGroupExists = async (
+  groupName: string,
+  churchId: string
+): Promise<boolean> => {
+  if (!groupName) return true;
+  const { data } = await supabase
+    .from("assistance_groups")
+    .select("id")
+    .eq("name", groupName)
+    .eq("church_id", churchId)
+    .maybeSingle();
+  return !!data;
+};
+
 // Validação para Regiões
 const validateRegiao = async (row: any): Promise<string[]> => {
   const errors: string[] = [];
@@ -274,13 +289,18 @@ const validateVisitante = async (row: any): Promise<string[]> => {
   }
 
   // Validar status se fornecido
-  if (row.status && !['visitante', 'em_assistencia', 'batizado'].includes(row.status)) {
-    errors.push("Status inválido. Use: visitante, em_assistencia ou batizado");
+  if (row.status && !['interessado', 'visitante', 'visitante_frequente', 'candidato_batismo', 'membro'].includes(row.status)) {
+    errors.push("Status inválido. Use: interessado, visitante, visitante_frequente, candidato_batismo ou membro");
   }
 
   // Validar categoria se fornecido
   if (row.categoria && !['crianca', 'intermediario', 'adolescente', 'jovem', 'senhora', 'varao', 'idoso'].includes(row.categoria)) {
     errors.push("Categoria inválida. Use: crianca, intermediario, adolescente, jovem, senhora, varao ou idoso");
+  }
+
+  // Validar resgate se fornecido
+  if (row.resgate && !['Sim', 'Não', 'sim', 'não'].includes(row.resgate)) {
+    errors.push("Resgate inválido. Use: Sim ou Não");
   }
 
   return errors;
