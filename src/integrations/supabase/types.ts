@@ -852,6 +852,14 @@ export type Database = {
         Args: { _role: string; _user_id: string }
         Returns: boolean
       }
+      is_user_assigned_to_church: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      user_has_church_access: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       visitor_category:
