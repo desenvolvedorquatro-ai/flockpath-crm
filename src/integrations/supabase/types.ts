@@ -402,7 +402,7 @@ export type Database = {
           created_at: string | null
           id: string
           module: string
-          role_name: string | null
+          role_name: string
         }
         Insert: {
           can_create?: boolean | null
@@ -412,7 +412,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           module: string
-          role_name?: string | null
+          role_name: string
         }
         Update: {
           can_create?: boolean | null
@@ -422,7 +422,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           module?: string
-          role_name?: string | null
+          role_name?: string
         }
         Relationships: [
           {
@@ -534,21 +534,21 @@ export type Database = {
           church_id: string | null
           created_at: string | null
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Insert: {
           church_id?: string | null
           created_at?: string | null
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Update: {
           church_id?: string | null
           created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: string
           user_id?: string
         }
         Relationships: [
@@ -558,6 +558,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "churches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_role_fkey"
+            columns: ["role"]
+            isOneToOne: false
+            referencedRelation: "role_definitions"
+            referencedColumns: ["role_name"]
           },
           {
             foreignKeyName: "user_roles_user_id_fkey"
@@ -842,10 +849,9 @@ export type Database = {
         Returns: string
       }
       has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
+        Args:
+          | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
+          | { _role: string; _user_id: string }
         Returns: boolean
       }
       has_role_in_church: {
