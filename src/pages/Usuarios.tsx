@@ -157,9 +157,15 @@ export default function Usuarios() {
         .select("*")
         .order("display_name");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar funções:", error);
+        throw error;
+      }
+      
+      console.log("Funções carregadas:", data);
       setAvailableRoles(data || []);
     } catch (error: any) {
+      console.error("Erro ao carregar funções:", error);
       toast({
         title: "Erro ao carregar funções",
         description: error.message,
@@ -1345,12 +1351,16 @@ export default function Usuarios() {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma função" />
                 </SelectTrigger>
-                <SelectContent>
-                  {availableRoles.map((role) => (
-                    <SelectItem key={role.id} value={role.role_name}>
-                      {role.display_name}
-                    </SelectItem>
-                  ))}
+                <SelectContent className="bg-card z-[100]">
+                  {availableRoles.length === 0 ? (
+                    <SelectItem value="loading" disabled>Carregando funções...</SelectItem>
+                  ) : (
+                    availableRoles.map((role) => (
+                      <SelectItem key={role.id} value={role.role_name}>
+                        {role.display_name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
