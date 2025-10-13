@@ -868,6 +868,7 @@ export type Database = {
         | "pastor_geral"
         | "Diacono"
         | "obreiro"
+        | "Diacono_sem_GA"
       visitor_category:
         | "crianca"
         | "intermediario"
@@ -1020,6 +1021,7 @@ export const Constants = {
         "pastor_geral",
         "Diacono",
         "obreiro",
+        "Diacono_sem_GA",
       ],
       visitor_category: [
         "crianca",
