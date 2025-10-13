@@ -849,32 +849,11 @@ export type Database = {
         Returns: string
       }
       has_role: {
-        Args:
-          | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
-          | { _role: string; _user_id: string }
-        Returns: boolean
-      }
-      has_role_in_church: {
-        Args: {
-          _church_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
+        Args: { _role: string; _user_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      app_role:
-        | "admin"
-        | "pastor"
-        | "group_leader"
-        | "user"
-        | "pastor_coordenador"
-        | "pastor_regiao"
-        | "pastor_geral"
-        | "Diacono"
-        | "obreiro"
-        | "Diacono_sem_GA"
       visitor_category:
         | "crianca"
         | "intermediario"
@@ -1017,18 +996,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: [
-        "admin",
-        "pastor",
-        "group_leader",
-        "user",
-        "pastor_coordenador",
-        "pastor_regiao",
-        "pastor_geral",
-        "Diacono",
-        "obreiro",
-        "Diacono_sem_GA",
-      ],
       visitor_category: [
         "crianca",
         "intermediario",
