@@ -681,6 +681,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "visitor_interactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "visitor_interactions_visitor_id_fkey"
             columns: ["visitor_id"]
             isOneToOne: false

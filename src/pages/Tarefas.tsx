@@ -552,51 +552,103 @@ export default function Tarefas() {
 
       {/* Dialog para concluir tarefa */}
       <Dialog open={completionDialogOpen} onOpenChange={setCompletionDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Concluir Tarefa</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Data de Conclusão *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn("w-full justify-start text-left font-normal")}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(completionData.completed_date, "PPP", { locale: ptBR })}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={completionData.completed_date}
-                    onSelect={(date) => date && setCompletionData({ ...completionData, completed_date: date })}
-                    initialFocus
+          {editingTask && (
+            <div className="space-y-4">
+              {/* Seção 1: Dados da Tarefa (Read-only) */}
+              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                <h3 className="font-semibold text-sm mb-3">Detalhes da Tarefa</h3>
+                
+                <div>
+                  <Label>Título</Label>
+                  <Input value={editingTask.title} disabled />
+                </div>
+
+                <div>
+                  <Label>Descrição</Label>
+                  <Textarea value={editingTask.description || ""} disabled rows={2} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Igreja</Label>
+                    <Input value={editingTask.churches?.name || ""} disabled />
+                  </div>
+
+                  <div>
+                    <Label>Grupo de Assistência</Label>
+                    <Input value={editingTask.assistance_groups?.name || ""} disabled />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Tipo de Interação</Label>
+                    <Input value={editingTask.interaction_type} disabled />
+                  </div>
+
+                  <div>
+                    <Label>Prazo</Label>
+                    <Input value={format(new Date(editingTask.due_date), "dd/MM/yyyy")} disabled />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Status Atual</Label>
+                  <div className="mt-2">{getStatusBadge(editingTask.status)}</div>
+                </div>
+              </div>
+
+              {/* Seção 2: Campos de Conclusão (Editáveis) */}
+              <div className="space-y-4 pt-2">
+                <h3 className="font-semibold text-sm">Informações de Conclusão</h3>
+                
+                <div>
+                  <Label>Data de Conclusão *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn("w-full justify-start text-left font-normal")}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(completionData.completed_date, "PPP", { locale: ptBR })}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={completionData.completed_date}
+                        onSelect={(date) => date && setCompletionData({ ...completionData, completed_date: date })}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Observações</Label>
+                  <Textarea
+                    id="notes"
+                    value={completionData.completion_notes}
+                    onChange={(e) => setCompletionData({ ...completionData, completion_notes: e.target.value })}
+                    placeholder="Descreva como a tarefa foi realizada..."
+                    rows={4}
                   />
-                </PopoverContent>
-              </Popover>
-            </div>
+                </div>
+              </div>
 
-            <div>
-              <Label htmlFor="notes">Observações</Label>
-              <Textarea
-                id="notes"
-                value={completionData.completion_notes}
-                onChange={(e) => setCompletionData({ ...completionData, completion_notes: e.target.value })}
-                placeholder="Descreva como a tarefa foi realizada..."
-              />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setCompletionDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleComplete}>Confirmar Conclusão</Button>
+              </div>
             </div>
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCompletionDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleComplete}>Confirmar</Button>
-            </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
