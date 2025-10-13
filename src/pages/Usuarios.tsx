@@ -96,6 +96,7 @@ export default function Usuarios() {
   const [view, setView] = useState<"card" | "list">("list");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
+  const [isCleaningUsers, setIsCleaningUsers] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && isAdmin) {
@@ -487,6 +488,32 @@ export default function Usuarios() {
     }
   };
 
+  const handleCleanupOrphanUsers = async () => {
+    if (!confirm("Tem certeza que deseja limpar todos os usuários órfãos (sem perfil) do sistema? Esta ação não pode ser desfeita!")) return;
+
+    setIsCleaningUsers(true);
+    try {
+      const { error } = await supabase.functions.invoke('cleanup-auth-users');
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Limpeza concluída com sucesso!",
+        description: "Usuários órfãos foram removidos do sistema."
+      });
+      
+      await fetchProfiles();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao limpar usuários",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCleaningUsers(false);
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
     if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
 
@@ -553,7 +580,17 @@ export default function Usuarios() {
             className="pl-10"
           />
         </div>
-        <ViewToggle view={view} onViewChange={setView} />
+        <div className="flex gap-2">
+          <Button
+            onClick={handleCleanupOrphanUsers}
+            disabled={isCleaningUsers}
+            variant="outline"
+            size="sm"
+          >
+            {isCleaningUsers ? "Limpando..." : "Limpar Usuários Órfãos"}
+          </Button>
+          <ViewToggle view={view} onViewChange={setView} />
+        </div>
       </div>
 
       {view === "list" ? (
