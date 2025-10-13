@@ -79,9 +79,11 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
           // Map stage titles to dashboard icon colors
           const getStageColor = (title: string) => {
             const colorMap: Record<string, string> = {
-              'Visitante': 'from-blue-500 via-blue-600 to-blue-700',      // Azul (#3B82F6)
-              'Em Assistência': 'from-orange-500 via-orange-600 to-orange-700', // Laranja (#F59E0B)
-              'Batizados': 'from-green-500 via-green-600 to-green-700',   // Verde (#10B981)
+              'Interessado': 'from-gray-500 via-gray-600 to-gray-700',
+              'Visitante': 'from-blue-500 via-blue-600 to-blue-700',
+              'Visitante Frequente': 'from-purple-500 via-purple-600 to-purple-700',
+              'Candidato à Batismo': 'from-orange-500 via-orange-600 to-orange-700',
+              'Membro': 'from-green-500 via-green-600 to-green-700',
             };
             return colorMap[title] || 'from-primary via-primary to-primary-glow';
           };

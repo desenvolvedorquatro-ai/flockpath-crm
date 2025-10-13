@@ -721,6 +721,7 @@ export type Database = {
           primeira_visita: string | null
           profissao: string | null
           region_id: string | null
+          resgate: boolean | null
           responsavel_assistencia: string | null
           sexo: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
@@ -751,6 +752,7 @@ export type Database = {
           primeira_visita?: string | null
           profissao?: string | null
           region_id?: string | null
+          resgate?: boolean | null
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status: Database["public"]["Enums"]["visitor_status"]
@@ -781,6 +783,7 @@ export type Database = {
           primeira_visita?: string | null
           profissao?: string | null
           region_id?: string | null
+          resgate?: boolean | null
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
           status?: Database["public"]["Enums"]["visitor_status"]
@@ -872,7 +875,12 @@ export type Database = {
         | "varao"
         | "idoso"
       visitor_gender: "masculino" | "feminino"
-      visitor_status: "visitante" | "em_assistencia" | "batizado"
+      visitor_status:
+        | "interessado"
+        | "visitante"
+        | "visitante_frequente"
+        | "candidato_batismo"
+        | "membro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1019,7 +1027,13 @@ export const Constants = {
         "idoso",
       ],
       visitor_gender: ["masculino", "feminino"],
-      visitor_status: ["visitante", "em_assistencia", "batizado"],
+      visitor_status: [
+        "interessado",
+        "visitante",
+        "visitante_frequente",
+        "candidato_batismo",
+        "membro",
+      ],
     },
   },
 } as const

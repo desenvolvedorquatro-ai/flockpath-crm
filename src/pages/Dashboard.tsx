@@ -20,8 +20,12 @@ import { Tables } from "@/integrations/supabase/types";
 
 interface DashboardStats {
   totalVisitors: number;
-  batizados: number;
-  emAssistencia: number;
+  interessados: number;
+  visitantes: number;
+  visitantesFrequentes: number;
+  candidatosBatismo: number;
+  membros: number;
+  resgates: number;
   conversionRate: string;
 }
 
@@ -34,14 +38,20 @@ export default function Dashboard() {
   const { isAdmin, isPastor, roles } = useUserRole();
   const [stats, setStats] = useState<DashboardStats>({
     totalVisitors: 0,
-    batizados: 0,
-    emAssistencia: 0,
+    interessados: 0,
+    visitantes: 0,
+    visitantesFrequentes: 0,
+    candidatosBatismo: 0,
+    membros: 0,
+    resgates: 0,
     conversionRate: "0%",
   });
   const [pipelineData, setPipelineData] = useState([
+    { title: "Interessado", count: 0, color: statusHexColors.interessado, percentage: 0 },
     { title: "Visitante", count: 0, color: statusHexColors.visitante, percentage: 0 },
-    { title: "Em Assistência", count: 0, color: statusHexColors.em_assistencia, percentage: 0 },
-    { title: "Batizados", count: 0, color: statusHexColors.batizado, percentage: 0 },
+    { title: "Visitante Frequente", count: 0, color: statusHexColors.visitante_frequente, percentage: 0 },
+    { title: "Candidato à Batismo", count: 0, color: statusHexColors.candidato_batismo, percentage: 0 },
+    { title: "Membro", count: 0, color: statusHexColors.membro, percentage: 0 },
   ]);
   
   // Estados para filtros de data
@@ -206,25 +216,31 @@ export default function Dashboard() {
 
       if (visitors) {
         const total = visitors.length;
-        const batizados = visitors.filter((v) => v.status === "batizado").length;
-        const emAssistencia = visitors.filter((v) => v.status === "em_assistencia").length;
-        const conversionRate = total > 0 ? ((batizados / total) * 100).toFixed(1) : "0";
+        const interessados = visitors.filter((v) => v.status === "interessado").length;
+        const visitantes = visitors.filter((v) => v.status === "visitante").length;
+        const visitantesFrequentes = visitors.filter((v) => v.status === "visitante_frequente").length;
+        const candidatosBatismo = visitors.filter((v) => v.status === "candidato_batismo").length;
+        const membros = visitors.filter((v) => v.status === "membro").length;
+        const resgates = visitors.filter((v: any) => v.resgate === true).length;
+        const conversionRate = total > 0 ? ((membros / total) * 100).toFixed(1) : "0";
 
         setStats({
           totalVisitors: total,
-          batizados,
-          emAssistencia,
+          interessados,
+          visitantes,
+          visitantesFrequentes,
+          candidatosBatismo,
+          membros,
+          resgates,
           conversionRate: `${conversionRate}%`,
         });
 
-        const visitante = visitors.filter((v) => v.status === "visitante").length;
-        const emAssist = visitors.filter((v) => v.status === "em_assistencia").length;
-        const batizado = visitors.filter((v) => v.status === "batizado").length;
-
         setPipelineData([
-          { title: "Visitante", count: visitante, color: statusHexColors.visitante, percentage: total > 0 ? Math.round((visitante / total) * 100) : 0 },
-          { title: "Em Assistência", count: emAssist, color: statusHexColors.em_assistencia, percentage: total > 0 ? Math.round((emAssist / total) * 100) : 0 },
-          { title: "Batizados", count: batizado, color: statusHexColors.batizado, percentage: total > 0 ? Math.round((batizado / total) * 100) : 0 },
+          { title: "Interessado", count: interessados, color: statusHexColors.interessado, percentage: total > 0 ? Math.round((interessados / total) * 100) : 0 },
+          { title: "Visitante", count: visitantes, color: statusHexColors.visitante, percentage: total > 0 ? Math.round((visitantes / total) * 100) : 0 },
+          { title: "Visitante Frequente", count: visitantesFrequentes, color: statusHexColors.visitante_frequente, percentage: total > 0 ? Math.round((visitantesFrequentes / total) * 100) : 0 },
+          { title: "Candidato à Batismo", count: candidatosBatismo, color: statusHexColors.candidato_batismo, percentage: total > 0 ? Math.round((candidatosBatismo / total) * 100) : 0 },
+          { title: "Membro", count: membros, color: statusHexColors.membro, percentage: total > 0 ? Math.round((membros / total) * 100) : 0 },
         ]);
       }
     };
@@ -255,8 +271,9 @@ export default function Dashboard() {
 
   const statsCards = [
     { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.visitante },
-    { title: "Batizados", value: stats.batizados, icon: UserPlus, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.batizado },
-    { title: "Em Assistência", value: stats.emAssistencia, icon: TrendingUp, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.em_assistencia },
+    { title: "Interessados", value: stats.interessados, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.interessado },
+    { title: "Membros", value: stats.membros, icon: UserPlus, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.membro },
+    { title: "Resgates", value: stats.resgates, icon: TrendingUp, trend: { value: 0, isPositive: true }, iconColor: "#EF4444" },
     { title: "Taxa de Conversão", value: stats.conversionRate, icon: Target, trend: { value: 0, isPositive: true }, iconColor: conversionRateColor },
   ];
 

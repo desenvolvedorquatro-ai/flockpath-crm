@@ -54,6 +54,7 @@ export default function Relatorios() {
   const [frequenciaMensalData, setFrequenciaMensalData] = useState<any[]>([]);
   const [topFrequentadoresData, setTopFrequentadoresData] = useState<any[]>([]);
   const [frequenciaDetalhadaData, setFrequenciaDetalhadaData] = useState<any[]>([]);
+  const [resgateData, setResgateData] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -137,11 +138,24 @@ export default function Relatorios() {
 
         const total = visitors.length;
         const statusReport = Object.entries(statusCounts).map(([key, value]: [string, any]) => ({
-          name: key === 'visitante' ? 'Visitante' : 
-                key === 'em_assistencia' ? 'Em Assistência' : 'Batizado',
+          name: key === 'interessado' ? 'Interessado' : 
+                key === 'visitante' ? 'Visitante' :
+                key === 'visitante_frequente' ? 'Visitante Frequente' :
+                key === 'candidato_batismo' ? 'Candidato à Batismo' : 'Membro',
           value: value,
           percentage: ((value / total) * 100).toFixed(1)
         }));
+        
+        // Relatório de Resgates
+        const resgates = visitors.filter((v: any) => v.resgate === true);
+        const resgateReport = [{
+          name: 'Resgates',
+          total: resgates.length
+        }, {
+          name: 'Não Resgates',
+          total: visitors.length - resgates.length
+        }];
+        setResgateData(resgateReport);
 
         setStatusData(statusReport);
 

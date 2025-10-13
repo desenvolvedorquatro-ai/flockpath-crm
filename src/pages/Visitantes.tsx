@@ -71,6 +71,7 @@ interface Visitor {
   data_batismo: string | null;
   area_id: string | null;
   region_id: string | null;
+  resgate: boolean | null;
 }
 
 interface AssistanceGroup {
@@ -173,6 +174,7 @@ export default function Visitantes() {
     responsavel_assistencia: "",
     participacao_seminario: "",
     candidato_batismo: false,
+    resgate: false,
   });
   const [editFormData, setEditFormData] = useState({
     full_name: "",
@@ -188,6 +190,7 @@ export default function Visitantes() {
     responsavel_assistencia: "",
     participacao_seminario: "",
     candidato_batismo: false,
+    resgate: false,
   });
   const [dataNascimento, setDataNascimento] = useState<Date | undefined>();
   const [primeiraVisita, setPrimeiraVisita] = useState<Date | undefined>();
@@ -515,6 +518,7 @@ export default function Visitantes() {
       address: visitor.address || "",
       invited_by: visitor.invited_by || "",
       status: visitor.status,
+      resgate: visitor.resgate || false,
       assistance_group_id: visitor.assistance_group_id || "none",
       categoria: visitor.categoria || "",
       sexo: visitor.sexo || "",
@@ -551,7 +555,7 @@ export default function Visitantes() {
         email: editFormData.email.trim() || null,
         address: editFormData.address.trim() || null,
         invited_by: editFormData.invited_by.trim() || null,
-        status: editFormData.status as "visitante" | "em_assistencia" | "batizado",
+        status: editFormData.status as any,
         assistance_group_id: editFormData.assistance_group_id && editFormData.assistance_group_id !== "none" ? editFormData.assistance_group_id : null,
         data_nascimento: editDataNascimento ? format(editDataNascimento, "yyyy-MM-dd") : null,
         primeira_visita: editPrimeiraVisita ? format(editPrimeiraVisita, "yyyy-MM-dd") : null,
@@ -563,6 +567,7 @@ export default function Visitantes() {
         participacao_seminario: editFormData.participacao_seminario.trim() || null,
         candidato_batismo: editFormData.candidato_batismo,
         data_batismo: editDataBatismo ? format(editDataBatismo, "yyyy-MM-dd") : null,
+        resgate: editFormData.resgate,
       })
       .eq("id", selectedVisitor.id);
 
@@ -655,7 +660,7 @@ export default function Visitantes() {
       email: formData.email.trim() || null,
       address: formData.address.trim() || null,
       invited_by: formData.invited_by.trim() || null,
-      status: formData.status as "visitante" | "em_assistencia" | "batizado",
+      status: formData.status as any,
       church_id: churchId,
       assistance_group_id: formData.assistance_group_id && formData.assistance_group_id !== "none" ? formData.assistance_group_id : null,
       data_nascimento: dataNascimento ? format(dataNascimento, "yyyy-MM-dd") : null,
@@ -667,6 +672,7 @@ export default function Visitantes() {
       participacao_seminario: formData.participacao_seminario.trim() || null,
       candidato_batismo: formData.candidato_batismo,
       data_batismo: dataBatismo ? format(dataBatismo, "yyyy-MM-dd") : null,
+      resgate: formData.resgate,
     }]);
 
     if (error) {
@@ -696,6 +702,7 @@ export default function Visitantes() {
         responsavel_assistencia: "",
         participacao_seminario: "",
         candidato_batismo: false,
+        resgate: false,
       });
       setDataNascimento(undefined);
       setPrimeiraVisita(undefined);
@@ -1072,6 +1079,20 @@ export default function Visitantes() {
                     Candidato a Batismo?
                   </Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="resgate"
+                    checked={formData.resgate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, resgate: e.target.checked })
+                    }
+                    className="w-4 h-4 rounded border-border"
+                  />
+                  <Label htmlFor="resgate" className="font-semibold cursor-pointer">
+                    Resgate
+                  </Label>
+                </div>
                 {formData.status === "batizado" && (
                   <div className="space-y-2">
                     <Label>Data do Batismo</Label>
@@ -1170,6 +1191,7 @@ export default function Visitantes() {
                   <TableHead className="hidden sm:table-cell min-w-[130px]">Grupo</TableHead>
                   <TableHead className="hidden md:table-cell min-w-[160px]">Última Interação</TableHead>
                   <TableHead className="min-w-[120px]">Status</TableHead>
+                  <TableHead className="hidden sm:table-cell min-w-[90px]">Resgate</TableHead>
                   <TableHead className="text-center min-w-[180px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1224,6 +1246,15 @@ export default function Visitantes() {
                         >
                           {statusLabels[visitor.status]}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {visitor.resgate ? (
+                          <Badge className="bg-red-500/10 text-red-500 border-red-500/20 text-xs">
+                            Sim
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">Não</Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex gap-2 justify-center">
@@ -1716,6 +1747,20 @@ export default function Visitantes() {
                 />
                 <Label htmlFor="edit_candidato_batismo" className="font-semibold cursor-pointer">
                   Candidato a Batismo?
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit_resgate"
+                  checked={editFormData.resgate}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, resgate: e.target.checked })
+                  }
+                  className="w-4 h-4 rounded border-border"
+                />
+                <Label htmlFor="edit_resgate" className="font-semibold cursor-pointer">
+                  Resgate
                 </Label>
               </div>
               {editFormData.status === "batizado" && (
