@@ -94,30 +94,6 @@ export default function Dashboard() {
         query = query.eq("churches.area_id", selectedArea);
       } else if (selectedRegion && selectedRegion !== "all") {
         query = query.eq("churches.areas.region_id", selectedRegion);
-      } else if (!isAdmin) {
-        // Se não é admin e não tem filtros, aplicar lógica antiga
-        if (isPastor) {
-          const { data: pastorChurches } = await supabase
-            .from("churches")
-            .select("id")
-            .eq("pastor_id", user.id);
-
-          if (pastorChurches && pastorChurches.length > 0) {
-            const churchIds = pastorChurches.map(c => c.id);
-            query = query.in("church_id", churchIds);
-          } else {
-            return;
-          }
-        } else {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("church_id")
-            .eq("id", user.id)
-            .single();
-
-          if (!profile?.church_id) return;
-          query = query.eq("church_id", profile.church_id);
-        }
       }
 
       // Aplicar filtros de data

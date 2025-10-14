@@ -60,43 +60,6 @@ export default function Relatorios() {
   const [frequenciaDetalhadaData, setFrequenciaDetalhadaData] = useState<any[]>([]);
   const [resgateData, setResgateData] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (!user) return;
-    const loadHierarchy = async () => {
-      const [regionsRes, areasRes, churchesRes] = await Promise.all([
-        supabase.from("regions").select("*").order("name"),
-        supabase.from("areas").select("*").order("name"),
-        supabase.from("churches").select("*").order("name"),
-      ]);
-      if (regionsRes.data) setRegions(regionsRes.data);
-      if (areasRes.data) setAreas(areasRes.data);
-      if (churchesRes.data) setChurches(churchesRes.data);
-    };
-    loadHierarchy();
-  }, [user]);
-
-  useEffect(() => {
-    if (selectedRegion && selectedRegion !== "all") {
-      setFilteredAreas(areas.filter(a => a.region_id === selectedRegion));
-    } else {
-      setFilteredAreas(areas);
-    }
-    setSelectedArea("all");
-    setSelectedChurch("all");
-  }, [selectedRegion, areas]);
-
-  useEffect(() => {
-    if (selectedArea && selectedArea !== "all") {
-      setFilteredChurches(churches.filter(c => c.area_id === selectedArea));
-    } else if (selectedRegion && selectedRegion !== "all") {
-      const regionAreas = areas.filter(a => a.region_id === selectedRegion).map(a => a.id);
-      setFilteredChurches(churches.filter(c => c.area_id && regionAreas.includes(c.area_id)));
-    } else {
-      setFilteredChurches(churches);
-    }
-    setSelectedChurch("all");
-  }, [selectedArea, selectedRegion, churches, areas]);
-
   const fetchReportData = async () => {
     if (!user) return;
     setLoading(true);
@@ -404,7 +367,7 @@ export default function Relatorios() {
 
         // Buscar informações das igrejas para cada visitante
         visitorMap.forEach((visitor) => {
-          const church = churches.find(c => c.id === visitor.church_id);
+          const church = filteredChurches.find(c => c.id === visitor.church_id);
           const churchName = church?.name || 'Sem Igreja';
 
           visitor.months.forEach((count, month) => {
