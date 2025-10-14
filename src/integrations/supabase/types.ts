@@ -529,6 +529,38 @@ export type Database = {
           },
         ]
       }
+      user_group_access: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_group_access_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "assistance_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           church_id: string | null
@@ -843,6 +875,24 @@ export type Database = {
       can_view_church: {
         Args: { _church_id: string; _user_id: string }
         Returns: boolean
+      }
+      get_accessible_attendance_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          attendance_id: string
+        }[]
+      }
+      get_accessible_group_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          group_id: string
+        }[]
+      }
+      get_accessible_visitor_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          visitor_id: string
+        }[]
       }
       get_user_church: {
         Args: { _user_id: string }
