@@ -16,7 +16,7 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [{
   title: "Dashboard",
-  url: "/",
+  url: "/dashboard",
   icon: Home
 }, {
   title: "Visitantes",

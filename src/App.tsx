@@ -21,6 +21,7 @@ import Relatorios from "./pages/Relatorios";
 import Tarefas from "./pages/Tarefas";
 import MapaFrequencia from "./pages/MapaFrequencia";
 import Auth from "./pages/Auth";
+import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -144,7 +145,7 @@ const AppLayout = () => {
           </header>
           <main className="flex-1 overflow-x-hidden p-3 md:p-4 lg:p-6">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/visitantes" element={<Visitantes />} />
               <Route path="/igrejas" element={<Igrejas />} />
               <Route path="/grupos" element={<Grupos />} />
@@ -170,6 +171,7 @@ const App = () => <QueryClientProvider client={queryClient}>
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/*" element={<ProtectedRoute>
                 <AppLayout />
