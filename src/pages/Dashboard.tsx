@@ -5,7 +5,7 @@ import { PipelineStage } from "@/components/dashboard/PipelineStage";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useHierarchyFilters } from "@/hooks/useHierarchyFilters";
 import { ModernHeader } from "@/components/ModernHeader";
 import { statusLabels, statusHexColors, conversionRateColor } from "@/lib/visitorStatus";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tables } from "@/integrations/supabase/types";
 
 interface DashboardStats {
   totalVisitors: number;
@@ -29,13 +28,24 @@ interface DashboardStats {
   conversionRate: string;
 }
 
-type Region = Tables<"regions">;
-type Area = Tables<"areas">;
-type Church = Tables<"churches">;
-
 export default function Dashboard() {
   const { user } = useAuth();
-  const { isAdmin, isPastor, roles } = useUserRole();
+  const {
+    selectedRegion,
+    selectedArea,
+    selectedChurch,
+    regions,
+    filteredAreas,
+    filteredChurches,
+    isRegionLocked,
+    isAreaLocked,
+    isChurchLocked,
+    setSelectedRegion,
+    setSelectedArea,
+    setSelectedChurch,
+    loading: filtersLoading,
+  } = useHierarchyFilters();
+  
   const [stats, setStats] = useState<DashboardStats>({
     totalVisitors: 0,
     interessados: 0,
@@ -58,100 +68,6 @@ export default function Dashboard() {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [isFiltering, setIsFiltering] = useState(false);
-
-  // Estados para filtros hierárquicos
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [churches, setChurches] = useState<Church[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [selectedArea, setSelectedArea] = useState<string>("all");
-  const [selectedChurch, setSelectedChurch] = useState<string>("all");
-  const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
-  const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  // Carregar dados hierárquicos e perfil do usuário
-  useEffect(() => {
-    if (!user) return;
-
-    const loadInitialData = async () => {
-      // Carregar regiões, áreas e igrejas
-      const [regionsRes, areasRes, churchesRes, profileRes] = await Promise.all([
-        supabase.from("regions").select("*").order("name"),
-        supabase.from("areas").select("*").order("name"),
-        supabase.from("churches").select("*").order("name"),
-        supabase.from("profiles").select("church_id, region_id, area_id, churches(area_id, areas(region_id))").eq("id", user.id).single()
-      ]);
-
-      if (regionsRes.data) setRegions(regionsRes.data);
-      if (areasRes.data) setAreas(areasRes.data);
-      if (churchesRes.data) setChurches(churchesRes.data);
-      if (profileRes.data) setUserProfile(profileRes.data);
-
-      // Pré-selecionar filtros baseado no nível do usuário
-      if (roles.includes("pastor")) {
-        // Pastor de igreja: pré-selecionar tudo e bloquear
-        if (profileRes.data?.church_id) {
-          setSelectedChurch(profileRes.data.church_id);
-          const church = churchesRes.data?.find(c => c.id === profileRes.data.church_id);
-          if (church?.area_id) {
-            setSelectedArea(church.area_id);
-            const area = areasRes.data?.find(a => a.id === church.area_id);
-            if (area?.region_id) {
-              setSelectedRegion(area.region_id);
-            }
-          }
-        }
-      } else if (roles.includes("pastor_coordenador")) {
-        // Pastor de área: pré-selecionar região e área
-        if (profileRes.data?.area_id) {
-          setSelectedArea(profileRes.data.area_id);
-          const area = areasRes.data?.find(a => a.id === profileRes.data.area_id);
-          if (area?.region_id) {
-            setSelectedRegion(area.region_id);
-          }
-        }
-      } else if (roles.includes("pastor_regiao")) {
-        // Pastor de região: pré-selecionar apenas região
-        if (profileRes.data?.region_id) {
-          setSelectedRegion(profileRes.data.region_id);
-        }
-      }
-    };
-
-    loadInitialData();
-  }, [user, roles]);
-
-  // Filtrar áreas quando região mudar
-  useEffect(() => {
-    if (selectedRegion && selectedRegion !== "all") {
-      setFilteredAreas(areas.filter(a => a.region_id === selectedRegion));
-    } else {
-      setFilteredAreas(areas);
-    }
-    // Limpar área e igreja se região mudou
-    if (!roles.includes("pastor_coordenador") && !roles.includes("pastor")) {
-      setSelectedArea("all");
-      setSelectedChurch("all");
-    }
-  }, [selectedRegion, areas, roles]);
-
-  // Filtrar igrejas quando área mudar
-  useEffect(() => {
-    if (selectedArea && selectedArea !== "all") {
-      setFilteredChurches(churches.filter(c => c.area_id === selectedArea));
-    } else if (selectedRegion && selectedRegion !== "all") {
-      // Se tem região mas não tem área, mostrar igrejas da região
-      const regionAreas = areas.filter(a => a.region_id === selectedRegion).map(a => a.id);
-      setFilteredChurches(churches.filter(c => c.area_id && regionAreas.includes(c.area_id)));
-    } else {
-      setFilteredChurches(churches);
-    }
-    // Limpar igreja se área mudou
-    if (!roles.includes("pastor")) {
-      setSelectedChurch("all");
-    }
-  }, [selectedArea, selectedRegion, churches, areas, roles]);
 
   useEffect(() => {
     if (!user) return;
@@ -246,28 +162,23 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, [user, isAdmin, isPastor, startDate, endDate, selectedRegion, selectedArea, selectedChurch]);
+  }, [user, startDate, endDate, selectedRegion, selectedArea, selectedChurch]);
 
   const clearFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
     // Limpar apenas filtros que o usuário pode alterar
-    if (isAdmin) {
+    if (!isRegionLocked) {
       setSelectedRegion("all");
+    }
+    if (!isAreaLocked) {
       setSelectedArea("all");
-      setSelectedChurch("all");
-    } else if (roles.includes("pastor_regiao")) {
-      setSelectedArea("all");
-      setSelectedChurch("all");
-    } else if (roles.includes("pastor_coordenador")) {
+    }
+    if (!isChurchLocked) {
       setSelectedChurch("all");
     }
     setIsFiltering(false);
   };
-
-  const isRegionLocked = roles.includes("pastor_regiao") || roles.includes("pastor_coordenador") || roles.includes("pastor");
-  const isAreaLocked = roles.includes("pastor_coordenador") || roles.includes("pastor");
-  const isChurchLocked = roles.includes("pastor");
 
   const statsCards = [
     { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.visitante },

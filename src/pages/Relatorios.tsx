@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileBarChart, Download, Calendar as CalendarIcon, MapPin, Building2, Church } from "lucide-react";
+import { FileBarChart, Download, Calendar as CalendarIcon, MapPin, Building2, Church, Users } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,33 +13,37 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
-import { Tables } from "@/integrations/supabase/types";
+import { useHierarchyFilters } from "@/hooks/useHierarchyFilters";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-
-type Region = Tables<"regions">;
-type Area = Tables<"areas">;
-type Church = Tables<"churches">;
 
 // Red-coral palette from design system
 const COLORS = ['hsl(5 53% 48%)', 'hsl(5 63% 58%)', 'hsl(5 73% 68%)', 'hsl(5 43% 38%)', 'hsl(5 33% 28%)'];
 
 export default function Relatorios() {
   const { user } = useAuth();
-  const { isAdmin, roles } = useUserRole();
+  const {
+    selectedRegion,
+    selectedArea,
+    selectedChurch,
+    selectedGroup,
+    regions,
+    filteredAreas,
+    filteredChurches,
+    filteredGroups,
+    isRegionLocked,
+    isAreaLocked,
+    isChurchLocked,
+    isGroupLocked,
+    setSelectedRegion,
+    setSelectedArea,
+    setSelectedChurch,
+    setSelectedGroup,
+    loading: filtersLoading,
+  } = useHierarchyFilters();
+  
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
-  
-  // Filtros hierárquicos
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [churches, setChurches] = useState<Church[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [selectedArea, setSelectedArea] = useState<string>("all");
-  const [selectedChurch, setSelectedChurch] = useState<string>("all");
-  const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
-  const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
 
   // Dados dos relatórios
   const [statusData, setStatusData] = useState<any[]>([]);
