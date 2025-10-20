@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle, Trash2, ArrowUpDown } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,6 +153,7 @@ export default function Visitantes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name-asc");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
@@ -517,6 +518,71 @@ export default function Visitantes() {
     }
   }, [location.state]);
 
+  const getSortedVisitors = (visitors: Visitor[]) => {
+    const sorted = [...visitors];
+    
+    switch (sortBy) {
+      case "name-asc":
+        return sorted.sort((a, b) => 
+          a.full_name.localeCompare(b.full_name, 'pt-BR')
+        );
+      case "name-desc":
+        return sorted.sort((a, b) => 
+          b.full_name.localeCompare(a.full_name, 'pt-BR')
+        );
+      case "group-asc":
+        return sorted.sort((a, b) => {
+          const groupA = a.assistance_group_name || "";
+          const groupB = b.assistance_group_name || "";
+          return groupA.localeCompare(groupB, 'pt-BR');
+        });
+      case "group-desc":
+        return sorted.sort((a, b) => {
+          const groupA = a.assistance_group_name || "";
+          const groupB = b.assistance_group_name || "";
+          return groupB.localeCompare(groupA, 'pt-BR');
+        });
+      case "church-asc":
+        return sorted.sort((a, b) => {
+          const churchA = a.church_name || "";
+          const churchB = b.church_name || "";
+          return churchA.localeCompare(churchB, 'pt-BR');
+        });
+      case "church-desc":
+        return sorted.sort((a, b) => {
+          const churchA = a.church_name || "";
+          const churchB = b.church_name || "";
+          return churchB.localeCompare(churchA, 'pt-BR');
+        });
+      case "categoria-asc":
+        return sorted.sort((a, b) => {
+          const catA = a.categoria || "";
+          const catB = b.categoria || "";
+          return catA.localeCompare(catB, 'pt-BR');
+        });
+      case "categoria-desc":
+        return sorted.sort((a, b) => {
+          const catA = a.categoria || "";
+          const catB = b.categoria || "";
+          return catB.localeCompare(catA, 'pt-BR');
+        });
+      case "sexo-asc":
+        return sorted.sort((a, b) => {
+          const sexoA = a.sexo || "";
+          const sexoB = b.sexo || "";
+          return sexoA.localeCompare(sexoB, 'pt-BR');
+        });
+      case "sexo-desc":
+        return sorted.sort((a, b) => {
+          const sexoA = a.sexo || "";
+          const sexoB = b.sexo || "";
+          return sexoB.localeCompare(sexoA, 'pt-BR');
+        });
+      default:
+        return sorted;
+    }
+  };
+
   useEffect(() => {
     let filtered = visitors;
 
@@ -537,9 +603,10 @@ export default function Visitantes() {
       filtered = filtered.filter((v) => v.assistance_group_id === groupFilter);
     }
 
-    setFilteredVisitors(filtered);
+    const sorted = getSortedVisitors(filtered);
+    setFilteredVisitors(sorted);
     setCurrentPage(1); // Reset para primeira página quando filtrar
-   }, [searchTerm, statusFilter, groupFilter, visitors]);
+   }, [searchTerm, statusFilter, groupFilter, visitors, sortBy]);
 
   const openEditDialog = async (visitor: Visitor) => {
     setSelectedVisitor(visitor);
@@ -1263,6 +1330,24 @@ export default function Visitantes() {
                     {group.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">Nome (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Nome (Z-A)</SelectItem>
+                <SelectItem value="group-asc">Grupo (A-Z)</SelectItem>
+                <SelectItem value="group-desc">Grupo (Z-A)</SelectItem>
+                <SelectItem value="church-asc">Igreja (A-Z)</SelectItem>
+                <SelectItem value="church-desc">Igreja (Z-A)</SelectItem>
+                <SelectItem value="categoria-asc">Categoria (A-Z)</SelectItem>
+                <SelectItem value="categoria-desc">Categoria (Z-A)</SelectItem>
+                <SelectItem value="sexo-asc">Sexo (A-Z)</SelectItem>
+                <SelectItem value="sexo-desc">Sexo (Z-A)</SelectItem>
               </SelectContent>
             </Select>
           </div>
