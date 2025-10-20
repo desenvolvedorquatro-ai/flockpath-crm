@@ -59,6 +59,7 @@ export default function Relatorios() {
   const [topFrequentadoresData, setTopFrequentadoresData] = useState<any[]>([]);
   const [frequenciaDetalhadaData, setFrequenciaDetalhadaData] = useState<any[]>([]);
   const [resgateData, setResgateData] = useState<any[]>([]);
+  const [gruposData, setGruposData] = useState<any[]>([]);
 
   const fetchReportData = async () => {
     if (!user) return;
@@ -391,6 +392,31 @@ export default function Relatorios() {
         });
 
         setFrequenciaDetalhadaData(frequenciaDetalhada);
+      }
+
+      // Buscar grupos de assistência com contagem de visitantes
+      const { data: groups } = await supabase
+        .from("assistance_groups")
+        .select("id, name");
+
+      if (groups) {
+        const { data: visitorCounts } = await supabase
+          .from("visitors")
+          .select("assistance_group_id");
+        
+        const countByGroup = (visitorCounts || []).reduce((acc, v) => {
+          if (v.assistance_group_id) {
+            acc[v.assistance_group_id] = (acc[v.assistance_group_id] || 0) + 1;
+          }
+          return acc;
+        }, {} as Record<string, number>);
+        
+        const gruposReport = groups.map(group => ({
+          name: group.name,
+          visitantes: countByGroup[group.id] || 0
+        })).sort((a, b) => b.visitantes - a.visitantes);
+        
+        setGruposData(gruposReport);
       }
     } catch (error) {
       console.error("Erro ao carregar relatórios:", error);
@@ -871,6 +897,53 @@ export default function Relatorios() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Distribuição de Visitantes por Grupo */}
+      {gruposData.length > 0 && (
+        <Card className="glass-card rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Distribuição de Visitantes por Grupo
+              </CardTitle>
+              <CardDescription>Quantidade de visitantes em cada grupo de assistência</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => exportToExcel(gruposData, "distribuicao_grupos")}>
+              <Download className="w-4 h-4 mr-2" />
+              Exportar
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={gruposData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="name" 
+                  className="text-muted-foreground text-xs"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                />
+                <YAxis className="text-muted-foreground text-xs" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--card))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }}
+                  labelStyle={{ color: "hsl(var(--foreground))" }}
+                />
+                <Bar 
+                  dataKey="visitantes" 
+                  fill="hsl(var(--primary))" 
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
