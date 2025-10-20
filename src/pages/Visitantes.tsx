@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,11 +146,13 @@ const calcularIdade = (dataNascimento: string | null): number | null => {
 export default function Visitantes() {
   const { user } = useAuth();
   const { isAdmin, isPastor } = useUserRole();
+  const location = useLocation();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
   const [assistanceGroups, setAssistanceGroups] = useState<AssistanceGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [groupFilter, setGroupFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
@@ -501,6 +504,19 @@ export default function Visitantes() {
     reloadUserChurch();
   }, [user, isAdmin, isPastor, isDialogOpen]);
 
+  // Aplicar filtro de grupo quando navegar da página de grupos
+  useEffect(() => {
+    if (location.state?.filterByGroup) {
+      setGroupFilter(location.state.filterByGroup);
+      toast({
+        title: "Filtro aplicado",
+        description: `Mostrando visitantes do grupo: ${location.state.groupName}`,
+      });
+      // Limpar o state após aplicar
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     let filtered = visitors;
 
@@ -517,9 +533,13 @@ export default function Visitantes() {
       filtered = filtered.filter((v) => v.status === statusFilter);
     }
 
+    if (groupFilter !== "all") {
+      filtered = filtered.filter((v) => v.assistance_group_id === groupFilter);
+    }
+
     setFilteredVisitors(filtered);
     setCurrentPage(1); // Reset para primeira página quando filtrar
-   }, [searchTerm, statusFilter, visitors]);
+   }, [searchTerm, statusFilter, groupFilter, visitors]);
 
   const openEditDialog = async (visitor: Visitor) => {
     setSelectedVisitor(visitor);
@@ -1227,6 +1247,20 @@ export default function Visitantes() {
                 {statusOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={groupFilter} onValueChange={setGroupFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filtrar por grupo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os grupos</SelectItem>
+                {assistanceGroups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.name}
                   </SelectItem>
                 ))}
               </SelectContent>

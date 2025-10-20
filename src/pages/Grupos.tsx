@@ -1,9 +1,10 @@
-import { UsersRound, Search, Edit, Trash2 } from "lucide-react";
+import { UsersRound, Search, Edit, Trash2, BarChart3 } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { useNavigate } from "react-router-dom";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type AssistanceGroup = Tables<"assistance_groups"> & {
   churches: { name: string } | null;
@@ -34,6 +38,7 @@ export default function Grupos() {
   const [view, setView] = useState<"card" | "list">("list");
   const { toast } = useToast();
   const { isAdmin, isPastor, loading: roleLoading } = useUserRole();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -215,6 +220,23 @@ export default function Grupos() {
     group.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const getVisitorBadge = (count: number) => {
+    if (count === 0) return { variant: "outline" as const, label: "Vazio", color: "text-muted-foreground" };
+    if (count <= 5) return { variant: "destructive" as const, label: "Crítico", color: "text-destructive" };
+    if (count <= 10) return { variant: "secondary" as const, label: "Atenção", color: "text-amber-600" };
+    if (count <= 15) return { variant: "default" as const, label: "Saudável", color: "text-green-600" };
+    return { variant: "default" as const, label: "Grande", color: "text-blue-600" };
+  };
+
+  const handleVisitorClick = (groupId: string, groupName: string) => {
+    navigate("/visitantes", { state: { filterByGroup: groupId, groupName } });
+  };
+
+  const chartData = filteredGroups.map(group => ({
+    name: group.name,
+    visitantes: group.visitor_count || 0
+  }));
+
   if (roleLoading || loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-muted-foreground">Carregando...</div>
@@ -317,6 +339,45 @@ export default function Grupos() {
         <ViewToggle view={view} onViewChange={setView} />
       </div>
 
+      {filteredGroups.length > 0 && (
+        <Card className="glass-card rounded-2xl mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Distribuição de Visitantes por Grupo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="name" 
+                  className="text-muted-foreground text-xs"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                />
+                <YAxis className="text-muted-foreground text-xs" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--card))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }}
+                  labelStyle={{ color: "hsl(var(--foreground))" }}
+                />
+                <Bar 
+                  dataKey="visitantes" 
+                  fill="hsl(var(--primary))" 
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
       {view === "list" ? (
         <div className="glass-card rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -338,9 +399,19 @@ export default function Grupos() {
                     <TableCell>{group.churches?.name || "-"}</TableCell>
                     <TableCell>{group.profiles?.full_name || "-"}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <UsersRound className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-medium">{group.visitor_count || 0}</span>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVisitorClick(group.id, group.name)}
+                          className="flex items-center gap-2 hover:bg-accent"
+                        >
+                          <UsersRound className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-semibold">{group.visitor_count || 0}</span>
+                        </Button>
+                        <Badge variant={getVisitorBadge(group.visitor_count || 0).variant}>
+                          {getVisitorBadge(group.visitor_count || 0).label}
+                        </Badge>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">{group.description || "-"}</TableCell>
@@ -387,10 +458,20 @@ export default function Grupos() {
                 </div>
               )}
 
-              <div className="mb-3 flex items-center gap-2 text-sm">
-                <UsersRound className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Visitantes:</span>
-                <span className="font-semibold text-foreground">{group.visitor_count || 0}</span>
+              <div className="mb-3 flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleVisitorClick(group.id, group.name)}
+                  className="flex items-center gap-2 p-0 h-auto hover:bg-transparent hover:underline"
+                >
+                  <UsersRound className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Visitantes:</span>
+                  <span className="text-sm font-semibold text-foreground">{group.visitor_count || 0}</span>
+                </Button>
+                <Badge variant={getVisitorBadge(group.visitor_count || 0).variant} className="text-xs">
+                  {getVisitorBadge(group.visitor_count || 0).label}
+                </Badge>
               </div>
 
               {group.description && (
