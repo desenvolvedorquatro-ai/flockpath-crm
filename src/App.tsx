@@ -17,6 +17,7 @@ import Regioes from "./pages/Regioes";
 import Areas from "./pages/Areas";
 import Importacao from "./pages/Importacao";
 import GerenciarFuncoes from "./pages/GerenciarFuncoes";
+import ConfiguracoesStatus from "./pages/ConfiguracoesStatus";
 import Relatorios from "./pages/Relatorios";
 import Tarefas from "./pages/Tarefas";
 import MapaFrequencia from "./pages/MapaFrequencia";
@@ -158,6 +159,7 @@ const AppLayout = () => {
               <Route path="/mapa-frequencia" element={<MapaFrequencia />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               <Route path="/gerenciar-funcoes" element={<GerenciarFuncoes />} />
+              <Route path="/configuracoes-status" element={<ConfiguracoesStatus />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

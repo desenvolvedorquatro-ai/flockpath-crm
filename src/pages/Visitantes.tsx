@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -150,6 +160,8 @@ export default function Visitantes() {
   const [churchId, setChurchId] = useState<string | null>(null);
   const [view, setView] = useState<"card" | "list">("list");
   const [userHasNoChurch, setUserHasNoChurch] = useState(false);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   // Estados para admin selecionar região, área e igreja
   const [regions, setRegions] = useState<Region[]>([]);
@@ -640,6 +652,63 @@ export default function Visitantes() {
     };
 
     reloadVisitors();
+  };
+
+  const handleDeleteAllVisitors = async () => {
+    if (deleteConfirmText !== "EXCLUIR TUDO") {
+      toast({
+        title: "Erro",
+        description: "Digite 'EXCLUIR TUDO' para confirmar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Buscar todos os visitantes
+      const { data: allVisitors } = await supabase
+        .from("visitors")
+        .select("id");
+
+      if (!allVisitors || allVisitors.length === 0) {
+        toast({
+          title: "Nenhum visitante encontrado",
+          description: "Não há visitantes para excluir",
+        });
+        setIsDeleteAllDialogOpen(false);
+        setDeleteConfirmText("");
+        return;
+      }
+
+      const visitorIds = allVisitors.map(v => v.id);
+
+      // Deletar registros relacionados primeiro
+      await supabase.from("visitor_interactions").delete().in("visitor_id", visitorIds);
+      await supabase.from("visitor_attendance").delete().in("visitor_id", visitorIds);
+      await supabase.from("visitor_history").delete().in("visitor_id", visitorIds);
+      await supabase.from("attendance_records").delete().in("visitor_id", visitorIds);
+
+      // Deletar visitantes
+      const { error } = await supabase.from("visitors").delete().in("id", visitorIds);
+
+      if (error) throw error;
+
+      toast({
+        title: "Visitantes excluídos com sucesso!",
+        description: `${allVisitors.length} visitante(s) foram excluídos.`,
+      });
+
+      setIsDeleteAllDialogOpen(false);
+      setDeleteConfirmText("");
+      setVisitors([]);
+      setFilteredVisitors([]);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir visitantes",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1163,9 +1232,60 @@ export default function Visitantes() {
               </SelectContent>
             </Select>
           </div>
-          <ViewToggle view={view} onViewChange={setView} />
+          <div className="flex gap-2">
+            {isAdmin && visitors.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={() => setIsDeleteAllDialogOpen(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Todos
+              </Button>
+            )}
+            <ViewToggle view={view} onViewChange={setView} />
+          </div>
         </div>
       </div>
+
+      <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>⚠️ ATENÇÃO: Exclusão em Massa</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p className="text-destructive font-semibold">
+                Esta ação irá excluir TODOS os visitantes cadastrados no sistema.
+              </p>
+              <p>Esta ação não pode ser desfeita e todos os dados relacionados também serão removidos:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Interações com visitantes</li>
+                <li>Presenças em eventos</li>
+                <li>Histórico de alterações</li>
+                <li>Registros de frequência</li>
+              </ul>
+              <div className="space-y-2 pt-4">
+                <Label htmlFor="confirm-delete">Digite "EXCLUIR TUDO" para confirmar:</Label>
+                <Input
+                  id="confirm-delete"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="EXCLUIR TUDO"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAllVisitors}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {filteredVisitors.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center">

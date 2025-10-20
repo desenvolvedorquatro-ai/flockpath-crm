@@ -1,4 +1,6 @@
-import { UserCog, Plus, Search, Shield, Edit, Trash2, Lock } from "lucide-react";
+import { UserCog, Plus, Search, Shield, Edit, Trash2, Lock, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +21,7 @@ type Profile = Tables<"profiles"> & {
   regions?: { name: string } | null;
   areas?: { name: string } | null;
   user_roles?: { role: string }[];
+  last_sign_in_at?: string | null;
 };
 
 type Church = Tables<"churches">;
@@ -199,11 +202,17 @@ export default function Usuarios() {
 
       if (rolesError) throw rolesError;
 
-      const profilesWithRoles = (profilesData || []).map((profile) => ({
-        ...profile,
-        user_roles: (rolesData || [])
-          .filter((role) => role.user_id === profile.id)
-          .map((role) => ({ role: role.role })),
+      // Buscar último acesso para cada usuário
+      const profilesWithRoles = await Promise.all((profilesData || []).map(async (profile) => {
+        const { data: lastSignIn } = await supabase.rpc('get_user_last_sign_in', { user_id: profile.id });
+        
+        return {
+          ...profile,
+          user_roles: (rolesData || [])
+            .filter((role) => role.user_id === profile.id)
+            .map((role) => ({ role: role.role })),
+          last_sign_in_at: lastSignIn,
+        };
       }));
 
       setProfiles(profilesWithRoles);
@@ -591,6 +600,7 @@ export default function Usuarios() {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Igreja</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Região</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Área</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Último Acesso</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Funções</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Ações</th>
                 </tr>
@@ -610,6 +620,13 @@ export default function Usuarios() {
                     </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">
                       {profile.areas?.name || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                      {profile.last_sign_in_at ? (
+                        format(new Date(profile.last_sign_in_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                      ) : (
+                        <span className="text-muted-foreground/50">Nunca acessou</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-2">
@@ -705,6 +722,16 @@ export default function Usuarios() {
                       <span className="text-muted-foreground">{profile.areas.name}</span>
                     </div>
                   )}
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="text-xs">
+                      {profile.last_sign_in_at ? (
+                        <>Último acesso: {format(new Date(profile.last_sign_in_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</>
+                      ) : (
+                        "Nunca acessou"
+                      )}
+                    </span>
+                  </div>
                 </div>
 
                 <div>

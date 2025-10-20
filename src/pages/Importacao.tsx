@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "nome_igreja", "nome_area", "nome_regiao", "nome_grupo", "endereco", "data_visita", "convidado_por", "observacoes", "status", "categoria", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo", "resgate"];
+        headers = ["nome", "email", "telefone", "sexo", "nome_igreja", "nome_area", "nome_regiao", "nome_grupo", "endereco", "data_visita", "convidado_por", "observacoes", "status", "categoria", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo", "resgate"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -371,6 +371,7 @@ export default function Importacao() {
       full_name: row.nome,
       email: row.email || null,
       phone: row.telefone || null,
+      sexo: row.sexo || null,
       church_id: church.id,
       assistance_group_id,
       address: row.endereco || null,
@@ -541,6 +542,7 @@ export default function Importacao() {
                   <div>
                     <strong>Campos opcionais:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li><strong>sexo</strong>: masculino, feminino</li>
                       <li><strong>status</strong>: interessado, visitante, visitante_frequente, candidato_batismo, membro</li>
                       <li><strong>categoria</strong>: crianca, intermediario, adolescente, jovem, senhora, varao, idoso</li>
                       <li><strong>nome_grupo</strong>: nome do grupo de assistência (deve estar cadastrado na igreja)</li>
