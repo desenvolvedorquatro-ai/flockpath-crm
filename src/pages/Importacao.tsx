@@ -133,6 +133,13 @@ export default function Importacao() {
         } catch (error: any) {
           console.error(`Erro ao importar:`, item.row, error);
           errors++;
+          
+          // Mostrar erro específico ao usuário
+          toast({
+            title: `Erro ao importar registro (linha ${item.row.__rowNum__ || 'desconhecida'})`,
+            description: error.message || "Erro desconhecido",
+            variant: "destructive",
+          });
         }
       }
 
