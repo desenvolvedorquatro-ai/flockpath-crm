@@ -646,6 +646,36 @@ export type Database = {
           },
         ]
       }
+      visitor_category_config: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          id: string
+          label: string
+          order_position: number
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          label: string
+          order_position?: number
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          label?: string
+          order_position?: number
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       visitor_history: {
         Row: {
           contacted_by: string | null
@@ -734,6 +764,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      visitor_status_config: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string | null
+          hex_color: string
+          id: string
+          label: string
+          order_position: number
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          active?: boolean
+          color: string
+          created_at?: string | null
+          hex_color: string
+          id?: string
+          label: string
+          order_position?: number
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string | null
+          hex_color?: string
+          id?: string
+          label?: string
+          order_position?: number
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
       }
       visitors: {
         Row: {
@@ -903,6 +969,10 @@ export type Database = {
         Returns: {
           church_id: string
         }[]
+      }
+      get_user_last_sign_in: {
+        Args: { user_id: string }
+        Returns: string
       }
       has_role: {
         Args: { _role: string; _user_id: string }
