@@ -91,12 +91,12 @@ export default function Grupos() {
       // Buscar contagem de visitantes por grupo
       const { data: visitorCounts } = await supabase
         .from("visitors")
-        .select("group_id");
+        .select("assistance_group_id");
       
       // Contar visitantes por grupo
       const countByGroup = (visitorCounts || []).reduce((acc, v) => {
-        if (v.group_id) {
-          acc[v.group_id] = (acc[v.group_id] || 0) + 1;
+        if (v.assistance_group_id) {
+          acc[v.assistance_group_id] = (acc[v.assistance_group_id] || 0) + 1;
         }
         return acc;
       }, {} as Record<string, number>);
