@@ -17,6 +17,7 @@ import { Tables, TablesInsert } from "@/integrations/supabase/types";
 type AssistanceGroup = Tables<"assistance_groups"> & {
   churches: { name: string } | null;
   profiles?: { full_name: string } | null;
+  visitor_count?: number;
 };
 
 type Church = Tables<"churches">;
@@ -87,19 +88,37 @@ export default function Grupos() {
 
       if (error) throw error;
       
-      // Buscar nomes dos responsáveis
+      // Buscar contagem de visitantes por grupo
+      const { data: visitorCounts } = await supabase
+        .from("visitors")
+        .select("group_id");
+      
+      // Contar visitantes por grupo
+      const countByGroup = (visitorCounts || []).reduce((acc, v) => {
+        if (v.group_id) {
+          acc[v.group_id] = (acc[v.group_id] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Buscar nomes dos responsáveis e adicionar contagem
       const groupsWithResponsible = await Promise.all(
         (data || []).map(async (group) => {
+          let profileData = null;
           if (group.responsible_id) {
-            const { data: profileData } = await supabase
+            const { data } = await supabase
               .from("profiles")
               .select("full_name")
               .eq("id", group.responsible_id)
               .single();
-            
-            return { ...group, profiles: profileData };
+            profileData = data;
           }
-          return { ...group, profiles: null };
+          
+          return { 
+            ...group, 
+            profiles: profileData,
+            visitor_count: countByGroup[group.id] || 0
+          };
         })
       );
       
@@ -307,6 +326,7 @@ export default function Grupos() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Igreja</TableHead>
                   <TableHead>Responsável</TableHead>
+                  <TableHead>Visitantes</TableHead>
                   <TableHead>Descrição</TableHead>
                   {(isAdmin || isPastor) && <TableHead className="text-right">Ações</TableHead>}
                 </TableRow>
@@ -317,6 +337,12 @@ export default function Grupos() {
                     <TableCell className="font-medium">{group.name}</TableCell>
                     <TableCell>{group.churches?.name || "-"}</TableCell>
                     <TableCell>{group.profiles?.full_name || "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <UsersRound className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{group.visitor_count || 0}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-xs truncate">{group.description || "-"}</TableCell>
                     {(isAdmin || isPastor) && (
                       <TableCell className="text-right">
@@ -360,6 +386,12 @@ export default function Grupos() {
                   <span className="font-medium text-foreground">{group.profiles.full_name}</span>
                 </div>
               )}
+
+              <div className="mb-3 flex items-center gap-2 text-sm">
+                <UsersRound className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Visitantes:</span>
+                <span className="font-semibold text-foreground">{group.visitor_count || 0}</span>
+              </div>
 
               {group.description && (
                 <p className="text-sm text-muted-foreground mb-4">{group.description}</p>
