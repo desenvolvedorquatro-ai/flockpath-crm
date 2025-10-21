@@ -20,11 +20,11 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
   
   // Calculate dynamic height based on number of stages for optimal UX
   const getItemHeight = () => {
-    if (stages.length <= 2) return "70px";
-    if (stages.length <= 3) return "58px";
-    if (stages.length <= 4) return "50px";
-    if (stages.length <= 5) return "44px";
-    return "38px";
+    if (stages.length <= 2) return "90px";
+    if (stages.length <= 3) return "80px";
+    if (stages.length <= 4) return "72px";
+    if (stages.length <= 5) return "65px";
+    return "60px";
   };
 
   if (isLoading) {
@@ -70,7 +70,7 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
         </CardTitle>
       </CardHeader>
       
-      <div className="px-4 pb-3 space-y-1 max-h-[380px] overflow-hidden">
+      <div className="px-4 pb-4 space-y-2">
         {stages.map((stage, index) => {
           const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
           const minWidth = 25; // Minimum width for visibility and accessibility
@@ -115,10 +115,10 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                 
                 {/* Content container */}
-                <div className="relative h-full flex items-center justify-center px-4 py-2">
-                  <div className="flex flex-col items-center justify-center text-center w-full gap-1.5">
+                <div className="relative h-full flex items-center justify-center px-4 py-3">
+                  <div className="flex flex-col items-center justify-center text-center w-full gap-2">
                     {/* Stage title */}
-                    <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm">
+                    <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
                       {stage.title}
                     </span>
                     
@@ -140,7 +140,7 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
 
               {/* Connector line between stages */}
               {index < stages.length - 1 && (
-                <div className="flex justify-center my-1">
+                <div className="flex justify-center my-2">
                   <div className="w-0.5 h-2 bg-gradient-to-b from-border to-transparent" />
                 </div>
               )}
