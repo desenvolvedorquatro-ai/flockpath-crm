@@ -1,6 +1,7 @@
 import { UsersRound, Search, Edit, Trash2 } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
 import { ViewToggle } from "@/components/ViewToggle";
+import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,8 @@ export default function Grupos() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<AssistanceGroup | null>(null);
   const [view, setView] = useState<"card" | "list">("list");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const { isAdmin, isPastor, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
@@ -218,6 +221,11 @@ export default function Grupos() {
     group.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   const getVisitorBadge = (count: number) => {
     if (count === 0) return { 
       className: "bg-muted text-muted-foreground border-muted", 
@@ -362,7 +370,9 @@ export default function Grupos() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredGroups.map((group) => (
+                {filteredGroups
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((group) => (
                   <TableRow key={group.id}>
                     <TableCell className="font-medium">{group.name}</TableCell>
                     <TableCell>{group.churches?.name || "-"}</TableCell>
@@ -404,7 +414,9 @@ export default function Grupos() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredGroups.map((group) => (
+          {filteredGroups
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((group) => (
             <div key={group.id} className="glass-card rounded-2xl p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -470,6 +482,16 @@ export default function Grupos() {
             {search ? "Nenhum grupo encontrado" : "Nenhum grupo cadastrado"}
           </p>
         </div>
+      )}
+
+      {filteredGroups.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalItems={filteredGroups.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
     </div>
   );

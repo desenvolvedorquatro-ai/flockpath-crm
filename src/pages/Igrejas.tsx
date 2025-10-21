@@ -1,6 +1,7 @@
 import { Building2, Search, Edit, Trash2, Users } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
 import { ViewToggle } from "@/components/ViewToggle";
+import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,8 @@ export default function Igrejas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChurch, setEditingChurch] = useState<Church | null>(null);
   const [view, setView] = useState<"card" | "list">("list");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
 
@@ -232,6 +235,11 @@ export default function Igrejas() {
     setIsDialogOpen(true);
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   const filteredAreas = areas.filter(a => 
     !formData.region_id || a.region_id === formData.region_id
   );
@@ -431,7 +439,9 @@ export default function Igrejas() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredChurches.map((church) => (
+                {filteredChurches
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((church) => (
                   <TableRow key={church.id}>
                     <TableCell className="font-medium">{church.name}</TableCell>
                     <TableCell>{church.city ? `${church.city}, ${church.state}` : "-"}</TableCell>
@@ -464,7 +474,9 @@ export default function Igrejas() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredChurches.map((church) => (
+          {filteredChurches
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((church) => (
             <div key={church.id} className="glass-card rounded-2xl p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -525,6 +537,16 @@ export default function Igrejas() {
             {search ? "Nenhuma igreja encontrada" : "Nenhuma igreja cadastrada"}
           </p>
         </div>
+      )}
+
+      {filteredChurches.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalItems={filteredChurches.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
     </div>
   );

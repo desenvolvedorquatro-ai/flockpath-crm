@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Map, Trash2, Edit, Building2, Users } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
+import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ModernHeader } from "@/components/ModernHeader";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,8 @@ export default function Areas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [view, setView] = useState<"card" | "list">("list");
 
   const [formData, setFormData] = useState({
@@ -226,6 +229,11 @@ export default function Areas() {
     setIsDialogOpen(false);
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   const openEditDialog = (area: Area) => {
     setEditingArea(area);
     setFormData({
@@ -355,7 +363,9 @@ export default function Areas() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAreas.map((area) => {
+                {filteredAreas
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((area) => {
                   const areaStat = stats.find(s => s.areaId === area.id);
                   return (
                     <TableRow key={area.id}>
@@ -403,7 +413,9 @@ export default function Areas() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAreas.map((area) => {
+          {filteredAreas
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((area) => {
             const areaStat = stats.find(s => s.areaId === area.id);
             return (
               <Card key={area.id} className="hover:shadow-lg transition-shadow">
@@ -454,6 +466,16 @@ export default function Areas() {
             );
           })}
         </div>
+      )}
+
+      {filteredAreas.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalItems={filteredAreas.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
     </div>
   );

@@ -68,7 +68,7 @@ export default function Tarefas() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -245,6 +245,11 @@ export default function Tarefas() {
     });
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
@@ -362,6 +367,7 @@ export default function Tarefas() {
                 totalItems={tasks.length}
                 itemsPerPage={itemsPerPage}
                 onPageChange={setCurrentPage}
+                onItemsPerPageChange={handleItemsPerPageChange}
               />
             </>
           )}

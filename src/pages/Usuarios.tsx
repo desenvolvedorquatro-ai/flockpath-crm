@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/ViewToggle";
+import { PaginationControls } from "@/components/PaginationControls";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -87,7 +88,7 @@ export default function Usuarios() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [view, setView] = useState<"card" | "list">("list");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     if (!roleLoading && isAdmin) {
@@ -539,6 +540,11 @@ export default function Usuarios() {
     }
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   const filteredProfiles = profiles.filter((profile) =>
     profile.full_name.toLowerCase().includes(search.toLowerCase()) ||
     profile.email?.toLowerCase().includes(search.toLowerCase())
@@ -788,28 +794,14 @@ export default function Usuarios() {
       )}
 
       {/* Paginação */}
-      {filteredProfiles.length > itemsPerPage && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Página {currentPage} de {Math.ceil(filteredProfiles.length / itemsPerPage)}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredProfiles.length / itemsPerPage), prev + 1))}
-            disabled={currentPage === Math.ceil(filteredProfiles.length / itemsPerPage)}
-          >
-            Próxima
-          </Button>
-        </div>
+      {filteredProfiles.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalItems={filteredProfiles.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
 
       {filteredProfiles.length === 0 && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MapPin, Trash2, Edit, Map, Building2, Users } from "lucide-react";
 import { ViewToggle } from "@/components/ViewToggle";
+import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ModernHeader } from "@/components/ModernHeader";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,8 @@ export default function Regioes() {
   const [editingRegion, setEditingRegion] = useState<Region | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<"card" | "list">("list");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -206,6 +209,11 @@ export default function Regioes() {
     setIsDialogOpen(false);
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   const openEditDialog = (region: Region) => {
     setEditingRegion(region);
     setFormData({
@@ -315,7 +323,9 @@ export default function Regioes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRegions.map((region) => {
+                {filteredRegions
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((region) => {
                   const regionStat = stats.find(s => s.regionId === region.id);
                   return (
                     <TableRow key={region.id}>
@@ -368,7 +378,9 @@ export default function Regioes() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRegions.map((region) => {
+          {filteredRegions
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((region) => {
             const regionStat = stats.find(s => s.regionId === region.id);
             return (
               <Card key={region.id} className="hover:shadow-lg transition-shadow">
@@ -422,6 +434,16 @@ export default function Regioes() {
             );
           })}
         </div>
+      )}
+
+      {filteredRegions.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalItems={filteredRegions.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
     </div>
   );

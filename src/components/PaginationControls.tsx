@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationControlsProps {
@@ -6,6 +7,7 @@ interface PaginationControlsProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
 }
 
 export function PaginationControls({
@@ -13,6 +15,7 @@ export function PaginationControls({
   totalItems,
   itemsPerPage,
   onPageChange,
+  onItemsPerPageChange,
 }: PaginationControlsProps) {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -42,7 +45,21 @@ export function PaginationControls({
         </Button>
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
+        <div className="flex items-center gap-3">
+          {onItemsPerPageChange && (
+            <Select 
+              value={String(itemsPerPage)} 
+              onValueChange={(val) => onItemsPerPageChange(Number(val))}
+            >
+              <SelectTrigger className="w-[70px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <p className="text-sm text-muted-foreground">
             Mostrando <span className="font-medium">{startItem}</span> a{" "}
             <span className="font-medium">{endItem}</span> de{" "}

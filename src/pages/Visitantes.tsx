@@ -51,6 +51,7 @@ import { toast } from "@/hooks/use-toast";
 import { VisitorInteractionsDialog } from "@/components/visitors/VisitorInteractionsDialog";
 import { VisitorTransferDialog } from "@/components/visitors/VisitorTransferDialog";
 import { ModernHeader } from "@/components/ModernHeader";
+import { PaginationControls } from "@/components/PaginationControls";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -159,7 +160,7 @@ export default function Visitantes() {
   const [isInteractionsDialogOpen, setIsInteractionsDialogOpen] = useState(false);
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [churchId, setChurchId] = useState<string | null>(null);
   const [view, setView] = useState<"card" | "list">("list");
@@ -517,6 +518,11 @@ export default function Visitantes() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   const getSortedVisitors = (visitors: Visitor[]) => {
     const sorted = [...visitors];
@@ -1670,28 +1676,14 @@ export default function Visitantes() {
       )}
 
       {/* Paginação */}
-      {filteredVisitors.length > itemsPerPage && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Página {currentPage} de {Math.ceil(filteredVisitors.length / itemsPerPage)}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredVisitors.length / itemsPerPage), prev + 1))}
-            disabled={currentPage === Math.ceil(filteredVisitors.length / itemsPerPage)}
-          >
-            Próxima
-          </Button>
-        </div>
+      {filteredVisitors.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalItems={filteredVisitors.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
 
       {/* Dialog de Edição */}
