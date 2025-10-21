@@ -82,7 +82,7 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
               'Interessado': 'from-gray-500 via-gray-600 to-gray-700',
               'Visitante': 'from-blue-500 via-blue-600 to-blue-700',
               'Visitante Frequente': 'from-purple-500 via-purple-600 to-purple-700',
-              'Candidato à Batismo': 'from-orange-500 via-orange-600 to-orange-700',
+              'Candidato a Batismo': 'from-orange-500 via-orange-600 to-orange-700',
               'Membro': 'from-green-500 via-green-600 to-green-700',
             };
             return colorMap[title] || 'from-primary via-primary to-primary-glow';
@@ -115,19 +115,19 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                 
                 {/* Content container */}
-                <div className="relative h-full flex items-center justify-center px-3 py-1.5">
-                  <div className="flex flex-col items-center justify-center text-center w-full gap-1">
+                <div className="relative h-full flex items-center justify-center px-4 py-2">
+                  <div className="flex flex-col items-center justify-center text-center w-full gap-1.5">
                     {/* Stage title */}
-                    <span className="text-white font-semibold text-xs md:text-sm leading-tight tracking-wide drop-shadow-sm">
+                    <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm">
                       {stage.title}
                     </span>
                     
                     {/* Metrics */}
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-white text-lg md:text-xl font-bold drop-shadow-md tabular-nums">
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-white text-xl md:text-2xl font-bold drop-shadow-md tabular-nums">
                         {stage.count}
                       </span>
-                      <span className="text-white/90 text-xs md:text-sm font-medium bg-white/10 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                      <span className="text-white/90 text-sm md:text-base font-medium bg-white/15 px-2.5 py-1 rounded-full backdrop-blur-sm">
                         {stage.percentage}%
                       </span>
                     </div>

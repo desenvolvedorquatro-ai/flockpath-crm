@@ -109,7 +109,7 @@ export default function Relatorios() {
           name: key === 'interessado' ? 'Interessado' : 
                 key === 'visitante' ? 'Visitante' :
                 key === 'visitante_frequente' ? 'Visitante Frequente' :
-                key === 'candidato_batismo' ? 'Candidato à Batismo' : 'Membro',
+                key === 'candidato_batismo' ? 'Candidato a Batismo' : 'Membro',
           value: value,
           percentage: ((value / total) * 100).toFixed(1)
         }));

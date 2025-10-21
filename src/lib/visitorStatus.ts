@@ -4,7 +4,7 @@ export const statusOptions = [
   { value: "interessado", label: "Interessado" },
   { value: "visitante", label: "Visitante" },
   { value: "visitante_frequente", label: "Visitante Frequente" },
-  { value: "candidato_batismo", label: "Candidato à Batismo" },
+  { value: "candidato_batismo", label: "Candidato a Batismo" },
   { value: "membro", label: "Membro" },
 ] as const;
 
@@ -20,7 +20,7 @@ export const statusLabels: Record<string, string> = {
   interessado: "Interessado",
   visitante: "Visitante",
   visitante_frequente: "Visitante Frequente",
-  candidato_batismo: "Candidato à Batismo",
+  candidato_batismo: "Candidato a Batismo",
   membro: "Membro",
 };
 

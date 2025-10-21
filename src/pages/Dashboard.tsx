@@ -60,7 +60,7 @@ export default function Dashboard() {
     { title: "Interessado", count: 0, color: statusHexColors.interessado, percentage: 0 },
     { title: "Visitante", count: 0, color: statusHexColors.visitante, percentage: 0 },
     { title: "Visitante Frequente", count: 0, color: statusHexColors.visitante_frequente, percentage: 0 },
-    { title: "Candidato à Batismo", count: 0, color: statusHexColors.candidato_batismo, percentage: 0 },
+    { title: "Candidato a Batismo", count: 0, color: statusHexColors.candidato_batismo, percentage: 0 },
     { title: "Membro", count: 0, color: statusHexColors.membro, percentage: 0 },
   ]);
   
@@ -131,7 +131,7 @@ export default function Dashboard() {
           { title: "Interessado", count: interessados, color: statusHexColors.interessado, percentage: total > 0 ? Math.round((interessados / total) * 100) : 0 },
           { title: "Visitante", count: visitantes, color: statusHexColors.visitante, percentage: total > 0 ? Math.round((visitantes / total) * 100) : 0 },
           { title: "Visitante Frequente", count: visitantesFrequentes, color: statusHexColors.visitante_frequente, percentage: total > 0 ? Math.round((visitantesFrequentes / total) * 100) : 0 },
-          { title: "Candidato à Batismo", count: candidatosBatismo, color: statusHexColors.candidato_batismo, percentage: total > 0 ? Math.round((candidatosBatismo / total) * 100) : 0 },
+          { title: "Candidato a Batismo", count: candidatosBatismo, color: statusHexColors.candidato_batismo, percentage: total > 0 ? Math.round((candidatosBatismo / total) * 100) : 0 },
           { title: "Membro", count: membros, color: statusHexColors.membro, percentage: total > 0 ? Math.round((membros / total) * 100) : 0 },
         ]);
       }
