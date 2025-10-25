@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -36,6 +36,7 @@ const AppLayout = () => {
     user,
     signOut
   } = useAuth();
+  const location = useLocation();
   const [userFullName, setUserFullName] = React.useState<string>("");
   const [userChurchInfo, setUserChurchInfo] = React.useState<string>("");
 
@@ -145,20 +146,20 @@ const AppLayout = () => {
             </DropdownMenu>
           </header>
           <main className="flex-1 overflow-x-hidden p-3 md:p-4 lg:p-6">
-            {window.location.pathname === "/dashboard" && <Dashboard />}
-            {window.location.pathname === "/visitantes" && <Visitantes />}
-            {window.location.pathname === "/igrejas" && <Igrejas />}
-            {window.location.pathname === "/grupos" && <Grupos />}
-            {window.location.pathname === "/usuarios" && <Usuarios />}
-            {window.location.pathname === "/regioes" && <Regioes />}
-            {window.location.pathname === "/areas" && <Areas />}
-            {window.location.pathname === "/importacao" && <Importacao />}
-            {window.location.pathname === "/relatorios" && <Relatorios />}
-            {window.location.pathname === "/tarefas" && <Tarefas />}
-            {window.location.pathname === "/mapa-frequencia" && <MapaFrequencia />}
-            {window.location.pathname === "/configuracoes" && <Configuracoes />}
-            {window.location.pathname === "/gerenciar-funcoes" && <GerenciarFuncoes />}
-            {window.location.pathname === "/configuracoes-status" && <ConfiguracoesStatus />}
+            {location.pathname === "/dashboard" && <Dashboard />}
+            {location.pathname === "/visitantes" && <Visitantes />}
+            {location.pathname === "/igrejas" && <Igrejas />}
+            {location.pathname === "/grupos" && <Grupos />}
+            {location.pathname === "/usuarios" && <Usuarios />}
+            {location.pathname === "/regioes" && <Regioes />}
+            {location.pathname === "/areas" && <Areas />}
+            {location.pathname === "/importacao" && <Importacao />}
+            {location.pathname === "/relatorios" && <Relatorios />}
+            {location.pathname === "/tarefas" && <Tarefas />}
+            {location.pathname === "/mapa-frequencia" && <MapaFrequencia />}
+            {location.pathname === "/configuracoes" && <Configuracoes />}
+            {location.pathname === "/gerenciar-funcoes" && <GerenciarFuncoes />}
+            {location.pathname === "/configuracoes-status" && <ConfiguracoesStatus />}
           </main>
         </div>
       </div>
