@@ -145,23 +145,20 @@ const AppLayout = () => {
             </DropdownMenu>
           </header>
           <main className="flex-1 overflow-x-hidden p-3 md:p-4 lg:p-6">
-            <Routes>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/visitantes" element={<Visitantes />} />
-              <Route path="/igrejas" element={<Igrejas />} />
-              <Route path="/grupos" element={<Grupos />} />
-              <Route path="/usuarios" element={<Usuarios />} />
-              <Route path="/regioes" element={<Regioes />} />
-              <Route path="/areas" element={<Areas />} />
-              <Route path="/importacao" element={<Importacao />} />
-              <Route path="/relatorios" element={<Relatorios />} />
-              <Route path="/tarefas" element={<Tarefas />} />
-              <Route path="/mapa-frequencia" element={<MapaFrequencia />} />
-              <Route path="/configuracoes" element={<Configuracoes />} />
-              <Route path="/gerenciar-funcoes" element={<GerenciarFuncoes />} />
-              <Route path="/configuracoes-status" element={<ConfiguracoesStatus />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            {window.location.pathname === "/dashboard" && <Dashboard />}
+            {window.location.pathname === "/visitantes" && <Visitantes />}
+            {window.location.pathname === "/igrejas" && <Igrejas />}
+            {window.location.pathname === "/grupos" && <Grupos />}
+            {window.location.pathname === "/usuarios" && <Usuarios />}
+            {window.location.pathname === "/regioes" && <Regioes />}
+            {window.location.pathname === "/areas" && <Areas />}
+            {window.location.pathname === "/importacao" && <Importacao />}
+            {window.location.pathname === "/relatorios" && <Relatorios />}
+            {window.location.pathname === "/tarefas" && <Tarefas />}
+            {window.location.pathname === "/mapa-frequencia" && <MapaFrequencia />}
+            {window.location.pathname === "/configuracoes" && <Configuracoes />}
+            {window.location.pathname === "/gerenciar-funcoes" && <GerenciarFuncoes />}
+            {window.location.pathname === "/configuracoes-status" && <ConfiguracoesStatus />}
           </main>
         </div>
       </div>
@@ -175,9 +172,21 @@ const App = () => <QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/*" element={<ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/visitantes" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/igrejas" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/grupos" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/usuarios" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/regioes" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/areas" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/importacao" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/relatorios" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/tarefas" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/mapa-frequencia" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/configuracoes" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/gerenciar-funcoes" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="/configuracoes-status" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
