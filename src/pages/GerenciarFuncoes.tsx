@@ -232,6 +232,38 @@ export default function GerenciarFuncoes() {
     setLoading(false);
   };
 
+  // Função para validar se é uma cor hexadecimal
+  const isHexColor = (color: string): boolean => /^#([0-9A-F]{3}){1,2}$/i.test(color);
+
+  // Função para calcular contraste e retornar cor de texto adequada
+  const getContrastColor = (hexColor: string): string => {
+    if (!isHexColor(hexColor)) return "#000000";
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
+  };
+
+  // Função para validar e normalizar cor (sempre retorna hexadecimal)
+  const validateAndNormalizeColor = (colorValue: string): string => {
+    const trimmedColor = colorValue.trim();
+    
+    // Se for hexadecimal válido, retornar como está
+    if (isHexColor(trimmedColor)) {
+      return trimmedColor;
+    }
+    
+    // Se for classe Tailwind válida, converter para hex
+    if (TAILWIND_TO_HEX[trimmedColor]) {
+      return TAILWIND_TO_HEX[trimmedColor];
+    }
+    
+    // Fallback: retornar cor padrão
+    console.warn(`Cor inválida "${colorValue}", usando cor padrão #6B7280`);
+    return '#6B7280';
+  };
+
   const openCreateDialog = () => {
     setIsEditing(false);
     setCurrentRole(null);
@@ -281,42 +313,11 @@ export default function GerenciarFuncoes() {
     setRolePermissions(emptyPerms);
   };
 
-  // Função para validar se é uma cor hexadecimal
-  const isHexColor = (color: string): boolean => /^#([0-9A-F]{3}){1,2}$/i.test(color);
-
-  // Função para calcular contraste e retornar cor de texto adequada
-  const getContrastColor = (hexColor: string): string => {
-    if (!isHexColor(hexColor)) return "#000000";
-    const r = parseInt(hexColor.slice(1, 3), 16);
-    const g = parseInt(hexColor.slice(3, 5), 16);
-    const b = parseInt(hexColor.slice(5, 7), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? "#000000" : "#FFFFFF";
-  };
-
   // Handler específico para o color picker
   const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const hexColor = e.target.value;
+    console.log('[DEBUG] Color picker mudou para:', hexColor);
     setColor(hexColor);
-  };
-
-  // Função para validar e normalizar cor (sempre retorna hexadecimal)
-  const validateAndNormalizeColor = (colorValue: string): string => {
-    const trimmedColor = colorValue.trim();
-    
-    // Se for hexadecimal válido, retornar como está
-    if (isHexColor(trimmedColor)) {
-      return trimmedColor;
-    }
-    
-    // Se for classe Tailwind válida, converter para hex
-    if (TAILWIND_TO_HEX[trimmedColor]) {
-      return TAILWIND_TO_HEX[trimmedColor];
-    }
-    
-    // Fallback: retornar cor padrão
-    console.warn(`Cor inválida "${colorValue}", usando cor padrão #6B7280`);
-    return '#6B7280';
   };
 
   // Função helper para renderizar Badge com cor
@@ -338,6 +339,8 @@ export default function GerenciarFuncoes() {
   };
 
   const handleSave = async () => {
+    console.log('[DEBUG] handleSave chamado. Cor atual no state:', color);
+    
     if (!displayName.trim() || !roleName.trim()) {
       toast({
         title: "Erro",
@@ -347,15 +350,19 @@ export default function GerenciarFuncoes() {
       return;
     }
 
+    const normalizedColor = validateAndNormalizeColor(color);
+    console.log('[DEBUG] Cor normalizada para salvar:', normalizedColor);
+
     try {
       if (isEditing && currentRole) {
         // Atualizar função existente
+        console.log('[DEBUG] Atualizando função:', currentRole.role_name, 'com cor:', normalizedColor);
         const { error: roleError } = await supabase
           .from("role_definitions")
           .update({
             display_name: displayName,
             description: description,
-            color: validateAndNormalizeColor(color),
+            color: normalizedColor,
           })
           .eq("id", currentRole.id);
 
@@ -386,13 +393,14 @@ export default function GerenciarFuncoes() {
         });
       } else {
         // Criar nova função
+        console.log('[DEBUG] Criando nova função:', roleName, 'com cor:', normalizedColor);
         const { error: roleError } = await supabase
           .from("role_definitions")
           .insert({
             role_name: roleName,
             display_name: displayName,
             description: description,
-            color: validateAndNormalizeColor(color),
+            color: normalizedColor,
           });
 
         if (roleError) throw roleError;
