@@ -49,6 +49,32 @@ const MODULE_LABELS: Record<ModuleName, string> = {
   config_status: "Configurações de Status",
 };
 
+// Mapeamento de cores Tailwind para hexadecimal
+const TAILWIND_TO_HEX: Record<string, string> = {
+  'bg-red-500': '#EF4444',
+  'bg-orange-500': '#F97316',
+  'bg-amber-500': '#F59E0B',
+  'bg-yellow-500': '#EAB308',
+  'bg-lime-500': '#84CC16',
+  'bg-green-500': '#22C55E',
+  'bg-emerald-500': '#10B981',
+  'bg-teal-500': '#14B8A6',
+  'bg-cyan-500': '#06B6D4',
+  'bg-sky-500': '#0EA5E9',
+  'bg-blue-500': '#3B82F6',
+  'bg-indigo-500': '#6366F1',
+  'bg-violet-500': '#8B5CF6',
+  'bg-purple-500': '#A855F7',
+  'bg-fuchsia-500': '#D946EF',
+  'bg-pink-500': '#EC4899',
+  'bg-rose-500': '#F43F5E',
+  'bg-gray-500': '#6B7280',
+  'bg-slate-500': '#64748B',
+  'bg-zinc-500': '#71717A',
+  'bg-neutral-500': '#737373',
+  'bg-stone-500': '#78716C',
+};
+
 export default function GerenciarFuncoes() {
   const { isAdmin } = useUserRole();
   const { toast } = useToast();
@@ -109,7 +135,10 @@ export default function GerenciarFuncoes() {
     setRoleName(role.role_name);
     setDisplayName(role.display_name);
     setDescription(role.description || "");
-    setColor(role.color);
+    
+    // Converter cor Tailwind para hexadecimal se necessário
+    const colorToSet = TAILWIND_TO_HEX[role.color] || role.color;
+    setColor(colorToSet);
 
     // Carregar permissões existentes
     const rolePerms: any = {};
@@ -154,6 +183,12 @@ export default function GerenciarFuncoes() {
     const b = parseInt(hexColor.slice(5, 7), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5 ? "#000000" : "#FFFFFF";
+  };
+
+  // Handler específico para o color picker
+  const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const hexColor = e.target.value;
+    setColor(hexColor);
   };
 
   // Função helper para renderizar Badge com cor
@@ -465,7 +500,7 @@ export default function GerenciarFuncoes() {
                   id="colorPicker"
                   type="color"
                   value={isHexColor(color) ? color : "#6B7280"}
-                  onChange={(e) => setColor(e.target.value)}
+                  onChange={handleColorPickerChange}
                   className="w-20 h-10 cursor-pointer"
                 />
                 <Input
