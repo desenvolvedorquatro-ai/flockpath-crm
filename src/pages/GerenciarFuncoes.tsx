@@ -194,14 +194,17 @@ export default function GerenciarFuncoes() {
   // Função helper para renderizar Badge com cor
   const renderBadgeWithColor = (displayName: string, colorValue: string) => {
     const isHex = isHexColor(colorValue);
+    const hexFromTailwind = TAILWIND_TO_HEX[colorValue];
     
-    if (isHex) {
+    // Se for hexadecimal ou tiver conversão Tailwind disponível
+    if (isHex || hexFromTailwind) {
+      const bgColor = isHex ? colorValue : hexFromTailwind;
       return (
         <Badge 
           className="border-0"
           style={{ 
-            backgroundColor: colorValue,
-            color: getContrastColor(colorValue)
+            backgroundColor: bgColor,
+            color: getContrastColor(bgColor)
           }}
         >
           {displayName}
@@ -209,7 +212,14 @@ export default function GerenciarFuncoes() {
       );
     }
     
-    return <Badge className={colorValue}>{displayName}</Badge>;
+    // Fallback para classes Tailwind não mapeadas ou strings inválidas
+    return (
+      <Badge 
+        className="border-0 bg-muted text-muted-foreground"
+      >
+        {displayName}
+      </Badge>
+    );
   };
 
   const handleSave = async () => {
