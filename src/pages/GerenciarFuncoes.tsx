@@ -51,28 +51,138 @@ const MODULE_LABELS: Record<ModuleName, string> = {
 
 // Mapeamento de cores Tailwind para hexadecimal
 const TAILWIND_TO_HEX: Record<string, string> = {
+  // Red
+  'bg-red-300': '#FCA5A5',
+  'bg-red-400': '#F87171',
   'bg-red-500': '#EF4444',
+  'bg-red-600': '#DC2626',
+  'bg-red-700': '#B91C1C',
+  // Orange
+  'bg-orange-300': '#FDBA74',
+  'bg-orange-400': '#FB923C',
   'bg-orange-500': '#F97316',
+  'bg-orange-600': '#EA580C',
+  'bg-orange-700': '#C2410C',
+  // Amber
+  'bg-amber-300': '#FCD34D',
+  'bg-amber-400': '#FBBF24',
   'bg-amber-500': '#F59E0B',
+  'bg-amber-600': '#D97706',
+  'bg-amber-700': '#B45309',
+  // Yellow
+  'bg-yellow-300': '#FDE047',
+  'bg-yellow-400': '#FACC15',
   'bg-yellow-500': '#EAB308',
+  'bg-yellow-600': '#CA8A04',
+  'bg-yellow-700': '#A16207',
+  // Lime
+  'bg-lime-300': '#BEF264',
+  'bg-lime-400': '#A3E635',
   'bg-lime-500': '#84CC16',
+  'bg-lime-600': '#65A30D',
+  'bg-lime-700': '#4D7C0F',
+  // Green
+  'bg-green-300': '#86EFAC',
+  'bg-green-400': '#4ADE80',
   'bg-green-500': '#22C55E',
+  'bg-green-600': '#16A34A',
+  'bg-green-700': '#15803D',
+  // Emerald
+  'bg-emerald-300': '#6EE7B7',
+  'bg-emerald-400': '#34D399',
   'bg-emerald-500': '#10B981',
+  'bg-emerald-600': '#059669',
+  'bg-emerald-700': '#047857',
+  // Teal
+  'bg-teal-300': '#5EEAD4',
+  'bg-teal-400': '#2DD4BF',
   'bg-teal-500': '#14B8A6',
+  'bg-teal-600': '#0D9488',
+  'bg-teal-700': '#0F766E',
+  // Cyan
+  'bg-cyan-300': '#67E8F9',
+  'bg-cyan-400': '#22D3EE',
   'bg-cyan-500': '#06B6D4',
+  'bg-cyan-600': '#0891B2',
+  'bg-cyan-700': '#0E7490',
+  // Sky
+  'bg-sky-300': '#7DD3FC',
+  'bg-sky-400': '#38BDF8',
   'bg-sky-500': '#0EA5E9',
+  'bg-sky-600': '#0284C7',
+  'bg-sky-700': '#0369A1',
+  // Blue
+  'bg-blue-300': '#93C5FD',
+  'bg-blue-400': '#60A5FA',
   'bg-blue-500': '#3B82F6',
+  'bg-blue-600': '#2563EB',
+  'bg-blue-700': '#1D4ED8',
+  // Indigo
+  'bg-indigo-300': '#A5B4FC',
+  'bg-indigo-400': '#818CF8',
   'bg-indigo-500': '#6366F1',
+  'bg-indigo-600': '#4F46E5',
+  'bg-indigo-700': '#4338CA',
+  // Violet
+  'bg-violet-300': '#C4B5FD',
+  'bg-violet-400': '#A78BFA',
   'bg-violet-500': '#8B5CF6',
+  'bg-violet-600': '#7C3AED',
+  'bg-violet-700': '#6D28D9',
+  // Purple
+  'bg-purple-300': '#D8B4FE',
+  'bg-purple-400': '#C084FC',
   'bg-purple-500': '#A855F7',
+  'bg-purple-600': '#9333EA',
+  'bg-purple-700': '#7E22CE',
+  // Fuchsia
+  'bg-fuchsia-300': '#F0ABFC',
+  'bg-fuchsia-400': '#E879F9',
   'bg-fuchsia-500': '#D946EF',
+  'bg-fuchsia-600': '#C026D3',
+  'bg-fuchsia-700': '#A21CAF',
+  // Pink
+  'bg-pink-300': '#F9A8D4',
+  'bg-pink-400': '#F472B6',
   'bg-pink-500': '#EC4899',
+  'bg-pink-600': '#DB2777',
+  'bg-pink-700': '#BE185D',
+  // Rose
+  'bg-rose-300': '#FDA4AF',
+  'bg-rose-400': '#FB7185',
   'bg-rose-500': '#F43F5E',
+  'bg-rose-600': '#E11D48',
+  'bg-rose-700': '#BE123C',
+  // Gray
+  'bg-gray-300': '#D1D5DB',
+  'bg-gray-400': '#9CA3AF',
   'bg-gray-500': '#6B7280',
+  'bg-gray-600': '#4B5563',
+  'bg-gray-700': '#374151',
+  // Slate
+  'bg-slate-300': '#CBD5E1',
+  'bg-slate-400': '#94A3B8',
   'bg-slate-500': '#64748B',
+  'bg-slate-600': '#475569',
+  'bg-slate-700': '#334155',
+  // Zinc
+  'bg-zinc-300': '#D4D4D8',
+  'bg-zinc-400': '#A1A1AA',
   'bg-zinc-500': '#71717A',
+  'bg-zinc-600': '#52525B',
+  'bg-zinc-700': '#3F3F46',
+  // Neutral
+  'bg-neutral-300': '#D4D4D4',
+  'bg-neutral-400': '#A3A3A3',
   'bg-neutral-500': '#737373',
+  'bg-neutral-600': '#525252',
+  'bg-neutral-700': '#404040',
+  // Stone
+  'bg-stone-300': '#D6D3D1',
+  'bg-stone-400': '#A8A29E',
   'bg-stone-500': '#78716C',
+  'bg-stone-600': '#57534E',
+  'bg-stone-700': '#44403C',
 };
 
 export default function GerenciarFuncoes() {
@@ -191,6 +301,25 @@ export default function GerenciarFuncoes() {
     setColor(hexColor);
   };
 
+  // Função para validar e normalizar cor
+  const validateAndNormalizeColor = (colorValue: string): string => {
+    const trimmedColor = colorValue.trim();
+    
+    // Se for hexadecimal válido, retornar como está
+    if (isHexColor(trimmedColor)) {
+      return trimmedColor;
+    }
+    
+    // Se for classe Tailwind válida, retornar como está
+    if (TAILWIND_TO_HEX[trimmedColor]) {
+      return trimmedColor;
+    }
+    
+    // Fallback: retornar cor padrão
+    console.warn(`Cor inválida "${colorValue}", usando cor padrão #6B7280`);
+    return '#6B7280';
+  };
+
   // Função helper para renderizar Badge com cor
   const renderBadgeWithColor = (displayName: string, colorValue: string) => {
     const isHex = isHexColor(colorValue);
@@ -211,6 +340,9 @@ export default function GerenciarFuncoes() {
         </Badge>
       );
     }
+    
+    // Log para debug de cores inválidas
+    console.warn(`Cor inválida para "${displayName}": "${colorValue}"`);
     
     // Fallback para classes Tailwind não mapeadas ou strings inválidas
     return (
@@ -240,7 +372,7 @@ export default function GerenciarFuncoes() {
           .update({
             display_name: displayName,
             description: description,
-            color: color,
+            color: validateAndNormalizeColor(color),
           })
           .eq("id", currentRole.id);
 
@@ -277,7 +409,7 @@ export default function GerenciarFuncoes() {
             role_name: roleName,
             display_name: displayName,
             description: description,
-            color: color,
+            color: validateAndNormalizeColor(color),
           });
 
         if (roleError) throw roleError;
