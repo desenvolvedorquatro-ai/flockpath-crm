@@ -185,7 +185,7 @@ export default function Usuarios() {
 
   const getRoleColor = (roleName: string) => {
     const role = availableRoles.find(r => r.role_name === roleName);
-    return role?.color || "bg-gray-500";
+    return role?.color || "#6B7280";
   };
 
   const fetchProfiles = async () => {
@@ -640,7 +640,8 @@ export default function Usuarios() {
                           profile.user_roles.map((ur, idx) => (
                             <Badge
                               key={idx}
-                              className={`${getRoleColor(ur.role)} text-white`}
+                              style={{ backgroundColor: getRoleColor(ur.role) }}
+                              className="text-white border-0"
                             >
                               {getRoleLabel(ur.role)}
                             </Badge>
@@ -745,7 +746,11 @@ export default function Usuarios() {
                   <div className="flex flex-wrap gap-2">
                     {profile.user_roles && profile.user_roles.length > 0 ? (
                       profile.user_roles.map((ur, idx) => (
-                        <Badge key={idx} className={`${getRoleColor(ur.role)} text-white`}>
+                        <Badge 
+                          key={idx} 
+                          style={{ backgroundColor: getRoleColor(ur.role) }}
+                          className="text-white border-0"
+                        >
                           {getRoleLabel(ur.role)}
                         </Badge>
                       ))
