@@ -64,7 +64,7 @@ export default function GerenciarFuncoes() {
   const [roleName, setRoleName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [description, setDescription] = useState("");
-  const [color, setColor] = useState("bg-gray-500");
+  const [color, setColor] = useState("#6B7280");
   const [rolePermissions, setRolePermissions] = useState<Record<ModuleName, {
     can_view: boolean;
     can_create: boolean;
