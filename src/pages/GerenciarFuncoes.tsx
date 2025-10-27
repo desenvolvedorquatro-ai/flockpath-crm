@@ -291,8 +291,8 @@ export default function GerenciarFuncoes() {
         });
       }
 
+      await fetchRoles();
       setDialogOpen(false);
-      fetchRoles();
     } catch (error: any) {
       toast({
         title: "Erro",
