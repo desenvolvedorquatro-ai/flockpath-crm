@@ -130,7 +130,7 @@ export default function GerenciarFuncoes() {
     setRoleName("");
     setDisplayName("");
     setDescription("");
-    setColor("bg-gray-500");
+    setColor("#6B7280");
     const emptyPerms: any = {};
     MODULES.forEach((module) => {
       emptyPerms[module] = {
@@ -141,6 +141,40 @@ export default function GerenciarFuncoes() {
       };
     });
     setRolePermissions(emptyPerms);
+  };
+
+  // Função para validar se é uma cor hexadecimal
+  const isHexColor = (color: string): boolean => /^#([0-9A-F]{3}){1,2}$/i.test(color);
+
+  // Função para calcular contraste e retornar cor de texto adequada
+  const getContrastColor = (hexColor: string): string => {
+    if (!isHexColor(hexColor)) return "#000000";
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
+  };
+
+  // Função helper para renderizar Badge com cor
+  const renderBadgeWithColor = (displayName: string, colorValue: string) => {
+    const isHex = isHexColor(colorValue);
+    
+    if (isHex) {
+      return (
+        <Badge 
+          style={{ 
+            backgroundColor: colorValue,
+            color: getContrastColor(colorValue),
+            borderColor: colorValue
+          }}
+        >
+          {displayName}
+        </Badge>
+      );
+    }
+    
+    return <Badge className={colorValue}>{displayName}</Badge>;
   };
 
   const handleSave = async () => {
@@ -314,7 +348,7 @@ export default function GerenciarFuncoes() {
                 {roles.map((role) => (
                   <TableRow key={role.id}>
                     <TableCell>
-                      <Badge className={role.color}>{role.display_name}</Badge>
+                      {renderBadgeWithColor(role.display_name, role.color)}
                     </TableCell>
                     <TableCell className="font-mono text-sm">{role.role_name}</TableCell>
                     <TableCell className="max-w-xs truncate">{role.description}</TableCell>
@@ -351,7 +385,7 @@ export default function GerenciarFuncoes() {
             <Card key={role.id}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex items-center gap-3">
-                  <Badge className={role.color}>{role.display_name}</Badge>
+                  {renderBadgeWithColor(role.display_name, role.color)}
                   <div>
                     <CardTitle className="text-sm font-medium">{role.role_name}</CardTitle>
                     <CardDescription className="text-xs">{role.description}</CardDescription>
@@ -426,12 +460,34 @@ export default function GerenciarFuncoes() {
 
             <div className="space-y-2">
               <Label htmlFor="color">Cor</Label>
-              <Input
-                id="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                placeholder="Ex: bg-purple-500"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="colorPicker"
+                  type="color"
+                  value={isHexColor(color) ? color : "#6B7280"}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-20 h-10 cursor-pointer"
+                />
+                <Input
+                  id="colorText"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  placeholder="Ex: #8B5CF6 ou bg-purple-500"
+                  className="flex-1"
+                />
+                <div 
+                  className="w-10 h-10 rounded border border-input flex items-center justify-center"
+                  style={{ 
+                    backgroundColor: isHexColor(color) ? color : "transparent",
+                    color: isHexColor(color) ? getContrastColor(color) : "inherit"
+                  }}
+                >
+                  {isHexColor(color) && <span className="text-xs font-bold">A</span>}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Use código hexadecimal (#8B5CF6) ou classe Tailwind (bg-purple-500)
+              </p>
             </div>
 
             <div className="space-y-4">

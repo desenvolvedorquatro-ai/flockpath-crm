@@ -821,6 +821,7 @@ export type Database = {
           id: string
           invited_by: string | null
           notes: string | null
+          observacao: string | null
           participacao_seminario: string | null
           phone: string | null
           primeira_visita: string | null
@@ -852,6 +853,7 @@ export type Database = {
           id?: string
           invited_by?: string | null
           notes?: string | null
+          observacao?: string | null
           participacao_seminario?: string | null
           phone?: string | null
           primeira_visita?: string | null
@@ -883,6 +885,7 @@ export type Database = {
           id?: string
           invited_by?: string | null
           notes?: string | null
+          observacao?: string | null
           participacao_seminario?: string | null
           phone?: string | null
           primeira_visita?: string | null
@@ -960,24 +963,15 @@ export type Database = {
           visitor_id: string
         }[]
       }
-      get_user_church: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_user_church: { Args: { _user_id: string }; Returns: string }
       get_user_church_ids: {
         Args: { _user_id: string }
         Returns: {
           church_id: string
         }[]
       }
-      get_user_last_sign_in: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      has_role: {
-        Args: { _role: string; _user_id: string }
-        Returns: boolean
-      }
+      get_user_last_sign_in: { Args: { user_id: string }; Returns: string }
+      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_user_assigned_to_church: {
         Args: { _user_id: string }
         Returns: boolean

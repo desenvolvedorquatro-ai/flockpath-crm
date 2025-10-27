@@ -78,6 +78,7 @@ interface Visitor {
   sexo: string | null;
   profissao: string | null;
   responsavel_assistencia: string | null;
+  observacao: string | null;
   participacao_seminario: string | null;
   candidato_batismo: boolean | null;
   data_batismo: string | null;
@@ -189,6 +190,7 @@ export default function Visitantes() {
     sexo: "",
     profissao: "",
     responsavel_assistencia: "",
+    observacao: "",
     participacao_seminario: "",
     candidato_batismo: false,
     resgate: false,
@@ -205,6 +207,7 @@ export default function Visitantes() {
     sexo: "",
     profissao: "",
     responsavel_assistencia: "",
+    observacao: "",
     participacao_seminario: "",
     candidato_batismo: false,
     resgate: false,
@@ -629,6 +632,7 @@ export default function Visitantes() {
       sexo: visitor.sexo || "",
       profissao: visitor.profissao || "",
       responsavel_assistencia: visitor.responsavel_assistencia || "",
+      observacao: visitor.observacao || "",
       participacao_seminario: visitor.participacao_seminario || "",
       candidato_batismo: visitor.candidato_batismo || false,
     });
@@ -669,6 +673,7 @@ export default function Visitantes() {
         sexo: (editFormData.sexo as any) || null,
         profissao: editFormData.profissao.trim() || null,
         responsavel_assistencia: editFormData.responsavel_assistencia.trim() || null,
+        observacao: editFormData.observacao.trim() || null,
         participacao_seminario: editFormData.participacao_seminario.trim() || null,
         candidato_batismo: editFormData.candidato_batismo,
         data_batismo: editDataBatismo ? format(editDataBatismo, "yyyy-MM-dd") : null,
@@ -831,6 +836,7 @@ export default function Visitantes() {
       sexo: (formData.sexo as any) || null,
       profissao: formData.profissao.trim() || null,
       responsavel_assistencia: formData.responsavel_assistencia.trim() || null,
+      observacao: formData.observacao.trim() || null,
       participacao_seminario: formData.participacao_seminario.trim() || null,
       candidato_batismo: formData.candidato_batismo,
       data_batismo: dataBatismo ? format(dataBatismo, "yyyy-MM-dd") : null,
@@ -862,6 +868,7 @@ export default function Visitantes() {
         sexo: "",
         profissao: "",
         responsavel_assistencia: "",
+        observacao: "",
         participacao_seminario: "",
         candidato_batismo: false,
         resgate: false,
@@ -1212,6 +1219,18 @@ export default function Visitantes() {
                     setFormData({ ...formData, responsavel_assistencia: e.target.value })
                   }
                   placeholder="Nome do responsável"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="observacao">Observação</Label>
+                <Textarea
+                  id="observacao"
+                  value={formData.observacao}
+                  onChange={(e) =>
+                    setFormData({ ...formData, observacao: e.target.value })
+                  }
+                  placeholder="Observações gerais sobre o visitante..."
+                  className="min-h-[100px]"
                 />
               </div>
               <div className="space-y-2">
@@ -1947,6 +1966,20 @@ export default function Visitantes() {
                   setEditFormData({ ...editFormData, responsavel_assistencia: e.target.value })
                 }
                 placeholder="Nome do responsável"
+              />
+            </div>
+
+            {/* Observação */}
+            <div className="space-y-2">
+              <Label htmlFor="edit_observacao">Observação</Label>
+              <Textarea
+                id="edit_observacao"
+                value={editFormData.observacao}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, observacao: e.target.value })
+                }
+                placeholder="Observações gerais sobre o visitante..."
+                className="min-h-[100px]"
               />
             </div>
 
