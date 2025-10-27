@@ -246,9 +246,8 @@ export default function GerenciarFuncoes() {
     setDisplayName(role.display_name);
     setDescription(role.description || "");
     
-    // Converter cor Tailwind para hexadecimal se necessário
-    const colorToSet = TAILWIND_TO_HEX[role.color] || role.color;
-    setColor(colorToSet);
+    // Sempre normalizar para hexadecimal
+    setColor(validateAndNormalizeColor(role.color));
 
     // Carregar permissões existentes
     const rolePerms: any = {};
@@ -301,7 +300,7 @@ export default function GerenciarFuncoes() {
     setColor(hexColor);
   };
 
-  // Função para validar e normalizar cor
+  // Função para validar e normalizar cor (sempre retorna hexadecimal)
   const validateAndNormalizeColor = (colorValue: string): string => {
     const trimmedColor = colorValue.trim();
     
@@ -310,9 +309,9 @@ export default function GerenciarFuncoes() {
       return trimmedColor;
     }
     
-    // Se for classe Tailwind válida, retornar como está
+    // Se for classe Tailwind válida, converter para hex
     if (TAILWIND_TO_HEX[trimmedColor]) {
-      return trimmedColor;
+      return TAILWIND_TO_HEX[trimmedColor];
     }
     
     // Fallback: retornar cor padrão
@@ -322,32 +321,16 @@ export default function GerenciarFuncoes() {
 
   // Função helper para renderizar Badge com cor
   const renderBadgeWithColor = (displayName: string, colorValue: string) => {
-    const isHex = isHexColor(colorValue);
-    const hexFromTailwind = TAILWIND_TO_HEX[colorValue];
+    // Normalizar cor para hex (caso ainda tenha Tailwind no banco)
+    const normalizedColor = validateAndNormalizeColor(colorValue);
     
-    // Se for hexadecimal ou tiver conversão Tailwind disponível
-    if (isHex || hexFromTailwind) {
-      const bgColor = isHex ? colorValue : hexFromTailwind;
-      return (
-        <Badge 
-          className="border-0"
-          style={{ 
-            backgroundColor: bgColor,
-            color: getContrastColor(bgColor)
-          }}
-        >
-          {displayName}
-        </Badge>
-      );
-    }
-    
-    // Log para debug de cores inválidas
-    console.warn(`Cor inválida para "${displayName}": "${colorValue}"`);
-    
-    // Fallback para classes Tailwind não mapeadas ou strings inválidas
     return (
       <Badge 
-        className="border-0 bg-muted text-muted-foreground"
+        className="border-0"
+        style={{ 
+          backgroundColor: normalizedColor,
+          color: getContrastColor(normalizedColor)
+        }}
       >
         {displayName}
       </Badge>
