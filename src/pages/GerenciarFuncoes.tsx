@@ -163,10 +163,10 @@ export default function GerenciarFuncoes() {
     if (isHex) {
       return (
         <Badge 
+          className="border-0"
           style={{ 
             backgroundColor: colorValue,
-            color: getContrastColor(colorValue),
-            borderColor: colorValue
+            color: getContrastColor(colorValue)
           }}
         >
           {displayName}
