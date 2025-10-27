@@ -1,0 +1,23 @@
+-- Converter todas as cores Tailwind para hexadecimal
+UPDATE role_definitions SET color = '#EF4444' WHERE color = 'bg-red-500';
+UPDATE role_definitions SET color = '#F97316' WHERE color = 'bg-orange-500';
+UPDATE role_definitions SET color = '#F59E0B' WHERE color = 'bg-amber-500';
+UPDATE role_definitions SET color = '#EAB308' WHERE color = 'bg-yellow-500';
+UPDATE role_definitions SET color = '#84CC16' WHERE color = 'bg-lime-500';
+UPDATE role_definitions SET color = '#22C55E' WHERE color = 'bg-green-500';
+UPDATE role_definitions SET color = '#10B981' WHERE color = 'bg-emerald-500';
+UPDATE role_definitions SET color = '#14B8A6' WHERE color = 'bg-teal-500';
+UPDATE role_definitions SET color = '#06B6D4' WHERE color = 'bg-cyan-500';
+UPDATE role_definitions SET color = '#0EA5E9' WHERE color = 'bg-sky-500';
+UPDATE role_definitions SET color = '#3B82F6' WHERE color = 'bg-blue-500';
+UPDATE role_definitions SET color = '#6366F1' WHERE color = 'bg-indigo-500';
+UPDATE role_definitions SET color = '#8B5CF6' WHERE color = 'bg-violet-500';
+UPDATE role_definitions SET color = '#A855F7' WHERE color = 'bg-purple-500';
+UPDATE role_definitions SET color = '#D946EF' WHERE color = 'bg-fuchsia-500';
+UPDATE role_definitions SET color = '#EC4899' WHERE color = 'bg-pink-500';
+UPDATE role_definitions SET color = '#F43F5E' WHERE color = 'bg-rose-500';
+UPDATE role_definitions SET color = '#6B7280' WHERE color = 'bg-gray-500';
+UPDATE role_definitions SET color = '#64748B' WHERE color = 'bg-slate-500';
+UPDATE role_definitions SET color = '#71717A' WHERE color = 'bg-zinc-500';
+UPDATE role_definitions SET color = '#737373' WHERE color = 'bg-neutral-500';
+UPDATE role_definitions SET color = '#78716C' WHERE color = 'bg-stone-500';
