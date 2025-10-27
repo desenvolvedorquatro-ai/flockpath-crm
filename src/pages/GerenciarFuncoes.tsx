@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Edit, Trash2 } from "lucide-react";
 import { ModuleName } from "@/hooks/usePermissions";
 import { ModernHeader } from "@/components/ModernHeader";
+import { cn } from "@/lib/utils";
 
 interface RoleDefinition {
   id: string;
@@ -316,8 +317,13 @@ export default function GerenciarFuncoes() {
   // Handler específico para o color picker
   const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const hexColor = e.target.value;
-    console.log('[DEBUG] Color picker mudou para:', hexColor);
     setColor(hexColor);
+  };
+
+  // Handler para input de texto de cor com validação
+  const handleColorTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputColor = e.target.value.trim();
+    setColor(inputColor);
   };
 
   // Função helper para renderizar Badge com cor
@@ -339,8 +345,6 @@ export default function GerenciarFuncoes() {
   };
 
   const handleSave = async () => {
-    console.log('[DEBUG] handleSave chamado. Cor atual no state:', color);
-    
     if (!displayName.trim() || !roleName.trim()) {
       toast({
         title: "Erro",
@@ -350,13 +354,20 @@ export default function GerenciarFuncoes() {
       return;
     }
 
+    // Validar cor antes de continuar
     const normalizedColor = validateAndNormalizeColor(color);
-    console.log('[DEBUG] Cor normalizada para salvar:', normalizedColor);
+    if (!normalizedColor || !isHexColor(normalizedColor)) {
+      toast({
+        title: "Erro de Validação",
+        description: "Cor inválida. Use formato hexadecimal (#8B5CF6)",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       if (isEditing && currentRole) {
         // Atualizar função existente
-        console.log('[DEBUG] Atualizando função:', currentRole.role_name, 'com cor:', normalizedColor);
         const { error: roleError } = await supabase
           .from("role_definitions")
           .update({
@@ -393,7 +404,6 @@ export default function GerenciarFuncoes() {
         });
       } else {
         // Criar nova função
-        console.log('[DEBUG] Criando nova função:', roleName, 'com cor:', normalizedColor);
         const { error: roleError } = await supabase
           .from("role_definitions")
           .insert({
@@ -639,9 +649,12 @@ export default function GerenciarFuncoes() {
                 <Input
                   id="colorText"
                   value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  placeholder="Ex: #8B5CF6 ou bg-purple-500"
-                  className="flex-1"
+                  onChange={handleColorTextChange}
+                  placeholder="Ex: #8B5CF6"
+                  className={cn(
+                    "flex-1",
+                    !isHexColor(color) && color !== "" && "border-destructive focus-visible:ring-destructive"
+                  )}
                 />
                 <div 
                   className="w-10 h-10 rounded border border-input flex items-center justify-center"
@@ -654,7 +667,7 @@ export default function GerenciarFuncoes() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Use código hexadecimal (#8B5CF6) ou classe Tailwind (bg-purple-500)
+                Use código hexadecimal (ex: #8B5CF6)
               </p>
             </div>
 
