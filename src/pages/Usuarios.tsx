@@ -229,6 +229,7 @@ export default function Usuarios() {
 
   const fetchProfiles = async () => {
     try {
+      console.log("🔍 Iniciando fetchProfiles...");
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select(`
@@ -240,7 +241,13 @@ export default function Usuarios() {
         `)
         .order("full_name");
 
-      if (profilesError) throw profilesError;
+      console.log("📊 Profiles retornados:", profilesData?.length, "perfis");
+      console.log("📋 Dados completos:", profilesData);
+      
+      if (profilesError) {
+        console.error("❌ Erro ao buscar profiles:", profilesError);
+        throw profilesError;
+      }
 
       const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
@@ -267,8 +274,11 @@ export default function Usuarios() {
         };
       }));
 
+      console.log("✅ Profiles com roles processados:", profilesWithRoles?.length, "perfis");
+      console.log("👥 Lista final:", profilesWithRoles);
       setProfiles(profilesWithRoles);
     } catch (error: any) {
+      console.error("❌ Erro total ao carregar usuários:", error);
       toast({
         title: "Erro ao carregar usuários",
         description: error.message,
