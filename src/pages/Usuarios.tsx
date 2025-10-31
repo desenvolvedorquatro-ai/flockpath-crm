@@ -229,6 +229,9 @@ export default function Usuarios() {
 
   const fetchProfiles = async () => {
     try {
+      console.log("🔍 Iniciando busca de usuários...");
+      
+      // Query simples de profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select(`
@@ -239,22 +242,50 @@ export default function Usuarios() {
         `)
         .order("full_name");
 
-      if (profilesError) throw profilesError;
+      console.log("📊 Profiles encontrados:", profilesData?.length);
+      console.log("📋 Dados brutos:", profilesData);
 
+      if (profilesError) {
+        console.error("❌ Erro ao buscar profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Buscar roles
       const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role");
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error("❌ Erro ao buscar roles:", rolesError);
+        throw rolesError;
+      }
 
-      // Buscar grupos de usuários separadamente
-      const { data: userGroupsData } = await supabase
+      console.log("👥 Roles encontrados:", rolesData?.length);
+
+      // Buscar grupos (com tratamento de erro não-crítico)
+      const { data: userGroupsData, error: groupsError } = await supabase
         .from("user_group_access")
         .select("user_id, group_id, assistance_groups(name)");
 
-      // Buscar último acesso para cada usuário
+      if (groupsError) {
+        console.warn("⚠️ Erro ao buscar grupos (não crítico):", groupsError);
+      } else {
+        console.log("🔗 Grupos encontrados:", userGroupsData?.length);
+      }
+
+      // Processar profiles com tratamento individual de erros
       const profilesWithRoles = await Promise.all((profilesData || []).map(async (profile) => {
-        const { data: lastSignIn } = await supabase.rpc('get_user_last_sign_in', { user_id: profile.id });
+        let lastSignIn = null;
+        
+        // Tentar buscar último acesso (não crítico)
+        try {
+          const { data, error } = await supabase.rpc('get_user_last_sign_in', { user_id: profile.id });
+          if (!error && data) {
+            lastSignIn = data;
+          }
+        } catch (err) {
+          console.warn(`⚠️ Não foi possível buscar last sign in para ${profile.full_name}:`, err);
+        }
         
         // Buscar grupo do usuário
         const userGroupData = userGroupsData?.find(ug => ug.user_id === profile.id);
@@ -269,8 +300,12 @@ export default function Usuarios() {
         };
       }));
 
+      console.log("✅ Profiles processados:", profilesWithRoles.length);
+      console.log("📄 Profiles finais:", profilesWithRoles);
+      
       setProfiles(profilesWithRoles);
     } catch (error: any) {
+      console.error("❌ Erro completo ao carregar usuários:", error);
       toast({
         title: "Erro ao carregar usuários",
         description: error.message,
