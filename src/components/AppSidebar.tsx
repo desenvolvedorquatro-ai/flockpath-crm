@@ -75,12 +75,12 @@ const systemMenuItems: MenuItem[] = [{
   icon: Shield,
   adminOnly: true
 }, {
-  title: "Config. Status",
+  title: "Config. do Sistema",
   url: "/configuracoes-status",
   icon: Settings,
   adminOnly: true
 }, {
-  title: "Configurações",
+  title: "Config. Usuário",
   url: "/configuracoes",
   icon: Settings
 }];
