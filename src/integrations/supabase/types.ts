@@ -941,6 +941,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_visitors: {
+        Args: { _action: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_church: {
         Args: { _church_id: string; _user_id: string }
         Returns: boolean

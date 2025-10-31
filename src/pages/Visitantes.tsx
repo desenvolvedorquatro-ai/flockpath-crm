@@ -152,6 +152,7 @@ export default function Visitantes() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
   const [assistanceGroups, setAssistanceGroups] = useState<AssistanceGroup[]>([]);
+  const [userGroupId, setUserGroupId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState<string>("all");
@@ -218,6 +219,23 @@ export default function Visitantes() {
   const [editPrimeiraVisita, setEditPrimeiraVisita] = useState<Date | undefined>();
   const [dataBatismo, setDataBatismo] = useState<Date | undefined>();
   const [editDataBatismo, setEditDataBatismo] = useState<Date | undefined>();
+
+  // Buscar grupo do usuário
+  useEffect(() => {
+    if (!user || isAdmin || isPastor) return;
+
+    const fetchUserGroup = async () => {
+      const { data } = await supabase
+        .from('user_group_access')
+        .select('group_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setUserGroupId(data?.group_id || null);
+    };
+
+    fetchUserGroup();
+  }, [user, isAdmin, isPastor]);
 
   useEffect(() => {
     if (!user) return;
@@ -364,7 +382,8 @@ export default function Visitantes() {
             setChurches([churchData]);
           }
 
-          const { data, error } = await supabase
+          // Criar query de visitantes
+          let visitorsQuery = supabase
             .from("visitors")
             .select(`
               *,
@@ -372,8 +391,14 @@ export default function Visitantes() {
               assistance_groups!visitors_assistance_group_id_fkey(name),
               visitor_interactions(interaction_type, interaction_date)
             `)
-            .eq("church_id", profile.church_id)
-            .order("created_at", { ascending: false });
+            .eq("church_id", profile.church_id);
+
+          // Se o usuário pertence a um grupo, filtrar apenas visitantes desse grupo
+          if (userGroupId) {
+            visitorsQuery = visitorsQuery.eq("assistance_group_id", userGroupId);
+          }
+
+          const { data, error } = await visitorsQuery.order("created_at", { ascending: false });
 
           if (error) {
             toast({
@@ -396,19 +421,30 @@ export default function Visitantes() {
             setFilteredVisitors(processedData);
           }
 
-          const { data: groupsData } = await supabase
-            .from("assistance_groups")
-            .select("id, name")
-            .eq("church_id", profile.church_id)
-            .order("name");
+          // Se o usuário pertence a um grupo, carregar apenas esse grupo
+          if (userGroupId) {
+            const { data: groupData } = await supabase
+              .from("assistance_groups")
+              .select("id, name")
+              .eq("id", userGroupId)
+              .maybeSingle();
 
-          setAssistanceGroups(groupsData || []);
+            setAssistanceGroups(groupData ? [groupData] : []);
+          } else {
+            const { data: groupsData } = await supabase
+              .from("assistance_groups")
+              .select("id, name")
+              .eq("church_id", profile.church_id)
+              .order("name");
+
+            setAssistanceGroups(groupsData || []);
+          }
         }
       }
     };
 
     fetchChurchAndVisitors();
-  }, [user, isAdmin, isPastor]);
+  }, [user, isAdmin, isPastor, userGroupId]);
 
   // Filtrar áreas quando região é selecionada
   useEffect(() => {

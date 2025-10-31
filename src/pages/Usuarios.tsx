@@ -23,11 +23,18 @@ type Profile = Tables<"profiles"> & {
   areas?: { name: string } | null;
   user_roles?: { role: string }[];
   last_sign_in_at?: string | null;
+  user_group?: { group_id: string; assistance_groups?: { name: string } } | null;
 };
 
 type Church = Tables<"churches">;
 type Region = Tables<"regions">;
 type Area = Tables<"areas">;
+
+interface AssistanceGroup {
+  id: string;
+  name: string;
+  church_id: string;
+}
 
 interface RoleDefinition {
   id: string;
@@ -45,6 +52,8 @@ export default function Usuarios() {
   const [availableRoles, setAvailableRoles] = useState<RoleDefinition[]>([]);
   const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
   const [filteredChurches, setFilteredChurches] = useState<Church[]>([]);
+  const [availableGroups, setAvailableGroups] = useState<AssistanceGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,6 +108,36 @@ export default function Usuarios() {
       fetchRoles();
     }
   }, [roleLoading, isAdmin]);
+
+  // Carregar grupos quando igreja é selecionada no formulário de criação
+  useEffect(() => {
+    if (newUserData.church_id) {
+      fetchGroupsForChurch(newUserData.church_id);
+    } else {
+      setAvailableGroups([]);
+      setSelectedGroupId("");
+    }
+  }, [newUserData.church_id]);
+
+  const fetchGroupsForChurch = async (churchId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('assistance_groups')
+        .select('id, name, church_id')
+        .eq('church_id', churchId)
+        .order('name');
+      
+      if (error) throw error;
+      setAvailableGroups(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar grupos:", error);
+      toast({
+        title: "Erro ao carregar grupos",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchChurches = async () => {
     try {
@@ -192,7 +231,13 @@ export default function Usuarios() {
     try {
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("*, churches(name), regions(name), areas(name)")
+        .select(`
+          *, 
+          churches(name), 
+          regions(name), 
+          areas(name),
+          user_group:user_group_access(group_id, assistance_groups(name))
+        `)
         .order("full_name");
 
       if (profilesError) throw profilesError;
@@ -207,12 +252,18 @@ export default function Usuarios() {
       const profilesWithRoles = await Promise.all((profilesData || []).map(async (profile) => {
         const { data: lastSignIn } = await supabase.rpc('get_user_last_sign_in', { user_id: profile.id });
         
+        // Processar user_group que pode vir como array
+        const userGroupData = Array.isArray(profile.user_group) 
+          ? profile.user_group[0] 
+          : profile.user_group;
+        
         return {
           ...profile,
           user_roles: (rolesData || [])
             .filter((role) => role.user_id === profile.id)
             .map((role) => ({ role: role.role })),
           last_sign_in_at: lastSignIn,
+          user_group: userGroupData || null,
         };
       }));
 
@@ -332,11 +383,34 @@ export default function Usuarios() {
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Erro desconhecido ao criar usuário');
 
+      // Salvar grupo se selecionado
+      if (selectedGroupId && selectedGroupId !== 'none' && data.user_id) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { error: groupError } = await supabase
+          .from('user_group_access')
+          .insert({
+            user_id: data.user_id,
+            group_id: selectedGroupId,
+            created_by: session?.user?.id
+          });
+
+        if (groupError) {
+          console.error("Erro ao atribuir grupo:", groupError);
+          toast({
+            title: "Aviso",
+            description: "Usuário criado, mas houve erro ao atribuir o grupo",
+            variant: "destructive",
+          });
+        }
+      }
+
       toast({ title: "Usuário criado com sucesso!" });
       setIsCreateDialogOpen(false);
       setNewUserData({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cpf: "", city: "", state: "", church_id: "", region_id: "", area_id: "" });
       setMultiChurchAccess(false);
       setSelectedChurches([]);
+      setSelectedGroupId("");
+      setAvailableGroups([]);
       setNewUserFilteredAreas([]);
       setNewUserFilteredChurches([]);
       fetchProfiles();
@@ -376,6 +450,24 @@ export default function Usuarios() {
         setFilteredChurches(churches.filter(church => church.area_id === user.area_id));
       } else {
         setFilteredChurches([]);
+      }
+
+      // Carregar grupos da igreja do usuário
+      if (user.church_id) {
+        await fetchGroupsForChurch(user.church_id);
+      }
+
+      // Buscar grupo atual do usuário
+      const { data: userGroup } = await supabase
+        .from("user_group_access")
+        .select("group_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (userGroup?.group_id) {
+        setSelectedGroupId(userGroup.group_id);
+      } else {
+        setSelectedGroupId("");
       }
 
       // Buscar igrejas adicionais do usuário
@@ -445,6 +537,34 @@ export default function Usuarios() {
           .insert(churchesToInsert);
 
         if (churchesError) throw churchesError;
+      }
+
+      // Atualizar grupo do usuário
+      // Primeiro deletar grupo antigo
+      await supabase
+        .from("user_group_access")
+        .delete()
+        .eq("user_id", selectedUserId);
+
+      // Inserir novo grupo se selecionado
+      if (selectedGroupId && selectedGroupId !== 'none') {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { error: groupError } = await supabase
+          .from("user_group_access")
+          .insert({
+            user_id: selectedUserId,
+            group_id: selectedGroupId,
+            created_by: session?.user?.id
+          });
+
+        if (groupError) {
+          console.error("Erro ao atualizar grupo:", groupError);
+          toast({
+            title: "Aviso",
+            description: "Dados atualizados, mas houve erro ao atualizar o grupo",
+            variant: "destructive",
+          });
+        }
       }
 
       toast({ title: "Dados atualizados com sucesso!" });
@@ -1023,6 +1143,30 @@ export default function Usuarios() {
               </Select>
             </div>
 
+            <div>
+              <Label htmlFor="group_id">Grupo de Assistência</Label>
+              <Select
+                value={selectedGroupId}
+                onValueChange={setSelectedGroupId}
+                disabled={!newUserData.church_id}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um grupo (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum grupo</SelectItem>
+                  {availableGroups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                O usuário verá apenas visitantes deste grupo
+              </p>
+            </div>
+
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -1257,6 +1401,30 @@ export default function Usuarios() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit_group_id">Grupo de Assistência</Label>
+              <Select
+                value={selectedGroupId}
+                onValueChange={setSelectedGroupId}
+                disabled={!editUserData.church_id}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um grupo (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum grupo</SelectItem>
+                  {availableGroups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                O usuário verá apenas visitantes deste grupo
+              </p>
             </div>
 
             <div className="flex items-center space-x-2">

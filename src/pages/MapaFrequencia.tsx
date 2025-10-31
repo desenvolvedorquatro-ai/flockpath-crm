@@ -49,6 +49,7 @@ export default function MapaFrequencia() {
   const [filteredGroups, setFilteredGroups] = useState<AssistanceGroup[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userGroupId, setUserGroupId] = useState<string | null>(null);
 
   const [selectedChurch, setSelectedChurch] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("all");
@@ -58,6 +59,28 @@ export default function MapaFrequencia() {
     start: startOfMonth(selectedMonth),
     end: endOfMonth(selectedMonth),
   });
+
+  // Buscar grupo do usuário
+  useEffect(() => {
+    if (!user || isAdmin || isPastor) return;
+
+    const fetchUserGroup = async () => {
+      const { data } = await supabase
+        .from('user_group_access')
+        .select('group_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setUserGroupId(data?.group_id || null);
+      
+      // Se usuário tem grupo, pré-selecionar
+      if (data?.group_id) {
+        setSelectedGroup(data.group_id);
+      }
+    };
+
+    fetchUserGroup();
+  }, [user, isAdmin, isPastor]);
 
   useEffect(() => {
     if (user) {
@@ -118,7 +141,10 @@ export default function MapaFrequencia() {
         .select("id, full_name")
         .order("full_name");
 
-      if (selectedGroup && selectedGroup !== "all") {
+      // Se usuário tem grupo, filtrar apenas por esse grupo
+      if (userGroupId) {
+        query = query.eq("assistance_group_id", userGroupId);
+      } else if (selectedGroup && selectedGroup !== "all") {
         query = query.eq("assistance_group_id", selectedGroup);
       } else if (selectedChurch) {
         query = query.eq("church_id", selectedChurch);
@@ -150,7 +176,10 @@ export default function MapaFrequencia() {
         .gte("attendance_date", startDate)
         .lte("attendance_date", endDate);
 
-      if (selectedGroup && selectedGroup !== "all") {
+      // Se usuário tem grupo, filtrar apenas por esse grupo
+      if (userGroupId) {
+        query = query.eq("assistance_group_id", userGroupId);
+      } else if (selectedGroup && selectedGroup !== "all") {
         query = query.eq("assistance_group_id", selectedGroup);
       } else if (selectedChurch) {
         query = query.eq("church_id", selectedChurch);
