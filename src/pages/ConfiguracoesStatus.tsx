@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Plus, Edit, Trash2, Save, X, GripVertical } from "lucide-react";
+import { Settings, Plus, Edit, Trash2, Save, X, GripVertical, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,11 +33,23 @@ interface CategoryConfig {
   active: boolean;
 }
 
+interface SystemConfig {
+  id: string;
+  config_key: string;
+  config_value: string;
+  config_type: string;
+  description: string;
+  editable_by_admin: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function ConfiguracoesStatus() {
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [statuses, setStatuses] = useState<StatusConfig[]>([]);
   const [categories, setCategories] = useState<CategoryConfig[]>([]);
+  const [systemConfig, setSystemConfig] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Estados para novo status
@@ -53,11 +65,13 @@ export default function ConfiguracoesStatus() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editStatusData, setEditStatusData] = useState<Partial<StatusConfig>>({});
   const [editCategoryData, setEditCategoryData] = useState<Partial<CategoryConfig>>({});
+  const [editingConfig, setEditingConfig] = useState<SystemConfig | null>(null);
 
   useEffect(() => {
     if (!roleLoading && isAdmin) {
       fetchStatuses();
       fetchCategories();
+      fetchSystemConfig();
     }
   }, [roleLoading, isAdmin]);
 
@@ -97,6 +111,23 @@ export default function ConfiguracoesStatus() {
       setCategories(data || []);
     }
     setLoading(false);
+  };
+
+  const fetchSystemConfig = async () => {
+    const { data, error } = await supabase
+      .from("system_config")
+      .select("*")
+      .order("config_key");
+
+    if (error) {
+      toast({
+        title: "Erro ao carregar configurações",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setSystemConfig(data || []);
+    }
   };
 
   const handleCreateStatus = async () => {
@@ -271,6 +302,33 @@ export default function ConfiguracoesStatus() {
     }
   };
 
+  const handleSaveConfig = async (configId: string) => {
+    if (!editingConfig) return;
+
+    const { error } = await supabase
+      .from("system_config")
+      .update({
+        config_value: editingConfig.config_value,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", configId);
+
+    if (error) {
+      toast({
+        title: "Erro ao atualizar configuração",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Configuração atualizada",
+        description: "A mudança será aplicada no próximo login dos usuários",
+      });
+      setEditingConfig(null);
+      fetchSystemConfig();
+    }
+  };
+
   const moveItem = async (
     table: "visitor_status_config" | "visitor_category_config",
     id: string,
@@ -329,6 +387,7 @@ export default function ConfiguracoesStatus() {
         <TabsList>
           <TabsTrigger value="status">Status de Visitantes</TabsTrigger>
           <TabsTrigger value="categoria">Categorias de Visitantes</TabsTrigger>
+          <TabsTrigger value="system">Configurações do Sistema</TabsTrigger>
         </TabsList>
 
         <TabsContent value="status">
@@ -721,8 +780,91 @@ export default function ConfiguracoesStatus() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+          </TabsContent>
+
+          <TabsContent value="system">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configurações do Sistema</CardTitle>
+                <CardDescription>
+                  Configure parâmetros globais do sistema, como tempo de expiração de sessão
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Configuração</TableHead>
+                      <TableHead>Valor Atual</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {systemConfig.map((config) => (
+                      <TableRow key={config.id}>
+                        <TableCell className="font-medium">
+                          {config.config_key}
+                        </TableCell>
+                        <TableCell>
+                          {editingConfig?.id === config.id ? (
+                            <Input
+                              type={config.config_type === "number" ? "number" : "text"}
+                              value={editingConfig.config_value}
+                              onChange={(e) =>
+                                setEditingConfig({
+                                  ...editingConfig,
+                                  config_value: e.target.value,
+                                })
+                              }
+                              className="max-w-[200px]"
+                            />
+                          ) : (
+                            <Badge variant="outline">
+                              {config.config_value}
+                              {config.config_key.includes("minutes") && " min"}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {config.description}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {editingConfig?.id === config.id ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleSaveConfig(config.id)}
+                              >
+                                <Save className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingConfig(null)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingConfig(config)}
+                              disabled={!config.editable_by_admin}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
   );
 }

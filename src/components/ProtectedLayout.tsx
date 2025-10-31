@@ -7,11 +7,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Building2, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 
 export const ProtectedLayout = () => {
   const { user, signOut } = useAuth();
   const [userFullName, setUserFullName] = React.useState<string>("");
   const [userChurchInfo, setUserChurchInfo] = React.useState<string>("");
+  
+  // Controle de timeout de sessão
+  useSessionTimeout();
 
   React.useEffect(() => {
     if (!user) return;

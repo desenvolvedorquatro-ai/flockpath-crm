@@ -434,6 +434,39 @@ export type Database = {
           },
         ]
       }
+      system_config: {
+        Row: {
+          config_key: string
+          config_type: string
+          config_value: string
+          created_at: string | null
+          description: string | null
+          editable_by_admin: boolean | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          config_key: string
+          config_type: string
+          config_value: string
+          created_at?: string | null
+          description?: string | null
+          editable_by_admin?: boolean | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_type?: string
+          config_value?: string
+          created_at?: string | null
+          description?: string | null
+          editable_by_admin?: boolean | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string
