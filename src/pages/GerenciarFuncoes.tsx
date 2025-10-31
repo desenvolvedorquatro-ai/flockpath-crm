@@ -47,7 +47,7 @@ const MODULE_LABELS: Record<ModuleName, string> = {
   tarefas: "Tarefas",
   frequencia: "Mapa de Frequência",
   interacoes: "Interações",
-  config_status: "Configurações de Status",
+  config_status: "Config. do Sistema",
 };
 
 // Mapeamento de cores Tailwind para hexadecimal

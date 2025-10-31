@@ -379,8 +379,8 @@ export default function ConfiguracoesStatus() {
     <div className="space-y-6">
       <ModernHeader
         icon={Settings}
-        title="Configurações de Status e Categoria"
-        description="Gerencie os status e categorias de visitantes"
+        title="Config. do Sistema"
+        description="Gerencie status, categorias e configurações globais do sistema"
       />
 
       <Tabs defaultValue="status" className="w-full">

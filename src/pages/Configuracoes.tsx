@@ -132,8 +132,8 @@ export default function Configuracoes() {
   return (
     <div className="min-h-screen bg-background">
       <ModernHeader
-        title="Configurações"
-        description="Personalize o sistema de acordo com suas necessidades"
+        title="Config. Usuário"
+        description="Altere seus dados pessoais e preferências de usuário"
         icon={Settings}
         colorScheme="red-coral"
       />
