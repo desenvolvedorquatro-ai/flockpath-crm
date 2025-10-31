@@ -229,25 +229,17 @@ export default function Usuarios() {
 
   const fetchProfiles = async () => {
     try {
-      console.log("🔍 Iniciando fetchProfiles...");
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select(`
           *, 
           churches(name), 
           regions(name), 
-          areas(name),
-          user_group:user_group_access(group_id, assistance_groups(name))
+          areas(name)
         `)
         .order("full_name");
 
-      console.log("📊 Profiles retornados:", profilesData?.length, "perfis");
-      console.log("📋 Dados completos:", profilesData);
-      
-      if (profilesError) {
-        console.error("❌ Erro ao buscar profiles:", profilesError);
-        throw profilesError;
-      }
+      if (profilesError) throw profilesError;
 
       const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
@@ -255,14 +247,17 @@ export default function Usuarios() {
 
       if (rolesError) throw rolesError;
 
+      // Buscar grupos de usuários separadamente
+      const { data: userGroupsData } = await supabase
+        .from("user_group_access")
+        .select("user_id, group_id, assistance_groups(name)");
+
       // Buscar último acesso para cada usuário
       const profilesWithRoles = await Promise.all((profilesData || []).map(async (profile) => {
         const { data: lastSignIn } = await supabase.rpc('get_user_last_sign_in', { user_id: profile.id });
         
-        // Processar user_group que pode vir como array
-        const userGroupData = Array.isArray(profile.user_group) 
-          ? profile.user_group[0] 
-          : profile.user_group;
+        // Buscar grupo do usuário
+        const userGroupData = userGroupsData?.find(ug => ug.user_id === profile.id);
         
         return {
           ...profile,
@@ -274,11 +269,8 @@ export default function Usuarios() {
         };
       }));
 
-      console.log("✅ Profiles com roles processados:", profilesWithRoles?.length, "perfis");
-      console.log("👥 Lista final:", profilesWithRoles);
       setProfiles(profilesWithRoles);
     } catch (error: any) {
-      console.error("❌ Erro total ao carregar usuários:", error);
       toast({
         title: "Erro ao carregar usuários",
         description: error.message,
