@@ -241,210 +241,69 @@ export default function Visitantes() {
     if (!user) return;
 
     const fetchChurchAndVisitors = async () => {
-      if (isAdmin) {
-        // Admin vê todos os visitantes e grupos com última interação e grupo
-        const { data, error } = await supabase
-          .from("visitors")
-          .select(`
-            *,
-            churches(name),
-            assistance_groups!visitors_assistance_group_id_fkey(name),
-            visitor_interactions(interaction_type, interaction_date)
-          `)
-          .order("created_at", { ascending: false });
+      // TODOS os usuários autenticados veem TODOS os visitantes
+      const { data, error } = await supabase
+        .from("visitors")
+        .select(`
+          *,
+          churches(name),
+          assistance_groups!visitors_assistance_group_id_fkey(name),
+          visitor_interactions(interaction_type, interaction_date)
+        `)
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          toast({
-            title: "Erro ao carregar visitantes",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          // Processar os dados para incluir último tipo de interação, nome do grupo e igreja
-          const processedData = (data || []).map((v: any) => {
-            const lastInteraction = v.visitor_interactions?.[0] || null;
-            return {
-              ...v,
-              church_name: v.churches?.name || null,
-              assistance_group_name: v.assistance_groups?.name || null,
-              last_interaction_type: lastInteraction?.interaction_type || null,
-              last_interaction_date: lastInteraction?.interaction_date || null,
-            };
-          });
-          setVisitors(processedData);
-          setFilteredVisitors(processedData);
-        }
-
-        const { data: groupsData } = await supabase
-          .from("assistance_groups")
-          .select("id, name")
-          .order("name");
-
-        setAssistanceGroups(groupsData || []);
-
-        // Carregar regiões, áreas e igrejas para admin
-        const { data: regionsData } = await supabase
-          .from("regions")
-          .select("*")
-          .order("name");
-        setRegions(regionsData || []);
-
-        const { data: areasData } = await supabase
-          .from("areas")
-          .select("*")
-          .order("name");
-        setAreas(areasData || []);
-
-        const { data: churchesData } = await supabase
-          .from("churches")
-          .select("*")
-          .order("name");
-        setChurches(churchesData || []);
-      } else if (isPastor) {
-        // Pastor vê visitantes e grupos de todas as suas igrejas
-        const { data: pastorChurches } = await supabase
-          .from("churches")
-          .select("id")
-          .eq("pastor_id", user.id);
-
-        if (pastorChurches && pastorChurches.length > 0) {
-          const churchIds = pastorChurches.map(c => c.id);
-          
-          const { data, error } = await supabase
-            .from("visitors")
-            .select(`
-              *,
-              churches(name),
-              assistance_groups!visitors_assistance_group_id_fkey(name),
-              visitor_interactions(interaction_type, interaction_date)
-            `)
-            .in("church_id", churchIds)
-            .order("created_at", { ascending: false });
-
-          if (error) {
-            toast({
-              title: "Erro ao carregar visitantes",
-              description: error.message,
-              variant: "destructive",
-            });
-          } else {
-            const processedData = (data || []).map((v: any) => {
-              const lastInteraction = v.visitor_interactions?.[0] || null;
-              return {
-                ...v,
-                church_name: v.churches?.name || null,
-                assistance_group_name: v.assistance_groups?.name || null,
-                last_interaction_type: lastInteraction?.interaction_type || null,
-                last_interaction_date: lastInteraction?.interaction_date || null,
-              };
-            });
-            setVisitors(processedData);
-            setFilteredVisitors(processedData);
-          }
-
-          const { data: groupsData } = await supabase
-            .from("assistance_groups")
-            .select("id, name")
-            .in("church_id", churchIds)
-            .order("name");
-
-          setAssistanceGroups(groupsData || []);
-        }
+      if (error) {
+        toast({
+          title: "Erro ao carregar visitantes",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
-        // Outros usuários veem apenas da sua igreja
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("church_id")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          toast({
-            title: "Erro ao carregar perfil",
-            description: profileError.message,
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (profile?.church_id) {
-          // Pré-carregar a igreja do usuário
-          setChurchId(profile.church_id);
-
-          // Carregar dados da igreja
-          const { data: churchData } = await supabase
-            .from("churches")
-            .select("*")
-            .eq("id", profile.church_id)
-            .maybeSingle();
-
-          if (churchData) {
-            setChurches([churchData]);
-          }
-
-          // Criar query de visitantes
-          let visitorsQuery = supabase
-            .from("visitors")
-            .select(`
-              *,
-              churches(name),
-              assistance_groups!visitors_assistance_group_id_fkey(name),
-              visitor_interactions(interaction_type, interaction_date)
-            `)
-            .eq("church_id", profile.church_id);
-
-          // Se o usuário pertence a um grupo, filtrar apenas visitantes desse grupo
-          if (userGroupId) {
-            visitorsQuery = visitorsQuery.eq("assistance_group_id", userGroupId);
-          }
-
-          const { data, error } = await visitorsQuery.order("created_at", { ascending: false });
-
-          if (error) {
-            toast({
-              title: "Erro ao carregar visitantes",
-              description: error.message,
-              variant: "destructive",
-            });
-          } else {
-            const processedData = (data || []).map((v: any) => {
-              const lastInteraction = v.visitor_interactions?.[0] || null;
-              return {
-                ...v,
-                church_name: v.churches?.name || null,
-                assistance_group_name: v.assistance_groups?.name || null,
-                last_interaction_type: lastInteraction?.interaction_type || null,
-                last_interaction_date: lastInteraction?.interaction_date || null,
-              };
-            });
-            setVisitors(processedData);
-            setFilteredVisitors(processedData);
-          }
-
-          // Se o usuário pertence a um grupo, carregar apenas esse grupo
-          if (userGroupId) {
-            const { data: groupData } = await supabase
-              .from("assistance_groups")
-              .select("id, name")
-              .eq("id", userGroupId)
-              .maybeSingle();
-
-            setAssistanceGroups(groupData ? [groupData] : []);
-          } else {
-            const { data: groupsData } = await supabase
-              .from("assistance_groups")
-              .select("id, name")
-              .eq("church_id", profile.church_id)
-              .order("name");
-
-            setAssistanceGroups(groupsData || []);
-          }
-        }
+        const processedData = (data || []).map((v: any) => {
+          const lastInteraction = v.visitor_interactions?.[0] || null;
+          return {
+            ...v,
+            church_name: v.churches?.name || null,
+            assistance_group_name: v.assistance_groups?.name || null,
+            last_interaction_type: lastInteraction?.interaction_type || null,
+            last_interaction_date: lastInteraction?.interaction_date || null,
+          };
+        });
+        setVisitors(processedData);
+        setFilteredVisitors(processedData);
       }
+
+      // Buscar TODOS os grupos de assistência
+      const { data: groupsData } = await supabase
+        .from("assistance_groups")
+        .select("id, name")
+        .order("name");
+      setAssistanceGroups(groupsData || []);
+
+      // Buscar todas as regiões para filtros
+      const { data: regionsData } = await supabase
+        .from("regions")
+        .select("*")
+        .order("name");
+      setRegions(regionsData || []);
+
+      // Buscar todas as áreas para filtros
+      const { data: areasData } = await supabase
+        .from("areas")
+        .select("*")
+        .order("name");
+      setAreas(areasData || []);
+
+      // Buscar todas as igrejas para filtros
+      const { data: churchesData } = await supabase
+        .from("churches")
+        .select("*")
+        .order("name");
+      setChurches(churchesData || []);
     };
 
     fetchChurchAndVisitors();
-  }, [user, isAdmin, isPastor, userGroupId]);
+  }, [user]);
 
   // Filtrar áreas quando região é selecionada
   useEffect(() => {
