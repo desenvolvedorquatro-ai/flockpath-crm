@@ -20,6 +20,7 @@ import Relatorios from "./pages/Relatorios";
 import Tarefas from "./pages/Tarefas";
 import MapaFrequencia from "./pages/MapaFrequencia";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Rotas protegidas com layout aninhado */}
           <Route element={<ProtectedRoute><ProtectedLayout /></ProtectedRoute>}>
