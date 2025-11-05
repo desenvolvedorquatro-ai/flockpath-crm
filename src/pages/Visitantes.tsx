@@ -147,7 +147,7 @@ const calcularIdade = (dataNascimento: string | null): number | null => {
 
 export default function Visitantes() {
   const { user } = useAuth();
-  const { isAdmin, isPastor } = useUserRole();
+  const { isAdmin, isPastor, isDiacono } = useUserRole();
   const location = useLocation();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
@@ -169,6 +169,8 @@ export default function Visitantes() {
   const [userHasNoChurch, setUserHasNoChurch] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [visitorToDelete, setVisitorToDelete] = useState<Visitor | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Estados para admin selecionar região, área e igreja
   const [regions, setRegions] = useState<Region[]>([]);
@@ -698,6 +700,62 @@ export default function Visitantes() {
     } catch (error: any) {
       toast({
         title: "Erro ao excluir visitantes",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteVisitor = async () => {
+    if (!visitorToDelete) return;
+
+    try {
+      // Deletar interações relacionadas
+      await supabase
+        .from("visitor_interactions")
+        .delete()
+        .eq("visitor_id", visitorToDelete.id);
+
+      // Deletar histórico
+      await supabase
+        .from("visitor_history")
+        .delete()
+        .eq("visitor_id", visitorToDelete.id);
+
+      // Deletar presença em eventos
+      await supabase
+        .from("visitor_attendance")
+        .delete()
+        .eq("visitor_id", visitorToDelete.id);
+
+      // Deletar registros de frequência
+      await supabase
+        .from("attendance_records")
+        .delete()
+        .eq("visitor_id", visitorToDelete.id);
+
+      // Deletar o visitante
+      const { error } = await supabase
+        .from("visitors")
+        .delete()
+        .eq("id", visitorToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Visitante excluído",
+        description: "O visitante foi excluído com sucesso.",
+      });
+
+      // Atualizar lista
+      setVisitors(prev => prev.filter(v => v.id !== visitorToDelete.id));
+      setFilteredVisitors(prev => prev.filter(v => v.id !== visitorToDelete.id));
+      
+      setIsDeleteDialogOpen(false);
+      setVisitorToDelete(null);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir visitante",
         description: error.message,
         variant: "destructive",
       });
@@ -1444,6 +1502,18 @@ export default function Visitantes() {
                           >
                             <ArrowRightLeft className="h-4 w-4" />
                           </Button>
+                          {(isAdmin || isDiacono) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setVisitorToDelete(visitor);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1582,6 +1652,20 @@ export default function Visitantes() {
                     <ArrowRightLeft className="h-4 w-4 mr-2" />
                     Transferir
                   </Button>
+                  {(isAdmin || isDiacono) && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setVisitorToDelete(visitor);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -2006,6 +2090,34 @@ export default function Visitantes() {
           }}
         />
       )}
+
+      {/* Dialog de Confirmação de Exclusão Individual */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o visitante{" "}
+              <strong>{visitorToDelete?.full_name}</strong>?
+              <br />
+              <br />
+              Esta ação não pode ser desfeita e todos os dados relacionados 
+              (interações, histórico, presenças) serão permanentemente excluídos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setVisitorToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteVisitor}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
