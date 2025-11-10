@@ -126,6 +126,10 @@ export const ProtectedLayout = () => {
           <main className="flex-1 overflow-x-hidden p-3 md:p-4 lg:p-6">
             <Outlet />
           </main>
+          <footer className="py-4 text-center text-muted-foreground border-t bg-background text-xs">
+            <p>© 2025 APRISCO. Todos os direitos reservados.</p>
+            <p className="mt-1">Desenvolvido por Axia Digital Labs</p>
+          </footer>
         </div>
       </div>
     </SidebarProvider>

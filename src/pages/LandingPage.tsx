@@ -101,6 +101,9 @@ export default function LandingPage() {
         <p className="text-sm md:text-base">
           © 2025 APRISCO. Todos os direitos reservados.
         </p>
+        <p className="text-xs md:text-sm mt-2">
+          Desenvolvido por Axia Digital Labs
+        </p>
       </footer>
     </div>;
 }
