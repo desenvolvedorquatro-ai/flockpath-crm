@@ -55,6 +55,7 @@ export default function ConfiguracoesStatus() {
   // Estados para novo status
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState({ value: "", label: "", color: "", hex_color: "" });
+  const [editingStatusInDialog, setEditingStatusInDialog] = useState<StatusConfig | null>(null);
 
   // Estados para nova categoria
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -158,8 +159,57 @@ export default function ConfiguracoesStatus() {
       toast({ title: "Status criado com sucesso!" });
       setIsStatusDialogOpen(false);
       setNewStatus({ value: "", label: "", color: "", hex_color: "" });
+      setEditingStatusInDialog(null);
       fetchStatuses();
     }
+  };
+
+  const handleSaveStatusFromDialog = async () => {
+    if (!editingStatusInDialog) return;
+
+    if (!newStatus.value || !newStatus.label || !newStatus.color || !newStatus.hex_color) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("visitor_status_config")
+      .update({
+        value: newStatus.value,
+        label: newStatus.label,
+        color: newStatus.color,
+        hex_color: newStatus.hex_color,
+      })
+      .eq("id", editingStatusInDialog.id);
+
+    if (error) {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Status atualizado com sucesso!" });
+      setIsStatusDialogOpen(false);
+      setNewStatus({ value: "", label: "", color: "", hex_color: "" });
+      setEditingStatusInDialog(null);
+      fetchStatuses();
+    }
+  };
+
+  const openEditStatusDialog = (status: StatusConfig) => {
+    setEditingStatusInDialog(status);
+    setNewStatus({
+      value: status.value,
+      label: status.label,
+      color: status.color,
+      hex_color: status.hex_color,
+    });
+    setIsStatusDialogOpen(true);
   };
 
   const handleCreateCategory = async () => {
@@ -398,7 +448,16 @@ export default function ConfiguracoesStatus() {
                   <CardTitle>Status de Visitantes</CardTitle>
                   <CardDescription>Configure os status disponíveis para visitantes</CardDescription>
                 </div>
-                <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+                <Dialog 
+                  open={isStatusDialogOpen} 
+                  onOpenChange={(open) => {
+                    setIsStatusDialogOpen(open);
+                    if (!open) {
+                      setNewStatus({ value: "", label: "", color: "", hex_color: "" });
+                      setEditingStatusInDialog(null);
+                    }
+                  }}
+                >
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
@@ -407,9 +466,13 @@ export default function ConfiguracoesStatus() {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Criar Novo Status</DialogTitle>
+                      <DialogTitle>
+                        {editingStatusInDialog ? "Editar Status" : "Criar Novo Status"}
+                      </DialogTitle>
                       <DialogDescription>
-                        Adicione um novo status para visitantes
+                        {editingStatusInDialog 
+                          ? "Edite as informações do status" 
+                          : "Adicione um novo status para visitantes"}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -444,17 +507,32 @@ export default function ConfiguracoesStatus() {
                         />
                       </div>
                       <div>
-                        <Label>Cor Hex (para gráficos)</Label>
-                        <Input
-                          placeholder="ex: #3B82F6"
-                          value={newStatus.hex_color}
-                          onChange={(e) =>
-                            setNewStatus({ ...newStatus, hex_color: e.target.value })
-                          }
-                        />
+                        <Label>Cor (para gráficos e badge)</Label>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            type="color"
+                            value={newStatus.hex_color}
+                            onChange={(e) =>
+                              setNewStatus({ ...newStatus, hex_color: e.target.value })
+                            }
+                            className="w-20 h-10 p-1 cursor-pointer"
+                          />
+                          <Input
+                            type="text"
+                            placeholder="#3B82F6"
+                            value={newStatus.hex_color}
+                            onChange={(e) =>
+                              setNewStatus({ ...newStatus, hex_color: e.target.value })
+                            }
+                            className="flex-1"
+                          />
+                        </div>
                       </div>
-                      <Button onClick={handleCreateStatus} className="w-full">
-                        Criar Status
+                      <Button 
+                        onClick={editingStatusInDialog ? handleSaveStatusFromDialog : handleCreateStatus} 
+                        className="w-full"
+                      >
+                        {editingStatusInDialog ? "Salvar Alterações" : "Criar Status"}
                       </Button>
                     </div>
                   </DialogContent>
@@ -560,10 +638,7 @@ export default function ConfiguracoesStatus() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                setEditingStatusId(status.id);
-                                setEditStatusData(status);
-                              }}
+                              onClick={() => openEditStatusDialog(status)}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
