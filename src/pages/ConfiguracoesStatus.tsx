@@ -574,7 +574,6 @@ export default function ConfiguracoesStatus() {
                               }
                               disabled={status.order_position === 1}
                             >
-                              <GripVertical className="h-3 w-3" />
                               ↑
                             </Button>
                             <Button
