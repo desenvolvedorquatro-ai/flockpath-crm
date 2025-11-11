@@ -32,6 +32,7 @@ interface DashboardStats {
 export default function Dashboard() {
   const { user } = useAuth();
   const { 
+    statuses,
     statusHexColors, 
     statusLabels,
     loading: configLoading 
@@ -70,7 +71,7 @@ export default function Dashboard() {
   const [isFiltering, setIsFiltering] = useState(false);
 
   useEffect(() => {
-    if (!user || configLoading || !statusHexColors) return;
+    if (!user || configLoading || !statusHexColors || statuses.length === 0) return;
 
     const fetchStats = async () => {
       let query = supabase.from("visitors").select(`
@@ -127,18 +128,26 @@ export default function Dashboard() {
           conversionRate: `${conversionRate}%`,
         });
 
-        setPipelineData([
-          { title: statusLabels.interessado || "Interessado", count: interessados, color: statusHexColors.interessado || "#6B7280", percentage: total > 0 ? Math.round((interessados / total) * 100) : 0 },
-          { title: statusLabels.visitante || "Visitante", count: visitantes, color: statusHexColors.visitante || "#3B82F6", percentage: total > 0 ? Math.round((visitantes / total) * 100) : 0 },
-          { title: statusLabels.visitante_frequente || "Visitante Frequente", count: visitantesFrequentes, color: statusHexColors.visitante_frequente || "#8B5CF6", percentage: total > 0 ? Math.round((visitantesFrequentes / total) * 100) : 0 },
-          { title: statusLabels.candidato_batismo || "Candidato a Batismo", count: candidatosBatismo, color: statusHexColors.candidato_batismo || "#F59E0B", percentage: total > 0 ? Math.round((candidatosBatismo / total) * 100) : 0 },
-          { title: statusLabels.membro || "Membro", count: membros, color: statusHexColors.membro || "#10B981", percentage: total > 0 ? Math.round((membros / total) * 100) : 0 },
-        ]);
+        // Criar pipeline data baseado nos status configurados
+        const pipeline = statuses
+          .filter(s => s.active)
+          .map((statusConfig) => {
+            const count = visitors.filter(v => v.status === statusConfig.value).length;
+            const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+            return {
+              title: statusConfig.label,
+              count,
+              color: statusConfig.hex_color,
+              percentage,
+            };
+          });
+
+        setPipelineData(pipeline);
       }
     };
 
     fetchStats();
-  }, [user, configLoading, statusHexColors, statusLabels, startDate, endDate, selectedRegion, selectedArea, selectedChurch]);
+  }, [user, configLoading, statusHexColors, statusLabels, statuses, startDate, endDate, selectedRegion, selectedArea, selectedChurch]);
 
   const clearFilters = () => {
     setStartDate(undefined);

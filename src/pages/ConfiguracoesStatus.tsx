@@ -426,7 +426,7 @@ export default function ConfiguracoesStatus() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <ModernHeader
         icon={Settings}
         title="Config. do Sistema"
@@ -497,36 +497,39 @@ export default function ConfiguracoesStatus() {
                         />
                       </div>
                       <div>
-                        <Label>Classes CSS (cor)</Label>
-                        <Input
-                          placeholder="ex: bg-blue-500/10 text-blue-500 border-blue-500/20"
-                          value={newStatus.color}
-                          onChange={(e) =>
-                            setNewStatus({ ...newStatus, color: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div>
                         <Label>Cor (para gráficos e badge)</Label>
                         <div className="flex gap-2 items-center">
                           <Input
                             type="color"
                             value={newStatus.hex_color}
-                            onChange={(e) =>
-                              setNewStatus({ ...newStatus, hex_color: e.target.value })
-                            }
+                            onChange={(e) => {
+                              const hexColor = e.target.value;
+                              setNewStatus({ 
+                                ...newStatus, 
+                                hex_color: hexColor,
+                                color: `bg-[${hexColor}]/10 text-[${hexColor}] border-[${hexColor}]/20`
+                              });
+                            }}
                             className="w-20 h-10 p-1 cursor-pointer"
                           />
                           <Input
                             type="text"
                             placeholder="#3B82F6"
                             value={newStatus.hex_color}
-                            onChange={(e) =>
-                              setNewStatus({ ...newStatus, hex_color: e.target.value })
-                            }
+                            onChange={(e) => {
+                              const hexColor = e.target.value;
+                              setNewStatus({ 
+                                ...newStatus, 
+                                hex_color: hexColor,
+                                color: `bg-[${hexColor}]/10 text-[${hexColor}] border-[${hexColor}]/20`
+                              });
+                            }}
                             className="flex-1"
                           />
                         </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          As classes CSS serão geradas automaticamente
+                        </p>
                       </div>
                       <Button 
                         onClick={editingStatusInDialog ? handleSaveStatusFromDialog : handleCreateStatus} 
