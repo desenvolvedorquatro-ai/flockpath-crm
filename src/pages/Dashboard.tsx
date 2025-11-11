@@ -180,6 +180,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background animate-fade-in">
+      <div className="container mx-auto px-4 md:px-6 py-6">
         <ModernHeader
           title="Dashboard"
           description="Acompanhe as métricas e estatísticas do sistema"
@@ -351,6 +352,7 @@ export default function Dashboard() {
             }
           </div>
         </div>
+      </div>
     </div>
   );
 }
