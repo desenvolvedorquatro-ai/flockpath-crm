@@ -340,12 +340,15 @@ export default function Dashboard() {
             <FunnelChart stages={pipelineData} />
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-            {pipelineData.map((stage, index) => (
-              <div key={stage.title} className="animate-scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                <PipelineStage {...stage} />
-              </div>
-            ))}
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2">
+            {pipelineData
+              .filter(stage => stage.count > 0)
+              .map((stage, index) => (
+                <div key={stage.title} className="flex-1 min-w-[180px] animate-scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <PipelineStage {...stage} />
+                </div>
+              ))
+            }
           </div>
         </div>
     </div>
