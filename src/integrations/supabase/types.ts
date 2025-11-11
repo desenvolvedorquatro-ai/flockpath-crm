@@ -840,7 +840,7 @@ export type Database = {
           area_id: string | null
           assistance_group_id: string | null
           candidato_batismo: boolean | null
-          categoria: Database["public"]["Enums"]["visitor_category"] | null
+          categoria: string | null
           church_id: string
           convidado_por: string | null
           created_at: string | null
@@ -863,7 +863,7 @@ export type Database = {
           resgate: boolean | null
           responsavel_assistencia: string | null
           sexo: Database["public"]["Enums"]["visitor_gender"] | null
-          status: Database["public"]["Enums"]["visitor_status"]
+          status: string
           tem_filhos: boolean | null
           updated_at: string | null
         }
@@ -872,7 +872,7 @@ export type Database = {
           area_id?: string | null
           assistance_group_id?: string | null
           candidato_batismo?: boolean | null
-          categoria?: Database["public"]["Enums"]["visitor_category"] | null
+          categoria?: string | null
           church_id: string
           convidado_por?: string | null
           created_at?: string | null
@@ -895,7 +895,7 @@ export type Database = {
           resgate?: boolean | null
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
-          status: Database["public"]["Enums"]["visitor_status"]
+          status: string
           tem_filhos?: boolean | null
           updated_at?: string | null
         }
@@ -904,7 +904,7 @@ export type Database = {
           area_id?: string | null
           assistance_group_id?: string | null
           candidato_batismo?: boolean | null
-          categoria?: Database["public"]["Enums"]["visitor_category"] | null
+          categoria?: string | null
           church_id?: string
           convidado_por?: string | null
           created_at?: string | null
@@ -927,7 +927,7 @@ export type Database = {
           resgate?: boolean | null
           responsavel_assistencia?: string | null
           sexo?: Database["public"]["Enums"]["visitor_gender"] | null
-          status?: Database["public"]["Enums"]["visitor_status"]
+          status?: string
           tem_filhos?: boolean | null
           updated_at?: string | null
         }
@@ -1032,12 +1032,6 @@ export type Database = {
         | "varao"
         | "idoso"
       visitor_gender: "masculino" | "feminino"
-      visitor_status:
-        | "interessado"
-        | "visitante"
-        | "visitante_frequente"
-        | "candidato_batismo"
-        | "membro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1175,13 +1169,6 @@ export const Constants = {
         "idoso",
       ],
       visitor_gender: ["masculino", "feminino"],
-      visitor_status: [
-        "interessado",
-        "visitante",
-        "visitante_frequente",
-        "candidato_batismo",
-        "membro",
-      ],
     },
   },
 } as const
