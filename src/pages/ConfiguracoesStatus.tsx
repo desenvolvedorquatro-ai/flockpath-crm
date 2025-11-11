@@ -547,7 +547,7 @@ export default function ConfiguracoesStatus() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12"></TableHead>
+                    <TableHead className="w-24">Ordem</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Preview</TableHead>
@@ -560,25 +560,35 @@ export default function ConfiguracoesStatus() {
                   {statuses.map((status) => (
                     <TableRow key={status.id}>
                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              moveItem("visitor_status_config", status.id, "up", statuses)
-                            }
-                          >
-                            ↑
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              moveItem("visitor_status_config", status.id, "down", statuses)
-                            }
-                          >
-                            ↓
-                          </Button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            #{status.order_position}
+                          </span>
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() =>
+                                moveItem("visitor_status_config", status.id, "up", statuses)
+                              }
+                              disabled={status.order_position === 1}
+                            >
+                              <GripVertical className="h-3 w-3" />
+                              ↑
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() =>
+                                moveItem("visitor_status_config", status.id, "down", statuses)
+                              }
+                              disabled={status.order_position === statuses.length}
+                            >
+                              ↓
+                            </Button>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>

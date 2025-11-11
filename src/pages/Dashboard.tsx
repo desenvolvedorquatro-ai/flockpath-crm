@@ -140,7 +140,8 @@ export default function Dashboard() {
               color: statusConfig.hex_color,
               percentage,
             };
-          });
+          })
+          .filter(stage => stage.count > 0); // Filtrar apenas status com visitantes
 
         setPipelineData(pipeline);
       }
