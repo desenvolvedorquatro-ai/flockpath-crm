@@ -1,7 +1,6 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingDown } from "lucide-react";
-import { statusHexColors } from "@/lib/visitorStatus";
 
 interface FunnelStage {
   title: string;

@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHierarchyFilters } from "@/hooks/useHierarchyFilters";
 import { ModernHeader } from "@/components/ModernHeader";
-import { statusLabels, statusHexColors, conversionRateColor } from "@/lib/visitorStatus";
+import { useVisitorConfig } from "@/hooks/useVisitorConfig";
+import { conversionRateColor } from "@/lib/visitorStatus";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,6 +31,11 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { 
+    statusHexColors, 
+    statusLabels,
+    loading: configLoading 
+  } = useVisitorConfig();
   const {
     selectedRegion,
     selectedArea,
@@ -56,13 +62,7 @@ export default function Dashboard() {
     resgates: 0,
     conversionRate: "0%",
   });
-  const [pipelineData, setPipelineData] = useState([
-    { title: "Interessado", count: 0, color: statusHexColors.interessado, percentage: 0 },
-    { title: "Visitante", count: 0, color: statusHexColors.visitante, percentage: 0 },
-    { title: "Visitante Frequente", count: 0, color: statusHexColors.visitante_frequente, percentage: 0 },
-    { title: "Candidato a Batismo", count: 0, color: statusHexColors.candidato_batismo, percentage: 0 },
-    { title: "Membro", count: 0, color: statusHexColors.membro, percentage: 0 },
-  ]);
+  const [pipelineData, setPipelineData] = useState<any[]>([]);
   
   // Estados para filtros de data
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -70,7 +70,7 @@ export default function Dashboard() {
   const [isFiltering, setIsFiltering] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || configLoading || !statusHexColors) return;
 
     const fetchStats = async () => {
       let query = supabase.from("visitors").select(`
@@ -128,17 +128,17 @@ export default function Dashboard() {
         });
 
         setPipelineData([
-          { title: "Interessado", count: interessados, color: statusHexColors.interessado, percentage: total > 0 ? Math.round((interessados / total) * 100) : 0 },
-          { title: "Visitante", count: visitantes, color: statusHexColors.visitante, percentage: total > 0 ? Math.round((visitantes / total) * 100) : 0 },
-          { title: "Visitante Frequente", count: visitantesFrequentes, color: statusHexColors.visitante_frequente, percentage: total > 0 ? Math.round((visitantesFrequentes / total) * 100) : 0 },
-          { title: "Candidato a Batismo", count: candidatosBatismo, color: statusHexColors.candidato_batismo, percentage: total > 0 ? Math.round((candidatosBatismo / total) * 100) : 0 },
-          { title: "Membro", count: membros, color: statusHexColors.membro, percentage: total > 0 ? Math.round((membros / total) * 100) : 0 },
+          { title: statusLabels.interessado || "Interessado", count: interessados, color: statusHexColors.interessado || "#6B7280", percentage: total > 0 ? Math.round((interessados / total) * 100) : 0 },
+          { title: statusLabels.visitante || "Visitante", count: visitantes, color: statusHexColors.visitante || "#3B82F6", percentage: total > 0 ? Math.round((visitantes / total) * 100) : 0 },
+          { title: statusLabels.visitante_frequente || "Visitante Frequente", count: visitantesFrequentes, color: statusHexColors.visitante_frequente || "#8B5CF6", percentage: total > 0 ? Math.round((visitantesFrequentes / total) * 100) : 0 },
+          { title: statusLabels.candidato_batismo || "Candidato a Batismo", count: candidatosBatismo, color: statusHexColors.candidato_batismo || "#F59E0B", percentage: total > 0 ? Math.round((candidatosBatismo / total) * 100) : 0 },
+          { title: statusLabels.membro || "Membro", count: membros, color: statusHexColors.membro || "#10B981", percentage: total > 0 ? Math.round((membros / total) * 100) : 0 },
         ]);
       }
     };
 
     fetchStats();
-  }, [user, startDate, endDate, selectedRegion, selectedArea, selectedChurch]);
+  }, [user, configLoading, statusHexColors, statusLabels, startDate, endDate, selectedRegion, selectedArea, selectedChurch]);
 
   const clearFilters = () => {
     setStartDate(undefined);
@@ -157,9 +157,9 @@ export default function Dashboard() {
   };
 
   const statsCards = [
-    { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.visitante },
-    { title: "Interessados", value: stats.interessados, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.interessado },
-    { title: "Membros", value: stats.membros, icon: UserPlus, trend: { value: 0, isPositive: true }, iconColor: statusHexColors.membro },
+    { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors?.visitante || "#3B82F6" },
+    { title: "Interessados", value: stats.interessados, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors?.interessado || "#6B7280" },
+    { title: "Membros", value: stats.membros, icon: UserPlus, trend: { value: 0, isPositive: true }, iconColor: statusHexColors?.membro || "#10B981" },
     { title: "Resgates", value: stats.resgates, icon: TrendingUp, trend: { value: 0, isPositive: true }, iconColor: "#EF4444" },
     { title: "Taxa de Conversão", value: stats.conversionRate, icon: Target, trend: { value: 0, isPositive: true }, iconColor: conversionRateColor },
   ];

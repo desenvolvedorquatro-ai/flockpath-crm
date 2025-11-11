@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useAuth } from "@/hooks/useAuth";
 import { useHierarchyFilters } from "@/hooks/useHierarchyFilters";
+import { useVisitorConfig } from "@/hooks/useVisitorConfig";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 // Red-coral palette from design system
@@ -21,6 +22,11 @@ const COLORS = ['hsl(5 53% 48%)', 'hsl(5 63% 58%)', 'hsl(5 73% 68%)', 'hsl(5 43%
 
 export default function Relatorios() {
   const { user } = useAuth();
+  const { 
+    statusLabels,
+    categoryLabels,
+    loading: configLoading 
+  } = useVisitorConfig();
   const {
     selectedRegion,
     selectedArea,
@@ -106,10 +112,7 @@ export default function Relatorios() {
 
         const total = visitors.length;
         const statusReport = Object.entries(statusCounts).map(([key, value]: [string, any]) => ({
-          name: key === 'interessado' ? 'Interessado' : 
-                key === 'visitante' ? 'Visitante' :
-                key === 'visitante_frequente' ? 'Visitante Frequente' :
-                key === 'candidato_batismo' ? 'Candidato a Batismo' : 'Membro',
+          name: statusLabels[key] || key,
           value: value,
           percentage: ((value / total) * 100).toFixed(1)
         }));
@@ -168,19 +171,8 @@ export default function Relatorios() {
           return acc;
         }, {});
 
-        const categoriaLabels: Record<string, string> = {
-          crianca: 'Criança',
-          intermediario: 'Intermediário',
-          adolescente: 'Adolescente',
-          jovem: 'Jovem',
-          senhora: 'Senhora',
-          varao: 'Varão',
-          idoso: 'Idoso',
-          não_definida: 'Não definida'
-        };
-
         const categoriaReport = Object.entries(categoriaCounts).map(([key, value]: [string, any]) => ({
-          name: categoriaLabels[key] || key,
+          name: categoryLabels[key] || key,
           value: value
         }));
 

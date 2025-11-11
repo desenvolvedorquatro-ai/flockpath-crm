@@ -55,7 +55,7 @@ import { PaginationControls } from "@/components/PaginationControls";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { statusColors, statusLabels, statusOptions } from "@/lib/visitorStatus";
+import { useVisitorConfig } from "@/hooks/useVisitorConfig";
 
 interface Visitor {
   id: string;
@@ -118,15 +118,6 @@ const interactionTypeLabels: Record<string, string> = {
   outro: "Outro",
 };
 
-const categoriaLabels: Record<string, string> = {
-  crianca: "Criança",
-  intermediario: "Intermediário",
-  adolescente: "Adolescente",
-  jovem: "Jovem",
-  senhora: "Senhora",
-  varao: "Varão",
-  idoso: "Idoso",
-};
 
 const sexoLabels: Record<string, string> = {
   masculino: "Masculino",
@@ -148,6 +139,14 @@ const calcularIdade = (dataNascimento: string | null): number | null => {
 export default function Visitantes() {
   const { user } = useAuth();
   const { isAdmin, isPastor, isDiacono } = useUserRole();
+  const { 
+    statusOptions, 
+    statusColors, 
+    statusLabels, 
+    categoryOptions,
+    categoryLabels,
+    loading: configLoading 
+  } = useVisitorConfig();
   const location = useLocation();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
@@ -1124,13 +1123,11 @@ export default function Visitantes() {
                       <SelectValue placeholder="Selecione categoria" />
                     </SelectTrigger>
                     <SelectContent className="bg-card">
-                      <SelectItem value="crianca">Criança</SelectItem>
-                      <SelectItem value="intermediario">Intermediário</SelectItem>
-                      <SelectItem value="adolescente">Adolescente</SelectItem>
-                      <SelectItem value="jovem">Jovem</SelectItem>
-                      <SelectItem value="senhora">Senhora</SelectItem>
-                      <SelectItem value="varao">Varão</SelectItem>
-                      <SelectItem value="idoso">Idoso</SelectItem>
+                      {categoryOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1430,7 +1427,7 @@ export default function Visitantes() {
                       <TableCell className="hidden xl:table-cell">
                         {visitor.categoria ? (
                           <Badge variant="outline" className="text-xs">
-                            {categoriaLabels[visitor.categoria]}
+                            {categoryLabels[visitor.categoria]}
                           </Badge>
                         ) : (
                           "-"
@@ -1546,7 +1543,7 @@ export default function Visitantes() {
                         </Badge>
                         {visitor.categoria && (
                           <Badge variant="secondary" className="text-xs">
-                            {categoriaLabels[visitor.categoria]}
+                            {categoryLabels[visitor.categoria]}
                           </Badge>
                         )}
                       </div>
@@ -1893,13 +1890,11 @@ export default function Visitantes() {
                     <SelectValue placeholder="Selecione categoria" />
                   </SelectTrigger>
                   <SelectContent className="bg-card">
-                    <SelectItem value="crianca">Criança</SelectItem>
-                    <SelectItem value="intermediario">Intermediário</SelectItem>
-                    <SelectItem value="adolescente">Adolescente</SelectItem>
-                    <SelectItem value="jovem">Jovem</SelectItem>
-                    <SelectItem value="senhora">Senhora</SelectItem>
-                    <SelectItem value="varao">Varão</SelectItem>
-                    <SelectItem value="idoso">Idoso</SelectItem>
+                    {categoryOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
