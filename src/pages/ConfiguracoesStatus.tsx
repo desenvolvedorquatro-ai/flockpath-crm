@@ -426,11 +426,12 @@ export default function ConfiguracoesStatus() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background animate-fade-in">
       <ModernHeader
         icon={Settings}
         title="Config. do Sistema"
         description="Gerencie status, categorias e configurações globais do sistema"
+        colorScheme="red-coral"
       />
 
       <Tabs defaultValue="status" className="w-full">

@@ -165,10 +165,15 @@ export default function Dashboard() {
     setIsFiltering(false);
   };
 
+  // Encontrar cores dos status configurados
+  const visitanteStatus = statuses.find(s => s.value === "visitante");
+  const interessadoStatus = statuses.find(s => s.value === "interessado");
+  const membroStatus = statuses.find(s => s.value === "membro");
+
   const statsCards = [
-    { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors?.visitante || "#3B82F6" },
-    { title: "Interessados", value: stats.interessados, icon: Users, trend: { value: 0, isPositive: true }, iconColor: statusHexColors?.interessado || "#6B7280" },
-    { title: "Membros", value: stats.membros, icon: UserPlus, trend: { value: 0, isPositive: true }, iconColor: statusHexColors?.membro || "#10B981" },
+    { title: "Total de Visitantes", value: stats.totalVisitors, icon: Users, trend: { value: 0, isPositive: true }, iconColor: visitanteStatus?.hex_color || "#3B82F6" },
+    { title: "Interessados", value: stats.interessados, icon: Users, trend: { value: 0, isPositive: true }, iconColor: interessadoStatus?.hex_color || "#6B7280" },
+    { title: "Membros", value: stats.membros, icon: UserPlus, trend: { value: 0, isPositive: true }, iconColor: membroStatus?.hex_color || "#10B981" },
     { title: "Resgates", value: stats.resgates, icon: TrendingUp, trend: { value: 0, isPositive: true }, iconColor: "#EF4444" },
     { title: "Taxa de Conversão", value: stats.conversionRate, icon: Target, trend: { value: 0, isPositive: true }, iconColor: conversionRateColor },
   ];
