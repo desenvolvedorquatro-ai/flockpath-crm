@@ -71,9 +71,10 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
       
       <div className="px-4 pb-4 space-y-2">
         {stages.map((stage, index) => {
-          const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
-          const minWidth = 25;
-          const actualWidth = Math.max(widthPercentage, stage.count > 0 ? minWidth : 0);
+          // Criar formato de funil: primeira barra 100%, última 30%
+          const totalStages = stages.length;
+          const funnelWidth = 100 - (index * (70 / (totalStages - 1 || 1)));
+          const actualWidth = Math.max(funnelWidth, 30);
 
           return (
             <div 
@@ -96,7 +97,7 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                 
                 <div className="relative h-full flex items-center justify-center px-4 py-3">
                   <div className="flex flex-col items-center justify-center text-center w-full gap-2">
-                    <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
                       {stage.title}
                     </span>
                     
@@ -114,7 +115,6 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
 
-              {/* Connector line between stages */}
               {index < stages.length - 1 && (
                 <div className="flex justify-center my-2">
                   <div className="w-0.5 h-2 bg-gradient-to-b from-border to-transparent" />
