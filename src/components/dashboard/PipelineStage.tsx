@@ -17,8 +17,11 @@ export function PipelineStage({ title, count, color, percentage }: PipelineStage
       </div>
       <div className="w-full bg-secondary rounded-full h-2.5 mb-2">
         <div
-          className="h-2.5 rounded-full bg-gradient-to-r from-primary to-primary-glow transition-all"
-          style={{ width: `${percentage || 0}%` }}
+          className="h-2.5 rounded-full transition-all"
+          style={{ 
+            width: `${percentage || 0}%`,
+            background: `linear-gradient(90deg, ${color}, ${color}dd)`
+          }}
         />
       </div>
       {percentage !== undefined && (

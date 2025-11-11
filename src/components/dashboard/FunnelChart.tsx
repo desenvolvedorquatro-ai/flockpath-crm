@@ -72,20 +72,8 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
       <div className="px-4 pb-4 space-y-2">
         {stages.map((stage, index) => {
           const widthPercentage = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
-          const minWidth = 25; // Minimum width for visibility and accessibility
+          const minWidth = 25;
           const actualWidth = Math.max(widthPercentage, stage.count > 0 ? minWidth : 0);
-          
-          // Map stage titles to dashboard icon colors
-          const getStageColor = (title: string) => {
-            const colorMap: Record<string, string> = {
-              'Interessado': 'from-gray-500 via-gray-600 to-gray-700',
-              'Visitante': 'from-blue-500 via-blue-600 to-blue-700',
-              'Visitante Frequente': 'from-purple-500 via-purple-600 to-purple-700',
-              'Candidato a Batismo': 'from-orange-500 via-orange-600 to-orange-700',
-              'Membro': 'from-green-500 via-green-600 to-green-700',
-            };
-            return colorMap[title] || 'from-primary via-primary to-primary-glow';
-          };
 
           return (
             <div 
@@ -97,31 +85,21 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
               }}
             >
               <div
-                className={`
-                  mx-auto rounded-xl relative overflow-hidden
-                  transition-all duration-500 ease-out
-                  bg-gradient-to-r ${getStageColor(stage.title)}
-                  hover:scale-[1.02] hover:shadow-glow
-                  cursor-pointer
-                  border-2 border-primary/20 hover:border-primary/40
-                `}
+                className="mx-auto rounded-xl relative overflow-hidden transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-glow cursor-pointer border-2 border-primary/20 hover:border-primary/40"
                 style={{
                   width: `${actualWidth}%`,
                   height: getItemHeight(),
+                  background: `linear-gradient(135deg, ${stage.color}, ${stage.color}dd, ${stage.color}bb)`
                 }}
               >
-                {/* Animated shine effect on hover */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                 
-                {/* Content container */}
                 <div className="relative h-full flex items-center justify-center px-4 py-3">
                   <div className="flex flex-col items-center justify-center text-center w-full gap-2">
-                    {/* Stage title */}
                     <span className="text-white font-semibold text-sm md:text-base leading-tight tracking-wide drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">
                       {stage.title}
                     </span>
                     
-                    {/* Metrics */}
                     <div className="flex items-center justify-center gap-3">
                       <span className="text-white text-xl md:text-2xl font-bold drop-shadow-md tabular-nums">
                         {stage.count}
@@ -133,7 +111,6 @@ export function FunnelChart({ stages, isLoading = false }: FunnelChartProps) {
                   </div>
                 </div>
 
-                {/* Bottom accent line */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
 
