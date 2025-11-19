@@ -963,7 +963,7 @@ export default function Visitantes() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+                  <Label htmlFor="phone">WhatsApp</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
@@ -1714,7 +1714,7 @@ export default function Visitantes() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_phone">Telefone</Label>
+                <Label htmlFor="edit_phone">WhatsApp</Label>
                 <Input
                   id="edit_phone"
                   value={editFormData.phone}

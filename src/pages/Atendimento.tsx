@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Send, Paperclip, Image as ImageIcon, Video } from "lucide-react";
+import { Search, Send, Paperclip, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
+import { NovaConversaDialog } from "@/components/atendimento/NovaConversaDialog";
 
 interface Contact {
   id: string;
@@ -31,6 +32,7 @@ export default function Atendimento() {
   const [searchTerm, setSearchTerm] = useState("");
   const [messageText, setMessageText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showNovaConversa, setShowNovaConversa] = useState(false);
 
   useEffect(() => {
     loadContacts();
@@ -64,6 +66,11 @@ export default function Atendimento() {
       contact.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.phone.includes(searchTerm)
   );
+
+  const handleSelectContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setMessages([]);
+  };
 
   const sendMessage = async () => {
     if (!messageText.trim() || !selectedContact) return;
@@ -120,8 +127,18 @@ export default function Atendimento() {
     <div className="flex h-[calc(100vh-4rem)] bg-background">
       {/* Lista de Conversas */}
       <div className="w-80 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border">
-          <h1 className="text-xl font-bold mb-4">Conversas WhatsApp</h1>
+        <div className="p-4 border-b border-border space-y-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">Conversas WhatsApp</h1>
+            <Button
+              size="sm"
+              onClick={() => setShowNovaConversa(true)}
+              className="gap-2"
+            >
+              <MessageSquarePlus className="w-4 h-4" />
+              Nova
+            </Button>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -138,10 +155,7 @@ export default function Atendimento() {
             {filteredContacts.map((contact) => (
               <button
                 key={contact.id}
-                onClick={() => {
-                  setSelectedContact(contact);
-                  setMessages([]);
-                }}
+                onClick={() => handleSelectContact(contact)}
                 className={`w-full p-3 rounded-lg mb-1 flex items-start gap-3 hover:bg-accent transition-colors ${
                   selectedContact?.id === contact.id ? "bg-accent" : ""
                 }`}
@@ -258,6 +272,13 @@ export default function Atendimento() {
           </div>
         )}
       </div>
+
+      <NovaConversaDialog
+        open={showNovaConversa}
+        onOpenChange={setShowNovaConversa}
+        contacts={contacts}
+        onSelectContact={handleSelectContact}
+      />
     </div>
   );
 }
