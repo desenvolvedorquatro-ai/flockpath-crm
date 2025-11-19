@@ -19,6 +19,7 @@ import ConfiguracoesStatus from "./pages/ConfiguracoesStatus";
 import Relatorios from "./pages/Relatorios";
 import Tarefas from "./pages/Tarefas";
 import MapaFrequencia from "./pages/MapaFrequencia";
+import Atendimento from "./pages/Atendimento";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import LandingPage from "./pages/LandingPage";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/importacao" element={<Importacao />} />
             <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/tarefas" element={<Tarefas />} />
+            <Route path="/atendimento" element={<Atendimento />} />
             <Route path="/mapa-frequencia" element={<MapaFrequencia />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/gerenciar-funcoes" element={<GerenciarFuncoes />} />

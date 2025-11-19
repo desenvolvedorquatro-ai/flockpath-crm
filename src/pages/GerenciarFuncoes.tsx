@@ -35,7 +35,7 @@ interface RolePermission {
   can_delete: boolean;
 }
 
-const MODULES: ModuleName[] = ["visitantes", "igrejas", "regioes", "areas", "grupos", "usuarios", "importacao", "interacoes", "tarefas", "frequencia", "config_status"];
+const MODULES: ModuleName[] = ["visitantes", "igrejas", "regioes", "areas", "grupos", "usuarios", "importacao", "interacoes", "tarefas", "frequencia", "config_status", "atendimento"];
 const MODULE_LABELS: Record<ModuleName, string> = {
   visitantes: "Visitantes",
   igrejas: "Igrejas",
@@ -48,6 +48,7 @@ const MODULE_LABELS: Record<ModuleName, string> = {
   frequencia: "Mapa de Frequência",
   interacoes: "Interações",
   config_status: "Config. do Sistema",
+  atendimento: "Atendimento",
 };
 
 // Mapeamento de cores Tailwind para hexadecimal

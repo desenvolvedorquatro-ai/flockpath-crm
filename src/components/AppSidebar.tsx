@@ -1,4 +1,4 @@
-import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map, Upload, Shield, FileBarChart, CheckSquare, Calendar } from "lucide-react";
+import { Home, Users, Building2, UserCog, UsersRound, Settings, MapPin, Map, Upload, Shield, FileBarChart, CheckSquare, Calendar, MessageSquare } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -48,6 +48,11 @@ const menuItems: MenuItem[] = [{
   url: "/tarefas",
   icon: CheckSquare,
   module: "tarefas"
+}, {
+  title: "Atendimento",
+  url: "/atendimento",
+  icon: MessageSquare,
+  module: "atendimento"
 }, {
   title: "Relatórios",
   url: "/relatorios",
