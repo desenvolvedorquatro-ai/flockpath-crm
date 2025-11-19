@@ -53,26 +53,25 @@ export default function Atendimento() {
 
       if (imagem) {
         payload.imagem = await convertToBase64(imagem);
+        payload.imagem_nome = imagem.name;
       }
 
       if (video) {
         payload.video = await convertToBase64(video);
+        payload.video_nome = video.name;
       }
 
-      const response = await fetch(
+      await fetch(
         "https://christoofer1992.app.n8n.cloud/webhook-test/ef46bf75-214a-4cff-b9d1-ebd9a33085f3",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          mode: "no-cors",
           body: JSON.stringify(payload),
         }
       );
-
-      if (!response.ok) {
-        throw new Error("Erro ao enviar mensagem");
-      }
 
       toast.success("Mensagem enviada com sucesso!");
       reset();
