@@ -1,65 +1,80 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, Send, Paperclip, Image as ImageIcon, Video } from "lucide-react";
 import { toast } from "sonner";
-import { Loader2, Send, Upload, X } from "lucide-react";
 
-const formSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
-  telefone: z.string().min(10, "Telefone inválido"),
-  mensagem: z.string().min(1, "Mensagem é obrigatória"),
-});
+interface Contact {
+  id: string;
+  full_name: string;
+  phone: string;
+  lastMessage?: string;
+  timestamp?: string;
+}
 
-type FormData = z.infer<typeof formSchema>;
+interface Message {
+  id: string;
+  text: string;
+  sender: "user" | "contact";
+  timestamp: string;
+  type?: "text" | "image" | "video";
+  media?: string;
+}
 
 export default function Atendimento() {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [messageText, setMessageText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [imagem, setImagem] = useState<File | null>(null);
-  const [video, setVideo] = useState<File | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-  });
+  useEffect(() => {
+    loadContacts();
+  }, []);
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
+  const loadContacts = async () => {
+    try {
+      const { data: visitors, error } = await supabase
+        .from("visitors")
+        .select("id, full_name, phone")
+        .not("phone", "is", null)
+        .order("full_name");
+
+      if (error) throw error;
+
+      const formattedContacts: Contact[] = (visitors || []).map((v) => ({
+        id: v.id,
+        full_name: v.full_name,
+        phone: v.phone || "",
+      }));
+
+      setContacts(formattedContacts);
+    } catch (error) {
+      console.error("Erro ao carregar contatos:", error);
+      toast.error("Erro ao carregar contatos");
+    }
   };
 
-  const onSubmit = async (data: FormData) => {
+  const filteredContacts = contacts.filter(
+    (contact) =>
+      contact.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.phone.includes(searchTerm)
+  );
+
+  const sendMessage = async () => {
+    if (!messageText.trim() || !selectedContact) return;
+
     setIsLoading(true);
-
     try {
-      const payload: any = {
-        nome: data.nome,
-        telefone: data.telefone,
-        mensagem: data.mensagem,
+      const payload = {
+        nome: selectedContact.full_name,
+        telefone: selectedContact.phone,
+        mensagem: messageText,
       };
-
-      if (imagem) {
-        payload.imagem = await convertToBase64(imagem);
-        payload.imagem_nome = imagem.name;
-      }
-
-      if (video) {
-        payload.video = await convertToBase64(video);
-        payload.video_nome = video.name;
-      }
 
       await fetch(
         "https://christoofer1992.app.n8n.cloud/webhook-test/ef46bf75-214a-4cff-b9d1-ebd9a33085f3",
@@ -73,153 +88,176 @@ export default function Atendimento() {
         }
       );
 
-      toast.success("Mensagem enviada com sucesso!");
-      reset();
-      setImagem(null);
-      setVideo(null);
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: messageText,
+        sender: "user",
+        timestamp: new Date().toISOString(),
+        type: "text",
+      };
+
+      setMessages([...messages, newMessage]);
+      setMessageText("");
+      toast.success("Mensagem enviada!");
     } catch (error) {
-      console.error("Erro ao enviar:", error);
-      toast.error("Erro ao enviar mensagem. Tente novamente.");
+      console.error("Erro ao enviar mensagem:", error);
+      toast.error("Erro ao enviar mensagem");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Atendimento</h1>
-        <p className="text-muted-foreground mt-2">
-          Envie mensagens via WhatsApp para seus contatos
-        </p>
+    <div className="flex h-[calc(100vh-4rem)] bg-background">
+      {/* Lista de Conversas */}
+      <div className="w-80 border-r border-border flex flex-col">
+        <div className="p-4 border-b border-border">
+          <h1 className="text-xl font-bold mb-4">Conversas WhatsApp</h1>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Buscar conversas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1">
+          <div className="p-2">
+            {filteredContacts.map((contact) => (
+              <button
+                key={contact.id}
+                onClick={() => {
+                  setSelectedContact(contact);
+                  setMessages([]);
+                }}
+                className={`w-full p-3 rounded-lg mb-1 flex items-start gap-3 hover:bg-accent transition-colors ${
+                  selectedContact?.id === contact.id ? "bg-accent" : ""
+                }`}
+              >
+                <Avatar className="w-10 h-10">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {getInitials(contact.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left overflow-hidden">
+                  <div className="font-medium text-sm truncate">
+                    {contact.full_name}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {contact.phone}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Enviar Mensagem WhatsApp</CardTitle>
-          <CardDescription>
-            Preencha os dados abaixo para enviar uma mensagem
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome</Label>
-              <Input
-                id="nome"
-                placeholder="Digite o nome do contato"
-                {...register("nome")}
-              />
-              {errors.nome && (
-                <p className="text-sm text-destructive">{errors.nome.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone</Label>
-              <Input
-                id="telefone"
-                placeholder="(00) 00000-0000"
-                {...register("telefone")}
-              />
-              {errors.telefone && (
-                <p className="text-sm text-destructive">{errors.telefone.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="mensagem">Mensagem</Label>
-              <Textarea
-                id="mensagem"
-                placeholder="Digite sua mensagem"
-                rows={5}
-                {...register("mensagem")}
-              />
-              {errors.mensagem && (
-                <p className="text-sm text-destructive">{errors.mensagem.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imagem">Imagem (opcional)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="imagem"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setImagem(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById("imagem")?.click()}
-                  className="w-full"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {imagem ? imagem.name : "Selecionar Imagem"}
-                </Button>
-                {imagem && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setImagem(null)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
+      {/* Área de Mensagens */}
+      <div className="flex-1 flex flex-col">
+        {selectedContact ? (
+          <>
+            {/* Cabeçalho da Conversa */}
+            <div className="p-4 border-b border-border flex items-center gap-3">
+              <Avatar className="w-10 h-10">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {getInitials(selectedContact.full_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="font-medium">{selectedContact.full_name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {selectedContact.phone}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="video">Vídeo (opcional)</Label>
+            {/* Mensagens */}
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.sender === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-lg p-3 ${
+                        message.sender === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <p className="text-sm">{message.text}</p>
+                      <span className="text-xs opacity-70 mt-1 block">
+                        {new Date(message.timestamp).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            {/* Campo de Envio */}
+            <div className="p-4 border-t border-border">
               <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon">
+                  <Paperclip className="w-5 h-5" />
+                </Button>
                 <Input
-                  id="video"
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => setVideo(e.target.files?.[0] || null)}
-                  className="hidden"
+                  placeholder="Digite uma mensagem..."
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                  className="flex-1"
                 />
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById("video")?.click()}
-                  className="w-full"
+                  onClick={sendMessage}
+                  disabled={!messageText.trim() || isLoading}
+                  size="icon"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {video ? video.name : "Selecionar Vídeo"}
+                  <Send className="w-5 h-5" />
                 </Button>
-                {video && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setVideo(null)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
             </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Enviar Mensagem
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <Search className="w-12 h-12" />
+              </div>
+              <h2 className="text-xl font-semibold mb-2">
+                Nenhuma conversa selecionada
+              </h2>
+              <p className="text-sm">
+                Escolha uma conversa da lista para começar
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
