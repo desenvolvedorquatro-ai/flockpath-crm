@@ -35,29 +35,39 @@ export default function Atendimento() {
   const [showNovaConversa, setShowNovaConversa] = useState(false);
 
   useEffect(() => {
-    loadContacts();
+    loadConversations();
   }, []);
 
-  const loadContacts = async () => {
+  const loadConversations = async () => {
     try {
-      const { data: visitors, error } = await supabase
-        .from("visitors")
-        .select("id, full_name, phone")
-        .not("phone", "is", null)
-        .order("full_name");
+      const { data: conversations, error } = await supabase
+        .from("conversations")
+        .select(`
+          id,
+          phone,
+          last_message,
+          last_message_time,
+          visitor_id,
+          visitors (
+            full_name
+          )
+        `)
+        .order("last_message_time", { ascending: false });
 
       if (error) throw error;
 
-      const formattedContacts: Contact[] = (visitors || []).map((v) => ({
-        id: v.id,
-        full_name: v.full_name,
-        phone: v.phone || "",
+      const formattedContacts: Contact[] = (conversations || []).map((c: any) => ({
+        id: c.visitor_id,
+        full_name: c.visitors?.full_name || "Contato",
+        phone: c.phone,
+        lastMessage: c.last_message,
+        timestamp: c.last_message_time,
       }));
 
       setContacts(formattedContacts);
     } catch (error) {
-      console.error("Erro ao carregar contatos:", error);
-      toast.error("Erro ao carregar contatos");
+      console.error("Erro ao carregar conversas:", error);
+      toast.error("Erro ao carregar conversas");
     }
   };
 
@@ -67,9 +77,30 @@ export default function Atendimento() {
       contact.phone.includes(searchTerm)
   );
 
-  const handleSelectContact = (contact: Contact) => {
+  const handleSelectContact = async (contact: Contact) => {
     setSelectedContact(contact);
     setMessages([]);
+    
+    // Criar ou atualizar conversa ao selecionar contato
+    try {
+      const { data: existingConversation } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("visitor_id", contact.id)
+        .single();
+
+      if (!existingConversation) {
+        await supabase.from("conversations").insert({
+          visitor_id: contact.id,
+          phone: contact.phone,
+          last_message: "",
+        });
+      }
+
+      loadConversations();
+    } catch (error) {
+      console.error("Erro ao criar conversa:", error);
+    }
   };
 
   const sendMessage = async () => {
@@ -95,6 +126,15 @@ export default function Atendimento() {
         }
       );
 
+      // Atualizar conversa com última mensagem
+      await supabase
+        .from("conversations")
+        .update({
+          last_message: messageText,
+          last_message_time: new Date().toISOString(),
+        })
+        .eq("visitor_id", selectedContact.id);
+
       const newMessage: Message = {
         id: Date.now().toString(),
         text: messageText,
@@ -105,6 +145,7 @@ export default function Atendimento() {
 
       setMessages([...messages, newMessage]);
       setMessageText("");
+      loadConversations();
       toast.success("Mensagem enviada!");
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -276,7 +317,6 @@ export default function Atendimento() {
       <NovaConversaDialog
         open={showNovaConversa}
         onOpenChange={setShowNovaConversa}
-        contacts={contacts}
         onSelectContact={handleSelectContact}
       />
     </div>

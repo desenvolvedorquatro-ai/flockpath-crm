@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Contact {
   id: string;
@@ -15,19 +16,46 @@ interface Contact {
 interface NovaConversaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contacts: Contact[];
   onSelectContact: (contact: Contact) => void;
 }
 
 export function NovaConversaDialog({
   open,
   onOpenChange,
-  contacts,
   onSelectContact,
 }: NovaConversaDialogProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [allVisitors, setAllVisitors] = useState<Contact[]>([]);
 
-  const filteredContacts = contacts.filter(
+  useEffect(() => {
+    if (open) {
+      loadAllVisitors();
+    }
+  }, [open]);
+
+  const loadAllVisitors = async () => {
+    try {
+      const { data: visitors, error } = await supabase
+        .from("visitors")
+        .select("id, full_name, phone")
+        .not("phone", "is", null)
+        .order("full_name");
+
+      if (error) throw error;
+
+      const formattedContacts: Contact[] = (visitors || []).map((v) => ({
+        id: v.id,
+        full_name: v.full_name,
+        phone: v.phone || "",
+      }));
+
+      setAllVisitors(formattedContacts);
+    } catch (error) {
+      console.error("Erro ao carregar visitantes:", error);
+    }
+  };
+
+  const filteredContacts = allVisitors.filter(
     (contact) =>
       contact.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.phone.includes(searchTerm)
