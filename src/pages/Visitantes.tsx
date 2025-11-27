@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle, Trash2, ArrowUpDown } from "lucide-react";
+import { Users, Plus, Mail, Phone, Calendar, Filter, MessageSquare, CalendarIcon, Building2, AlertCircle, Cake, Edit, User2, Briefcase, ArrowRightLeft, CheckCircle2, XCircle, Trash2, ArrowUpDown, Power } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { ViewToggle } from "@/components/ViewToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,6 +57,7 @@ import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useVisitorConfig } from "@/hooks/useVisitorConfig";
+import { Switch } from "@/components/ui/switch";
 
 interface Visitor {
   id: string;
@@ -86,6 +87,7 @@ interface Visitor {
   area_id: string | null;
   region_id: string | null;
   resgate: boolean | null;
+  active: boolean;
 }
 
 interface AssistanceGroup {
@@ -647,6 +649,38 @@ export default function Visitantes() {
     };
 
     reloadVisitors();
+  };
+
+  const handleToggleActive = async (visitor: Visitor) => {
+    const newActiveState = !visitor.active;
+    
+    const { error } = await supabase
+      .from("visitors")
+      .update({ active: newActiveState })
+      .eq("id", visitor.id);
+
+    if (error) {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: newActiveState ? "Visitante ativado!" : "Visitante inativado!",
+      description: newActiveState 
+        ? "O visitante aparecerá nos dashboards novamente." 
+        : "O visitante foi inativado e não aparecerá nos dashboards.",
+    });
+
+    // Recarregar lista
+    const updated = visitors.map(v => 
+      v.id === visitor.id ? { ...v, active: newActiveState } : v
+    );
+    setVisitors(updated);
+    setFilteredVisitors(updated);
   };
 
   const handleDeleteAllVisitors = async () => {
@@ -1409,6 +1443,7 @@ export default function Visitantes() {
                   <TableHead className="hidden md:table-cell min-w-[160px]">Última Interação</TableHead>
                   <TableHead className="min-w-[120px]">Status</TableHead>
                   <TableHead className="hidden sm:table-cell min-w-[90px]">Resgate</TableHead>
+                  <TableHead className="text-center min-w-[80px]">Ativo</TableHead>
                   <TableHead className="text-center min-w-[180px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1472,6 +1507,15 @@ export default function Visitantes() {
                         ) : (
                           <Badge variant="outline" className="text-xs">Não</Badge>
                         )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center items-center">
+                          <Switch
+                            checked={visitor.active}
+                            onCheckedChange={() => handleToggleActive(visitor)}
+                            aria-label={visitor.active ? "Inativar visitante" : "Ativar visitante"}
+                          />
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex gap-2 justify-center">
@@ -1618,6 +1662,22 @@ export default function Visitantes() {
                     </span>
                   </div>
                 )}
+                <div className="flex gap-2 mt-3">
+                  <div className="flex items-center gap-2 mb-2 w-full">
+                    <Label htmlFor={`active-${visitor.id}`} className="text-sm font-medium">
+                      Ativo:
+                    </Label>
+                    <Switch
+                      id={`active-${visitor.id}`}
+                      checked={visitor.active}
+                      onCheckedChange={() => handleToggleActive(visitor)}
+                      aria-label={visitor.active ? "Inativar visitante" : "Ativar visitante"}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {visitor.active ? "(Aparece no dashboard)" : "(Não aparece no dashboard)"}
+                    </span>
+                  </div>
+                </div>
                 <div className="flex gap-2 mt-3">
                   <Button
                     variant="outline"

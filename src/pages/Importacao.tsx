@@ -22,6 +22,7 @@ export default function Importacao() {
   const [validationResults, setValidationResults] = useState<ValidationResult | null>(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [pendingImportData, setPendingImportData] = useState<{ data: any[], type: string } | null>(null);
+  const [importProgress, setImportProgress] = useState(0);
 
   const downloadTemplate = (type: string) => {
     let headers: string[] = [];
@@ -108,13 +109,16 @@ export default function Importacao() {
     if (!pendingImportData || !validationResults) return;
 
     setImporting(true);
+    setImportProgress(0);
 
     try {
       let success = 0;
       let errors = 0;
+      const totalItems = validationResults.valid.length;
 
       // Importar apenas registros válidos
-      for (const item of validationResults.valid) {
+      for (let i = 0; i < validationResults.valid.length; i++) {
+        const item = validationResults.valid[i];
         try {
           switch (pendingImportData.type) {
             case "regioes":
@@ -142,6 +146,10 @@ export default function Importacao() {
             variant: "destructive",
           });
         }
+        
+        // Atualizar progresso
+        const progress = Math.round(((i + 1) / totalItems) * 100);
+        setImportProgress(progress);
       }
 
       toast({
@@ -153,6 +161,7 @@ export default function Importacao() {
       setShowPreviewDialog(false);
       setValidationResults(null);
       setPendingImportData(null);
+      setImportProgress(0);
     } catch (error: any) {
       toast({
         title: "Erro na importação",
@@ -161,6 +170,7 @@ export default function Importacao() {
       });
     } finally {
       setImporting(false);
+      setImportProgress(0);
     }
   };
 
@@ -408,7 +418,11 @@ export default function Importacao() {
 
   return (
     <div className="min-h-screen bg-background">
-      <LoadingOverlay isVisible={importing} message="Processando importação..." />
+      <LoadingOverlay 
+        isVisible={importing} 
+        message="Processando importação..." 
+        progress={importProgress}
+      />
       
       <ModernHeader
         title="Importação de Dados"

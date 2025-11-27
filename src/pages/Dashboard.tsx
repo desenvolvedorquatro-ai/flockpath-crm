@@ -87,7 +87,8 @@ export default function Dashboard() {
             region_id
           )
         )
-      `);
+      `)
+      .eq("active", true); // Filtrar apenas visitantes ativos
 
       // Aplicar filtros hierárquicos
       if (selectedChurch && selectedChurch !== "all") {
