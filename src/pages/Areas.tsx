@@ -4,6 +4,7 @@ import { ViewToggle } from "@/components/ViewToggle";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ModernHeader } from "@/components/ModernHeader";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -249,11 +250,17 @@ export default function Areas() {
   );
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingOverlay isVisible={true} message="Carregando áreas..." />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay isVisible={loading} message="Carregando áreas..." />
+      
       <ModernHeader
         title="Áreas"
         description="Gerencie as áreas do sistema"

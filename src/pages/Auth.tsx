@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,6 +99,8 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <LoadingOverlay isVisible={loading} message="Entrando..." />
+      
       <Card className="w-full max-w-md shadow-2xl border-2 border-primary/10">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto mb-2">

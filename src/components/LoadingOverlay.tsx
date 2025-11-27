@@ -1,10 +1,11 @@
 import ovelhaLoading from "@/assets/ovelha-loading.png";
 
-interface ImportLoadingOverlayProps {
+interface LoadingOverlayProps {
   isVisible: boolean;
+  message?: string;
 }
 
-export function ImportLoadingOverlay({ isVisible }: ImportLoadingOverlayProps) {
+export function LoadingOverlay({ isVisible, message = "Processando..." }: LoadingOverlayProps) {
   if (!isVisible) return null;
 
   return (
@@ -23,7 +24,7 @@ export function ImportLoadingOverlay({ isVisible }: ImportLoadingOverlayProps) {
             className="h-20 w-20"
           />
           <p className="text-white font-medium text-lg animate-pulse">
-            Processando importação...
+            {message}
           </p>
         </div>
       </div>

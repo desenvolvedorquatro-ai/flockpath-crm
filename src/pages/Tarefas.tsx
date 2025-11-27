@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ModernHeader } from "@/components/ModernHeader";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -284,6 +285,8 @@ export default function Tarefas() {
 
   return (
     <div className="container py-8">
+      <LoadingOverlay isVisible={loading} message="Carregando tarefas..." />
+      
       <ModernHeader
         title="Tarefas"
         description="Gerencie tarefas atribuídas aos responsáveis dos GAs"

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -166,6 +167,8 @@ export default function Atendimento() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-background">
+      <LoadingOverlay isVisible={isLoading} message="Enviando mensagem..." />
+      
       {/* Lista de Conversas */}
       <div className="w-80 border-r border-border flex flex-col">
         <div className="p-4 border-b border-border space-y-4">

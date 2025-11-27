@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ViewToggle } from "@/components/ViewToggle";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";

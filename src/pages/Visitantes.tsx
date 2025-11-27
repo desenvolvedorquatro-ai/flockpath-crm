@@ -51,6 +51,7 @@ import { toast } from "@/hooks/use-toast";
 import { VisitorInteractionsDialog } from "@/components/visitors/VisitorInteractionsDialog";
 import { VisitorTransferDialog } from "@/components/visitors/VisitorTransferDialog";
 import { ModernHeader } from "@/components/ModernHeader";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { PaginationControls } from "@/components/PaginationControls";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -852,6 +853,8 @@ export default function Visitantes() {
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay isVisible={configLoading} message="Carregando visitantes..." />
+      
       <ModernHeader
         title="Visitantes"
         description="Gestão completa de visitantes e membros"

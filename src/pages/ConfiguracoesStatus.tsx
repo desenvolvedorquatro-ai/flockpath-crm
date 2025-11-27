@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Settings, Plus, Edit, Trash2, Save, X, GripVertical, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -427,6 +428,8 @@ export default function ConfiguracoesStatus() {
 
   return (
     <div className="min-h-screen bg-background animate-fade-in">
+      <LoadingOverlay isVisible={loading} message="Carregando configurações..." />
+      
       <ModernHeader
         icon={Settings}
         title="Config. do Sistema"
