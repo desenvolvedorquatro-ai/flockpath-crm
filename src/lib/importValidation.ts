@@ -18,10 +18,11 @@ export const validateEmail = (email: string): boolean => {
 };
 
 // Validação de telefone
-export const validatePhone = (phone: string): boolean => {
+export const validatePhone = (phone: string | number): boolean => {
   if (!phone) return true; // telefone opcional
+  const phoneStr = String(phone).trim();
   const phoneRegex = /^\(?([0-9]{2})\)?[-. ]?([0-9]{4,5})[-. ]?([0-9]{4})$/;
-  return phoneRegex.test(phone.replace(/\s/g, ""));
+  return phoneRegex.test(phoneStr.replace(/\s/g, ""));
 };
 
 // Converte data de DDMMAAAA ou DD/MM/AAAA ou número serial do Excel para AAAA-MM-DD
