@@ -3,9 +3,10 @@ import ovelhaLoading from "@/assets/ovelha-loading.png";
 interface LoadingOverlayProps {
   isVisible: boolean;
   message?: string;
+  progress?: number; // 0-100
 }
 
-export function LoadingOverlay({ isVisible, message = "Processando..." }: LoadingOverlayProps) {
+export function LoadingOverlay({ isVisible, message = "Processando...", progress }: LoadingOverlayProps) {
   if (!isVisible) return null;
 
   return (
@@ -22,9 +23,16 @@ export function LoadingOverlay({ isVisible, message = "Processando..." }: Loadin
         </div>
         
         {/* Texto abaixo do círculo */}
-        <p className="text-gray-700 font-medium text-lg animate-pulse">
-          {message}
-        </p>
+        <div className="text-center">
+          <p className="text-gray-700 font-medium text-lg animate-pulse">
+            {message}
+          </p>
+          {progress !== undefined && (
+            <p className="text-gray-600 font-semibold text-xl mt-2">
+              {progress}%
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

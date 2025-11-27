@@ -874,6 +874,7 @@ export type Database = {
       }
       visitors: {
         Row: {
+          active: boolean
           address: string | null
           area_id: string | null
           assistance_group_id: string | null
@@ -906,6 +907,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          active?: boolean
           address?: string | null
           area_id?: string | null
           assistance_group_id?: string | null
@@ -938,6 +940,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          active?: boolean
           address?: string | null
           area_id?: string | null
           assistance_group_id?: string | null
