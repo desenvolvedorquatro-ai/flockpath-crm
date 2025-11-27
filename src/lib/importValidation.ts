@@ -272,8 +272,8 @@ const validateVisitante = async (row: any): Promise<string[]> => {
     errors.push("Email inválido");
   }
 
-  if (row.telefone && !validatePhone(row.telefone)) {
-    errors.push("Telefone inválido");
+  if (row.whatsapp && !validatePhone(row.whatsapp)) {
+    errors.push("WhatsApp inválido");
   }
 
   if (row.data_visita && !validateDate(row.data_visita)) {
@@ -288,14 +288,30 @@ const validateVisitante = async (row: any): Promise<string[]> => {
     errors.push("Data de batismo inválida (use formato DD/MM/AAAA, DDMMAAAA ou AAAA-MM-DD)");
   }
 
-  // Validar status se fornecido
-  if (row.status && !['interessado', 'visitante', 'visitante_frequente', 'candidato_batismo', 'membro'].includes(row.status)) {
-    errors.push("Status inválido. Use: interessado, visitante, visitante_frequente, candidato_batismo ou membro");
+  // Validar status se fornecido - buscar dinamicamente do banco
+  if (row.status) {
+    const { data: validStatuses } = await supabase
+      .from("visitor_status_config")
+      .select("value")
+      .eq("active", true);
+    
+    const allowedStatuses = validStatuses?.map(s => s.value) || [];
+    if (!allowedStatuses.includes(row.status)) {
+      errors.push(`Status inválido. Status disponíveis: ${allowedStatuses.join(", ")}`);
+    }
   }
 
-  // Validar categoria se fornecido
-  if (row.categoria && !['crianca', 'intermediario', 'adolescente', 'jovem', 'senhora', 'varao', 'idoso'].includes(row.categoria)) {
-    errors.push("Categoria inválida. Use: crianca, intermediario, adolescente, jovem, senhora, varao ou idoso");
+  // Validar categoria se fornecido - buscar dinamicamente do banco
+  if (row.categoria) {
+    const { data: validCategories } = await supabase
+      .from("visitor_category_config")
+      .select("value")
+      .eq("active", true);
+    
+    const allowedCategories = validCategories?.map(c => c.value) || [];
+    if (!allowedCategories.includes(row.categoria)) {
+      errors.push(`Categoria inválida. Categorias disponíveis: ${allowedCategories.join(", ")}`);
+    }
   }
 
   // Validar resgate se fornecido
