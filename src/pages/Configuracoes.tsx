@@ -1,5 +1,6 @@
 import { Settings, User, LogOut, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
@@ -131,6 +132,8 @@ export default function Configuracoes() {
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay isVisible={loading} message="Salvando..." />
+      
       <ModernHeader
         title="Config. Usuário"
         description="Altere seus dados pessoais e preferências de usuário"

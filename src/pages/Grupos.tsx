@@ -1,5 +1,6 @@
 import { UsersRound, Search, Edit, Trash2 } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ViewToggle } from "@/components/ViewToggle";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -254,13 +255,17 @@ export default function Grupos() {
   };
 
   if (roleLoading || loading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-muted-foreground">Carregando...</div>
-    </div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingOverlay isVisible={true} message="Carregando grupos..." />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay isVisible={loading} message="Carregando grupos..." />
+      
       <ModernHeader
         title="Grupos de Assistência"
         description="Gerencie células e grupos de acompanhamento"

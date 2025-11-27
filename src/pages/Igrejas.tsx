@@ -1,5 +1,6 @@
 import { Building2, Search, Edit, Trash2, Users } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ViewToggle } from "@/components/ViewToggle";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -250,13 +251,16 @@ export default function Igrejas() {
   );
 
   if (roleLoading || loading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-muted-foreground">Carregando...</div>
-    </div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingOverlay isVisible={true} message="Carregando igrejas..." />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay isVisible={loading} message="Carregando igrejas..." />
       <ModernHeader
         title="Igrejas"
         description="Gerencie todas as igrejas do sistema"

@@ -9,6 +9,7 @@ import { useHierarchyFilters } from "@/hooks/useHierarchyFilters";
 import { ModernHeader } from "@/components/ModernHeader";
 import { useVisitorConfig } from "@/hooks/useVisitorConfig";
 import { conversionRateColor } from "@/lib/visitorStatus";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -181,6 +182,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background animate-fade-in">
+      <LoadingOverlay isVisible={configLoading || filtersLoading} message="Carregando dashboard..." />
+      
       <div className="container mx-auto px-4 md:px-6 py-6">
         <ModernHeader
           title="Dashboard"

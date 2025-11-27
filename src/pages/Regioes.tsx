@@ -4,6 +4,7 @@ import { ViewToggle } from "@/components/ViewToggle";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ModernHeader } from "@/components/ModernHeader";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -228,11 +229,17 @@ export default function Regioes() {
   );
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingOverlay isVisible={true} message="Carregando regiões..." />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay isVisible={loading} message="Carregando regiões..." />
+      
       <ModernHeader
         title="Regiões"
         description="Gerencie as regiões do sistema"

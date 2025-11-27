@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FileBarChart, Download, Calendar as CalendarIcon, MapPin, Building2, Church, Users } from "lucide-react";
 import { ModernHeader } from "@/components/ModernHeader";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

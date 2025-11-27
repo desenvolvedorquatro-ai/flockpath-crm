@@ -2,6 +2,7 @@ import { UserCog, Plus, Search, Shield, Edit, Trash2, Lock, Clock } from "lucide
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ViewToggle } from "@/components/ViewToggle";
 import { PaginationControls } from "@/components/PaginationControls";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -730,9 +731,11 @@ export default function Usuarios() {
   }, [search]);
 
   if (roleLoading || loading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-muted-foreground">Carregando...</div>
-    </div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <LoadingOverlay isVisible={true} message="Carregando usuários..." />
+      </div>
+    );
   }
 
   if (!isAdmin) {
@@ -748,6 +751,8 @@ export default function Usuarios() {
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay isVisible={loading} message="Carregando usuários..." />
+      
       <ModernHeader
         title="Usuários"
         description="Gerencie usuários e permissões do sistema"

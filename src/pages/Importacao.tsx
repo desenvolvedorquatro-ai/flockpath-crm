@@ -12,7 +12,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import * as XLSX from "xlsx";
 import { ModernHeader } from "@/components/ModernHeader";
 import { ImportPreviewDialog } from "@/components/ImportPreviewDialog";
-import { ImportLoadingOverlay } from "@/components/ImportLoadingOverlay";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { validateImportData, ValidationResult } from "@/lib/importValidation";
 
 export default function Importacao() {
@@ -408,7 +408,7 @@ export default function Importacao() {
 
   return (
     <div className="min-h-screen bg-background">
-      <ImportLoadingOverlay isVisible={importing} />
+      <LoadingOverlay isVisible={importing} message="Processando importação..." />
       
       <ModernHeader
         title="Importação de Dados"
