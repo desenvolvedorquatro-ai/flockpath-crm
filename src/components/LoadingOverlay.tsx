@@ -9,21 +9,21 @@ export function LoadingOverlay({ isVisible, message = "Processando..." }: Loadin
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm">
       <div className="relative flex items-center justify-center">
         {/* Círculo de carregamento vermelho */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-32 w-32 animate-spin rounded-full border-4 border-transparent border-t-red-500 border-r-red-500" />
+          <div className="h-40 w-40 animate-spin rounded-full border-[6px] border-transparent border-t-red-500 border-r-red-500" />
         </div>
         
         {/* Ovelha no centro */}
-        <div className="relative z-10 flex flex-col items-center gap-4">
+        <div className="relative z-10 flex flex-col items-center gap-6">
           <img 
             src={ovelhaLoading} 
             alt="Processando" 
-            className="h-20 w-20"
+            className="h-24 w-24 object-contain"
           />
-          <p className="text-white font-medium text-lg animate-pulse">
+          <p className="text-gray-700 font-medium text-lg animate-pulse">
             {message}
           </p>
         </div>
