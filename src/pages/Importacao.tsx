@@ -40,7 +40,7 @@ export default function Importacao() {
         filename = "template_igrejas.xlsx";
         break;
       case "visitantes":
-        headers = ["nome", "email", "telefone", "sexo", "nome_igreja", "nome_area", "nome_regiao", "nome_grupo", "endereco", "data_visita", "convidado_por", "observacoes", "status", "categoria", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo", "resgate"];
+        headers = ["nome", "email", "whatsapp", "sexo", "nome_igreja", "nome_area", "nome_regiao", "nome_grupo", "endereco", "data_visita", "convidado_por", "observacoes", "status", "categoria", "profissao", "estado_civil", "data_nascimento", "tem_filhos", "candidato_batismo", "data_batismo", "resgate"];
         filename = "template_visitantes.xlsx";
         break;
     }
@@ -370,7 +370,7 @@ export default function Importacao() {
     const { error } = await supabase.from("visitors").insert({
       full_name: row.nome,
       email: row.email || null,
-      phone: row.telefone || null,
+      phone: row.whatsapp || null,
       sexo: row.sexo || null,
       church_id: church.id,
       assistance_group_id,
