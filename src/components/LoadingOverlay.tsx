@@ -17,7 +17,7 @@ export function LoadingOverlay({ isVisible, message = "Processando..." }: Loadin
           <img 
             src={ovelhaLoading} 
             alt="Processando" 
-            className="h-24 w-24 object-contain"
+            className="h-24 w-24 object-contain animate-pulse"
           />
         </div>
         
