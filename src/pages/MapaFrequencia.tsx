@@ -323,7 +323,7 @@ export default function MapaFrequencia() {
               <span className="text-sm font-medium">Culto Noite</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-gray-500 flex items-center justify-center">
+              <div className="w-5 h-5 rounded bg-green-400 flex items-center justify-center">
                 <Clock className="w-3 h-3 text-white" />
               </div>
               <span className="text-sm font-medium">Outro Horário</span>
@@ -517,7 +517,7 @@ export default function MapaFrequencia() {
                                   checked={hasAttendance(visitor.id, day, "outro")}
                                   onCheckedChange={() => toggleAttendance(visitor.id, day, "outro")}
                                   disabled={!can("frequencia", "create")}
-                                  className="w-5 h-5 data-[state=checked]:bg-gray-500 data-[state=checked]:border-gray-600"
+                                  className="w-5 h-5 data-[state=checked]:bg-green-400 data-[state=checked]:border-green-500"
                                   title="Outro horário"
                                 />
                               </div>
