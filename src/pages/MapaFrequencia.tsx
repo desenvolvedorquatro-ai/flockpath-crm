@@ -5,16 +5,18 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ModernHeader } from "@/components/ModernHeader";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { PaginationControls } from "@/components/PaginationControls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSunday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Sun, Moon, Clock } from "lucide-react";
+import { Calendar, Sun, Moon, Clock, Search } from "lucide-react";
 
 interface Visitor {
   id: string;
@@ -55,11 +57,30 @@ export default function MapaFrequencia() {
   const [selectedChurch, setSelectedChurch] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 30;
 
   const daysInMonth = eachDayOfInterval({
     start: startOfMonth(selectedMonth),
     end: endOfMonth(selectedMonth),
   });
+
+  // Filtrar visitantes por busca
+  const filteredVisitors = visitors.filter((visitor) =>
+    visitor.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Paginação
+  const totalPages = Math.ceil(filteredVisitors.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedVisitors = filteredVisitors.slice(startIndex, endIndex);
+
+  // Reset página quando mudar busca
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Buscar grupo do usuário
   useEffect(() => {
@@ -320,7 +341,7 @@ export default function MapaFrequencia() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="church" className="text-base font-semibold">Igreja</Label>
               <Select value={selectedChurch} onValueChange={setSelectedChurch}>
@@ -380,6 +401,20 @@ export default function MapaFrequencia() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label htmlFor="search" className="text-base font-semibold">Buscar Visitante</Label>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Digite o nome..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -400,11 +435,12 @@ export default function MapaFrequencia() {
                 ))}
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-border">
-                <table className="w-full border-collapse">
-                  <thead className="bg-muted/50 sticky top-0 z-50">
+              <>
+                <div className="overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full border-collapse">
+                  <thead className="bg-muted/50 sticky top-0 z-[100]">
                     <tr>
-                      <th className="border-r border-border p-3 sticky left-0 bg-muted z-50 min-w-[150px] max-w-[180px] text-left font-bold">
+                      <th className="border-r border-border p-3 sticky left-0 bg-muted z-[100] min-w-[225px] max-w-[270px] text-left font-bold">
                         Visitante
                       </th>
                       {daysInMonth.map((day) => (
@@ -426,14 +462,14 @@ export default function MapaFrequencia() {
                     </tr>
                   </thead>
                   <tbody>
-                    {visitors.map((visitor, index) => (
+                    {paginatedVisitors.map((visitor, index) => (
                       <tr
                         key={visitor.id}
                         className={`hover:bg-accent/20 transition-colors ${
                           index % 2 === 0 ? "bg-background" : "bg-muted/20"
                         }`}
                       >
-                        <td className={`border-r border-b border-border p-3 sticky left-0 z-10 font-medium min-w-[150px] max-w-[180px] ${
+                        <td className={`border-r border-b border-border p-3 sticky left-0 z-[50] font-medium min-w-[225px] max-w-[270px] ${
                           index % 2 === 0 ? "bg-background" : "bg-muted/20"
                         }`}>
                           <div className="flex items-center justify-between gap-2">
@@ -490,7 +526,7 @@ export default function MapaFrequencia() {
                         ))}
                       </tr>
                     ))}
-                    {visitors.length === 0 && (
+                    {paginatedVisitors.length === 0 && (
                       <tr>
                         <td
                           colSpan={daysInMonth.length + 1}
@@ -502,7 +538,10 @@ export default function MapaFrequencia() {
                               Nenhum visitante encontrado
                             </p>
                             <p className="text-sm">
-                              Selecione uma igreja ou grupo de assistência para visualizar os visitantes
+                              {searchQuery 
+                                ? "Nenhum resultado para a busca aplicada."
+                                : "Selecione uma igreja ou grupo de assistência para visualizar os visitantes"
+                              }
                             </p>
                           </div>
                         </td>
@@ -511,6 +550,17 @@ export default function MapaFrequencia() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Paginação */}
+              {filteredVisitors.length > itemsPerPage && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalItems={filteredVisitors.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              )}
+            </>
             )}
           </CardContent>
         </Card>
