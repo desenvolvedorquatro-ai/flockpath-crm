@@ -436,11 +436,11 @@ export default function MapaFrequencia() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="overflow-x-auto rounded-lg border border-border isolate relative">
                   <table className="w-full border-collapse">
-                  <thead className="bg-muted/50 sticky top-0 z-[100]">
+                  <thead className="bg-muted/50 sticky top-0 z-20">
                     <tr>
-                      <th className="border-r border-border p-3 sticky left-0 bg-muted z-[100] min-w-[225px] max-w-[270px] text-left font-bold">
+                      <th className="border-r border-border p-3 sticky left-0 bg-muted z-30 min-w-[225px] max-w-[270px] text-left font-bold shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                         Visitante
                       </th>
                       {daysInMonth.map((day) => (
@@ -469,8 +469,8 @@ export default function MapaFrequencia() {
                           index % 2 === 0 ? "bg-background" : "bg-muted/20"
                         }`}
                       >
-                        <td className={`border-r border-b border-border p-3 sticky left-0 z-[50] font-medium min-w-[225px] max-w-[270px] ${
-                          index % 2 === 0 ? "bg-background" : "bg-muted/20"
+                        <td className={`border-r border-b border-border p-3 sticky left-0 z-10 font-medium min-w-[225px] max-w-[270px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] ${
+                          index % 2 === 0 ? "bg-white dark:bg-background" : "bg-gray-50 dark:bg-muted/30"
                         }`}>
                           <div className="flex items-center justify-between gap-2">
                             <span className="truncate text-sm">{visitor.full_name}</span>
