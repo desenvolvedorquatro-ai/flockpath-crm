@@ -402,9 +402,9 @@ export default function MapaFrequencia() {
             ) : (
               <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="w-full border-collapse">
-                  <thead className="bg-muted/50 sticky top-0 z-30">
+                  <thead className="bg-muted/50 sticky top-0 z-50">
                     <tr>
-                      <th className="border-r border-border p-3 sticky left-0 bg-muted z-40 min-w-[200px] text-left font-bold">
+                      <th className="border-r border-border p-3 sticky left-0 bg-muted z-50 min-w-[150px] max-w-[180px] text-left font-bold">
                         Visitante
                       </th>
                       {daysInMonth.map((day) => (
@@ -433,11 +433,11 @@ export default function MapaFrequencia() {
                           index % 2 === 0 ? "bg-background" : "bg-muted/20"
                         }`}
                       >
-                        <td className={`border-r border-b border-border p-3 sticky left-0 z-20 font-medium ${
+                        <td className={`border-r border-b border-border p-3 sticky left-0 z-10 font-medium min-w-[150px] max-w-[180px] ${
                           index % 2 === 0 ? "bg-background" : "bg-muted/20"
                         }`}>
                           <div className="flex items-center justify-between gap-2">
-                            <span className="truncate">{visitor.full_name}</span>
+                            <span className="truncate text-sm">{visitor.full_name}</span>
                             <Badge variant="secondary" className="shrink-0 text-xs">
                               {getAttendanceCount(visitor.id)}
                             </Badge>
